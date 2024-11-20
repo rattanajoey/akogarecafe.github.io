@@ -55,3 +55,12 @@ export const DropZone = styled('div')`
   background-color: rgba(0, 0, 0, 0.1); /* Light color for drop zones */
   border: 1px solid #000; /* Border to show the drop zone */
 `;
+
+export const HighlightCircle = styled('div')({
+  position: 'absolute',
+  width: '20px',
+  height: '20px',
+  borderRadius: '50%',
+  backgroundColor: 'rgba(0, 255, 0, 0.6)',
+  pointerEvents: 'none', // Prevent blocking click events
+});
