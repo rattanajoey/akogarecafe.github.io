@@ -1,15 +1,19 @@
-import React from 'react';
-import './App.css'; // Your styles
+import React, { useState } from 'react';
 import ShogiBoardComponent from './components/Shogi/ShogiBoardComponent';
+import SpeedDialComponent from './components/SpeedDial/SpeedDialComponent';
 
 const App = () => {
+  const [selectedIcon, setSelectedIcon] = useState('Home');
+
+  const handleIconSelect = (iconName) => {
+    setSelectedIcon(iconName);
+  };
+
   return (
     <div className="App">
-      <header className="App-header">
-        <h1>Welcome to Akogare Cafe</h1>
-        <p>Play Shogi and learn more about me!</p>
-      </header>
-      <ShogiBoardComponent />
+      {selectedIcon === 'Home' && 
+      <ShogiBoardComponent />}
+      <SpeedDialComponent onIconSelect={handleIconSelect} /> 
     </div>
   );
 };
