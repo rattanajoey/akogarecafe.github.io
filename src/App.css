@@ -16,14 +16,3 @@
   justify-content: center;
   gap: 20px;
 }
-
-.youtube-link, .resume-link {
-  background-color: #f0f0f0;
-  padding: 10px;
-  border-radius: 5px;
-}
-
-.youtube-link a, .resume-link a {
-  color: #007bff;
-  text-decoration: none;
-}
