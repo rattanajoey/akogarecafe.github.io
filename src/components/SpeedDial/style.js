@@ -6,10 +6,12 @@ export const NiraImage = styled('img')({
   });
 
 export const SpeedDialContainer = styled(Box)({
+    position:'sticky',
+    bottom: 0,
     '.MuiSpeedDial-fab':
     {
         backgroundColor: 'initial !important',
-        'box-shadow': 'initial !important',
+        boxShadow: 'initial !important',
         height: 'auto',
         width: 'auto',
     },

@@ -6,8 +6,6 @@ import { NiraImage, SpeedDialContainer } from './style';
 
 const SpeedDialComponent = ({ onIconSelect }) => {
   const [open, setOpen] = useState(false); 
-  const [selectedIcon, setSelectedIcon] = useState(null); 
-  console.log(selectedIcon);
 
   const actions = [
     { icon: <LibraryMusicIcon />, name: 'Music' },
@@ -15,18 +13,19 @@ const SpeedDialComponent = ({ onIconSelect }) => {
   ];
 
   const handleIconClick = (iconName) => {
-    setSelectedIcon(iconName); 
     if (onIconSelect) {
       onIconSelect(iconName); 
     }
   };
+
+  const imageSrc = open ? '/pieces/nira2.png' : '/pieces/nira.png';
 
   return (
     <SpeedDialContainer>
       <SpeedDial
         ariaLabel="SpeedDial openIcon example"
         sx={{ position: 'absolute', bottom: 48, right: 48 }}
-        icon={<NiraImage src={open ? '/pieces/nira2.png' : '/pieces/nira.png'} alt='Nira' />}
+        icon={<NiraImage src={imageSrc} alt='Nira' />}
         onClick={() => setOpen((prev) => !prev)}
         open={open}
       >

@@ -21,9 +21,9 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "predeploy": "echo 'akogarecafe.com' > build/CNAME",
+    "predeploy": "npm run build && cp CNAME build/",
     "deploy": "gh-pages -d build",
-    "deploy-all": "npm run build && npm run deploy"
+    "deploy-all": "npm run build && npm run predeploy && npm run deploy"
   },
   "eslintConfig": {
     "extends": [
