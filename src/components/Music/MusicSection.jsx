@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { artists } from "../constants/MusicInfo";
+import { SongContainer, SongList } from "./style";
 
 const MusicSection = () => {
   const [expanded, setExpanded] = useState(null);
@@ -20,10 +21,14 @@ const MusicSection = () => {
   };
 
   return (
-    <Box sx={{ flexGrow: 1 }}>
+    <Box sx={{ flexGrow: 1, mb: 24 }}>
       <Grid container spacing={3} mt={4} p={3}>
         {artists.map((artist, index) => (
-          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={artist.name} justifyItems={'center'}>
+          <Grid
+            size={{ xs: 12, sm: 6, md: 4 }}
+            key={artist.name}
+            justifyItems={"center"}
+          >
             <Card
               sx={{ position: "relative", cursor: "pointer", width: "70%" }}
             >
@@ -52,25 +57,18 @@ const MusicSection = () => {
                 mountOnEnter
                 unmountOnExit
               >
-                <Box
+                <SongContainer
                   sx={{
-                    position: "absolute",
-                    top: 0,
-                    right: 0,
-                    width: "100%",
-                    height: "100%",
-                    backgroundColor: "rgba(0, 0, 0, 0.7)",
-                    color: "white",
                     display: expanded === index ? "block" : "none",
                   }}
                   onClick={() => handleExpandClick(index)}
                 >
                   <Typography variant="h6">Favorite Songs</Typography>
-                  <ul>
+                  <SongList>
                     {artist.favoriteSongs.map((song) => (
                       <li key={song}>{song}</li>
                     ))}
-                  </ul>
+                  </SongList>
                   <Button
                     href={artist.moreInfoLink}
                     target="_blank"
@@ -79,7 +77,7 @@ const MusicSection = () => {
                   >
                     More Info
                   </Button>
-                </Box>
+                </SongContainer>
               </Slide>
             </Card>
           </Grid>

@@ -35,5 +35,23 @@ export const artists = [
       favoriteSongs: ["Banksanka", "Inferuno Love Letter", "Aimoraimo"],
       moreInfoLink: "https://tuki-official.net/",
     },
+    {
+      name: 'Hanayui',
+      albumCover: '/music/hanayui_when_freesia_blooms.jpg',
+      favoriteSongs: ['When Freesia Blooms', 'Iolite', 'NatunoSiori'],
+      moreInfoLink: 'https://lit.link/en/hanayui08'
+    },
+    {
+      name: 'The Toys',
+      albumCover: '/music/the_toys.jpg',
+      favoriteSongs: ['Before Rain', 'Spring', 'I Beg Your Pardon'],
+      moreInfoLink: 'https://www.facebook.com/thisisthetoys'
+    },
+    {
+      name: 'XG',
+      albumCover: '/music/xg_something_aint_right.jpg',
+      favoriteSongs: ['IS THIS LOVE', 'SOMETHING AINT RIGHT', 'WOKE UP'],
+      moreInfoLink: 'https://xgalx.com/en/xg/'
+    }
   ];
   

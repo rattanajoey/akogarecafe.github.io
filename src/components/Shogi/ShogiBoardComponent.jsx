@@ -7,7 +7,6 @@ import { ShogiBoardWrapper, ShogiBoard, ShogiPiece, DropZone } from "./style"; /
 
 import { getValidMoves } from "../PieceMechanics";
 import { calculatePosition } from "../utils";
-import { Typography } from "@mui/material";
 
 const ShogiBoardComponent = () => {
   const [pieces, setPieces] = useState(initialShogiPieces);
@@ -55,9 +54,6 @@ const ShogiBoardComponent = () => {
 
   return (
     <div style={{height: '100vh'}}>
-      <div className="App-header">
-        <Typography variant="h4">Akogare Cafe</Typography>
-      </div>
       <ShogiBoardWrapper>
         <ShogiBoard>
           {pieces.map((piece) => {
