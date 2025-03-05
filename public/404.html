@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 Not Found</title>
+</head>
+<body>
+    <h1>Whoops! Looks like this page is lost.</h1>
+    <p>Redirecting you to the homepage...</p>
+    <script>
+      var validRoutes = ["/", "/portfolio", "/music"]; // Add valid paths here
+      var path = window.location.pathname;
+
+      if (validRoutes.includes(path)) {
+          window.location.replace("/#"+path);
+      } else {
+          setTimeout(() => {
+              window.location.replace("/#/");
+          }, 1500); // 1.5 second delay
+      }
+    </script>
+</body>
+</html>
