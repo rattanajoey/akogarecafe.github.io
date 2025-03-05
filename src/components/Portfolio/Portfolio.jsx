@@ -107,7 +107,11 @@ const PortfolioSection = () => {
                   <CompanyTitle href="http://startengine.com/" target="_blank">
                     Software Engineer · StartEngine
                   </CompanyTitle>
-                  <ArrowContainer isHovered={hoveredCompany === "startengine"}>
+                  <ArrowContainer
+                    ishovered={
+                      hoveredCompany === "startengine" ? "true" : "false"
+                    }
+                  >
                     <ArrowOutwardIcon />
                   </ArrowContainer>
                 </CompanyTitleContainer>
@@ -148,7 +152,9 @@ const PortfolioSection = () => {
                   <CompanyTitle href="https://www.isbx.com/" target="_blank">
                     Junior Software Engineer / QA Tester · ISBX
                   </CompanyTitle>
-                  <ArrowContainer isHovered={hoveredCompany === "isbx"}>
+                  <ArrowContainer
+                    ishovered={hoveredCompany === "isbx" ? "true" : "false"}
+                  >
                     <ArrowOutwardIcon />
                   </ArrowContainer>
                 </CompanyTitleContainer>
@@ -203,7 +209,9 @@ const PortfolioSection = () => {
                   <CompanyTitle href="https://www.appen.com/" target="_blank">
                     Web Search Evaluator · Appen
                   </CompanyTitle>
-                  <ArrowContainer isHovered={hoveredCompany === "appen"}>
+                  <ArrowContainer
+                    ishovered={hoveredCompany === "appen" ? "true" : "false"}
+                  >
                     <ArrowOutwardIcon />
                   </ArrowContainer>
                 </CompanyTitleContainer>
