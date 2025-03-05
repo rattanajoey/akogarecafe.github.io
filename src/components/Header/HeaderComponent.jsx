@@ -1,10 +1,11 @@
 import React from "react";
 import { Box, IconButton, Typography } from "@mui/material";
-import { SocialMediaContainer } from "./style";
 import YouTubeIcon from "@mui/icons-material/YouTube";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import TwitterIcon from "@mui/icons-material/Twitter";
 import GamesIcon from "@mui/icons-material/Games";
+import GitHubIcon from "@mui/icons-material/GitHub";
+import { SocialMediaContainer } from "./style";
 
 const HeaderComponent = () => {
   return (
@@ -44,6 +45,13 @@ const HeaderComponent = () => {
           aria-label="Twitch"
         >
           <GamesIcon />
+        </IconButton>
+        <IconButton
+          href="https://github.com/rattanajoey"
+          target="_blank"
+          aria-label="GitHub"
+        >
+          <GitHubIcon />
         </IconButton>
       </SocialMediaContainer>
       <Typography variant="h4" style={{ textAlign: "center", flexGrow: 1 }}>

@@ -1,4 +1,5 @@
 import React from "react";
+import { useState } from "react";
 import Grid from "@mui/material/Grid2";
 import {
   Card,
@@ -9,7 +10,6 @@ import {
   Box,
   Slide,
 } from "@mui/material";
-import { useState } from "react";
 import { artists } from "../constants/MusicInfo";
 import { SongContainer, SongList } from "./style";
 
@@ -32,13 +32,23 @@ const MusicSection = () => {
             <Card
               sx={{ position: "relative", cursor: "pointer", width: "70%" }}
             >
-              <CardMedia
-                component="img"
-                height="auto"
-                image={artist.albumCover}
-                alt={`${artist.name}`}
-                sx={{ objectFit: "cover", width: "100%" }}
-              />
+              <Box sx={{ position: "relative", paddingTop: "100%" }}>
+                <CardMedia
+                  component="img"
+                  height="100%"
+                  image={artist.albumCover}
+                  alt={`${artist.name}'s album cover`}
+                  loading="lazy"
+                  sx={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    objectFit: "cover",
+                    width: "100%",
+                    height: "100%",
+                  }}
+                />
+              </Box>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
                   {artist.name}

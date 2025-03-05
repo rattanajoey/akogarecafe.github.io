@@ -2,20 +2,28 @@ import React, { useState } from "react";
 import { SpeedDial, SpeedDialAction } from "@mui/material";
 import LibraryMusicIcon from "@mui/icons-material/LibraryMusic";
 import HomeIcon from "@mui/icons-material/Home";
+import ArticleIcon from "@mui/icons-material/Article";
 import { NiraImage, SpeedDialContainer } from "./style";
+import { useNavigate } from "react-router-dom";
 
 const SpeedDialComponent = ({ onIconSelect }) => {
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
 
   const actions = [
+    { icon: <ArticleIcon />, name: "Portfolio" },
     { icon: <LibraryMusicIcon />, name: "Music" },
-    { icon: <HomeIcon />, name: "Home" },
+    { icon: <HomeIcon />, name: "" },
   ];
 
   const handleIconClick = (iconName) => {
     if (onIconSelect) {
       onIconSelect(iconName);
     }
+  };
+
+  const handleAction = (route) => {
+    navigate(route);
   };
 
   const imageSrc = open ? "/pieces/nira2.png" : "/pieces/nira.png";
@@ -33,8 +41,10 @@ const SpeedDialComponent = ({ onIconSelect }) => {
           <SpeedDialAction
             key={action.name}
             icon={action.icon}
-            tooltipTitle={action.name}
-            onClick={() => handleIconClick(action.name)}
+            onClick={() => {
+              handleIconClick(action.name);
+              handleAction(action.name.toLowerCase());
+            }}
           />
         ))}
       </SpeedDial>
