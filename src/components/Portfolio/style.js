@@ -69,7 +69,7 @@ export const SkillIcon = styled(Box)({
   borderRadius: "0px 15px",
 });
 
-export const CompanyTitleContainer = styled(Box)({
+export const CompanyTitleContainer = styled(Grid2)({
   alignItems: "center",
   fontSize: "22px",
   "& svg": {
@@ -84,16 +84,17 @@ export const CompanyTitle = styled("a")(({ theme }) => ({
   [theme.breakpoints.down("sm")]: { fontSize: "18px" },
 }));
 
-export const ArrowContainer = styled(Box)(({ isHovered }) => ({
+export const ArrowContainer = styled(Box)(({ ishovered }) => ({
   display: "flex",
   alignItems: "center",
   transition: "transform 0.3s",
-  transform: isHovered ? "translate(5px, -5px)" : "translate(0px, 0px)",
+  transform:
+    ishovered === "true" ? "translate(5px, -5px)" : "translate(0px, 0px)",
 
   svg: {
     fontSize: "24px",
     transition: "transform 0.3s, font-size 0.3s",
-    transform: isHovered ? "scale(1.1)" : "scale(1)",
+    transform: ishovered === "true" ? "scale(1.1)" : "scale(1)",
   },
 }));
 
