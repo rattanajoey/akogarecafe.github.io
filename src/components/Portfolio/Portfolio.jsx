@@ -7,6 +7,7 @@ import {
   PortfolioWrapper,
   SkillIcon,
   SkillsContainer,
+  SkillsContainerWrapper,
   UserNameContainer,
 } from "./style";
 import { Grid2, Typography } from "@mui/material";
@@ -41,8 +42,8 @@ const PortfolioSection = () => {
   return (
     <PortfolioWrapper container>
       <BackgroundContianer>
-        <Grid2 container pl={28} pr={4} mt={4}>
-          <Grid2 size={5}>
+        <SkillsContainerWrapper container>
+          <Grid2 size={{ xs: 12, sm: 5 }}>
             <UserNameContainer>
               <Typography variant="h3">Joey Rattana</Typography>
               <Typography variant="h6" mt={1}>
@@ -55,7 +56,7 @@ const PortfolioSection = () => {
               </Typography>
             </UserNameContainer>
           </Grid2>
-          <Grid2 size={7} mb={24}>
+          <Grid2 size={{ xs: 12, sm: 7 }} mb={24}>
             <SkillsContainer>
               <Typography variant="body1">
                 I&apos;m a <strong>Software Engineer</strong> with a commitment
@@ -94,7 +95,7 @@ const PortfolioSection = () => {
                 sound.
               </Typography>
               <Grid2 container mt={8}>
-                <Grid2 size={3}>
+                <Grid2 size={{ xs: 12, sm: 3 }}>
                   <Typography>2022 - Present</Typography>
                 </Grid2>
                 <CompanyTitleContainer
@@ -112,21 +113,21 @@ const PortfolioSection = () => {
                 </CompanyTitleContainer>
               </Grid2>
               <Grid2 container mt={4} rowSpacing={2}>
-                <Grid2 size={3} />
+                <Grid2 size={{ xs: 0, sm: 3 }} />
                 {renderSkill(
                   NextPlanIcon,
                   "Next.js",
                   "Experienced",
                   "Built SSR & CSR apps, optimized performance, routing, API handling."
                 )}
-                <Grid2 size={3} />
+                <Grid2 size={{ xs: 0, sm: 3 }} />
                 {renderSkill(
                   BubbleChartIcon,
                   "React",
                   "Expert",
                   "Developed reusable components, hooks, context, state management."
                 )}
-                <Grid2 size={3} />
+                <Grid2 size={{ xs: 0, sm: 3 }} />
                 {renderSkill(
                   SyncIcon,
                   "React Query",
@@ -135,7 +136,7 @@ const PortfolioSection = () => {
                 )}
               </Grid2>
               <Grid2 container mt={8}>
-                <Grid2 size={3}>
+                <Grid2 size={{ xs: 12, sm: 3 }}>
                   <Typography>2019 - 2020</Typography>
                 </Grid2>
                 <CompanyTitleContainer
@@ -153,35 +154,35 @@ const PortfolioSection = () => {
                 </CompanyTitleContainer>
               </Grid2>
               <Grid2 container mt={4} rowSpacing={2}>
-                <Grid2 size={3} />
+                <Grid2 size={{ xs: 0, sm: 3 }} />
                 {renderSkill(
                   CodeIcon,
                   "TypeScript",
                   "Intermediate",
                   "Built scalable web apps with strong typing and modern ES features."
                 )}
-                <Grid2 size={3} />
+                <Grid2 size={{ xs: 0, sm: 3 }} />
                 {renderSkill(
                   BubbleChartIcon,
                   "React",
                   "Expert",
                   "Developed reusable components, hooks, context, state management."
                 )}
-                <Grid2 size={3} />
+                <Grid2 size={{ xs: 0, sm: 3 }} />
                 {renderSkill(
                   SmartphoneIcon,
                   "React Native",
                   "Intermediate",
                   "Built a mobile companion app from scratch, integrating native features."
                 )}
-                <Grid2 size={3} />
+                <Grid2 size={{ xs: 0, sm: 3 }} />
                 {renderSkill(
                   BugReportIcon,
                   "Manual & Automated Testing",
                   "Intermediate",
                   "Conducted functional, regression, and UI tests across web & mobile apps."
                 )}
-                <Grid2 size={3} />
+                <Grid2 size={{ xs: 0, sm: 3 }} />
                 {renderSkill(
                   FactCheckIcon,
                   "Test Case Development",
@@ -190,7 +191,7 @@ const PortfolioSection = () => {
                 )}
               </Grid2>
               <Grid2 container mt={8}>
-                <Grid2 size={3}>
+                <Grid2 size={{ xs: 12, sm: 3 }}>
                   <Typography>2019 - 2020</Typography>
                 </Grid2>
                 <CompanyTitleContainer
@@ -208,14 +209,14 @@ const PortfolioSection = () => {
                 </CompanyTitleContainer>
               </Grid2>
               <Grid2 container mt={4} rowSpacing={2}>
-                <Grid2 size={3} />
+                <Grid2 size={{ xs: 0, sm: 3 }} />
                 {renderSkill(
                   InsightsIcon,
                   "SEO & Content Quality",
                   "Intermediate",
                   "Evaluated ad placements, page rankings, and optimized content discovery."
                 )}
-                <Grid2 size={3} />
+                <Grid2 size={{ xs: 0, sm: 3 }} />
                 {renderSkill(
                   GridViewIcon,
                   "Data Accuracy & Pattern Recognition",
@@ -225,7 +226,7 @@ const PortfolioSection = () => {
               </Grid2>
             </SkillsContainer>
           </Grid2>
-        </Grid2>
+        </SkillsContainerWrapper>
       </BackgroundContianer>
     </PortfolioWrapper>
   );

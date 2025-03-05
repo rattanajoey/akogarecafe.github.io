@@ -6,39 +6,56 @@ export const PortfolioWrapper = styled(Grid2)({
   minHeight: "100vh",
 });
 
-export const BackgroundContianer = styled(Grid2)({
-  background: `url(${process.env.PUBLIC_URL}/portfolio/sao_bg.gif) fixed repeat-y 55px -10px, url(${process.env.PUBLIC_URL}/portfolio/sao_bg_line.png) fixed repeat-y 55px -10px`,
-  minWidth: "1200px",
+export const BackgroundContianer = styled(Grid2)(({ theme }) => ({
   width: "100%",
-});
+  [theme.breakpoints.up("md")]: {
+    background: `url(${process.env.PUBLIC_URL}/portfolio/sao_bg.gif) fixed repeat-y 55px -10px, url(${process.env.PUBLIC_URL}/portfolio/sao_bg_line.png) fixed repeat-y 55px -10px`,
+    minWidth: "1200px",
+  },
+}));
 
-export const UserNameContainer = styled(Box)({
-  borderWidth: "3px",
-  borderStyle: "solid",
-  borderImageSource:
-    "linear-gradient(to bottom right, #006672, rgba(0, 0, 0, 0) 50%, #006672)",
-  borderImageSlice: 1,
-  padding: "24px",
+export const SkillsContainerWrapper = styled(Grid2)(({ theme }) => ({
+  paddingLeft: "224px",
+  paddingRight: "32px",
+  marginTop: "32px",
+  [theme.breakpoints.down("md")]: {
+    padding: 0,
+  },
+}));
+
+export const UserNameContainer = styled(Grid2)(({ theme }) => ({
   color: "white",
+  padding: "24px",
   textAlign: "left",
-  width: "80%",
-});
+  width: "100%",
+  [theme.breakpoints.up("sm")]: {
+    borderWidth: "3px",
+    borderStyle: "solid",
+    borderImageSource:
+      "linear-gradient(to bottom right, #006672, rgba(0, 0, 0, 0) 50%, #006672)",
+    borderImageSlice: 1,
+    width: "80%",
+  },
+}));
 
-export const SkillsContainer = styled(Box)({
-  borderWidth: "3px",
-  borderStyle: "solid",
-  borderImageSource:
-    "linear-gradient(to bottom right, #006672, rgba(0, 0, 0, 0) 50%, #006672)",
-  borderImageSlice: 1,
+export const SkillsContainer = styled(Box)(({ theme }) => ({
   padding: "24px",
   color: "rgb(148, 163, 184)",
   textAlign: "left",
-  background:
-    "linear-gradient(to bottom right, rgba(8, 19, 24, 0.8), rgba(8, 19, 24, 0) 50%, rgba(8, 19, 24, 0.8))",
+
   "& strong": {
     color: "#f8f8f8",
   },
-});
+  [theme.breakpoints.up("sm")]: {
+    background:
+      "linear-gradient(to bottom right, rgba(8, 19, 24, 0.8), rgba(8, 19, 24, 0) 50%, rgba(8, 19, 24, 0.8))",
+    borderWidth: "3px",
+    borderStyle: "solid",
+    borderImageSource:
+      "linear-gradient(to bottom right, #006672, rgba(0, 0, 0, 0) 50%, #006672)",
+    borderImageSlice: 1,
+  },
+}));
 
 export const SkillIcon = styled(Box)({
   width: "35px",
@@ -61,10 +78,11 @@ export const CompanyTitleContainer = styled(Box)({
   display: "flex",
 });
 
-export const CompanyTitle = styled("a")({
+export const CompanyTitle = styled("a")(({ theme }) => ({
   color: "#006672",
   textDecoration: "none",
-});
+  [theme.breakpoints.down("sm")]: { fontSize: "18px" },
+}));
 
 export const ArrowContainer = styled(Box)(({ isHovered }) => ({
   display: "flex",

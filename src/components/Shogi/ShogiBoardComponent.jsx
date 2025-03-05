@@ -53,7 +53,7 @@ const ShogiBoardComponent = () => {
   };
 
   return (
-    <div style={{height: '100vh'}}>
+    <div style={{ height: "100vh" }}>
       <ShogiBoardWrapper>
         <ShogiBoard>
           {pieces.map((piece) => {
@@ -67,13 +67,13 @@ const ShogiBoardComponent = () => {
                   cursor: "pointer",
                   transform: piece.playerTwo ? "rotate(180deg)" : "none",
                 }}
-                onClick={() => handlePieceClick(piece)} // Click to select piece
+                onClick={() => handlePieceClick(piece)}
                 onMouseEnter={() =>
                   !selectedPiece && setHighlightedSquare(piece.position)
-                } // Only show tooltip on hover if no piece is selected
+                }
                 onMouseLeave={() =>
                   !selectedPiece && setHighlightedSquare(null)
-                } // Only hide tooltip if no piece selected
+                }
               >
                 <img src={piece.image} alt={piece.name} />
               </ShogiPiece>
@@ -96,7 +96,7 @@ const ShogiBoardComponent = () => {
                       ? "teal"
                       : "transparent",
                   }}
-                  onClick={() => handleSquareClick(position)} // Click to move piece
+                  onClick={() => handleSquareClick(position)}
                 />
               );
             })

@@ -1,11 +1,11 @@
 import React from "react";
-import { Box, IconButton, Typography } from "@mui/material";
+import { Box, IconButton } from "@mui/material";
 import YouTubeIcon from "@mui/icons-material/YouTube";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import TwitterIcon from "@mui/icons-material/Twitter";
 import GamesIcon from "@mui/icons-material/Games";
 import GitHubIcon from "@mui/icons-material/GitHub";
-import { SocialMediaContainer } from "./style";
+import { SocialMediaContainer, Title } from "./style";
 
 const HeaderComponent = () => {
   return (
@@ -54,9 +54,7 @@ const HeaderComponent = () => {
           <GitHubIcon />
         </IconButton>
       </SocialMediaContainer>
-      <Typography variant="h4" style={{ textAlign: "center", flexGrow: 1 }}>
-        Akogare Cafe
-      </Typography>
+      <Title variant="h4">Akogare Cafe</Title>
     </Box>
   );
 };
