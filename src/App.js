@@ -21,7 +21,7 @@ const RedirectToHash = () => {
 
 const App = () => {
   return (
-    <Router>
+    <Router basename="/">
       <RedirectToHash />
       <div className="App">
         <HeaderComponent />
