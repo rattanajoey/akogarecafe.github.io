@@ -8,14 +8,8 @@
 <body>
     <h1>Redirecting...</h1>
     <script>
-        var validRoutes = ["/", "/portfolio", "/music"]; 
         var path = window.location.pathname;
-
-        if (validRoutes.includes(path)) {
-            window.location.replace("/#"+path); 
-        } else {
-            window.location.replace("/#/"); 
-        }
-    </script>      
+        window.location.replace("/#"+path);
+    </script>
 </body>
 </html>

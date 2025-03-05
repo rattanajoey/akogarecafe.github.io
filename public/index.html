@@ -12,7 +12,7 @@
     <script>
       (function() {
         var path = window.location.pathname;
-        if (!window.location.hash && path !== "/") {
+        if (!window.location.hash) {
           window.location.replace("/#"+path);
         }
       })();
