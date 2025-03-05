@@ -10,9 +10,8 @@ import { Box } from "@mui/material";
 
 const RedirectToHash = () => {
   useEffect(() => {
-    const currentPath = window.location.pathname;
-
-    if (currentPath !== "/" && !window.location.hash) {
+    const currentPath = window.location.pathname + window.location.search; // Preserve any query params
+    if (!window.location.hash) {
       window.location.replace(`/#${currentPath}`);
     }
   }, []);
