@@ -23,6 +23,14 @@ export const SkillsContainerWrapper = styled(Grid2)(({ theme }) => ({
   },
 }));
 
+export const SKillGrid = styled(Grid2)(({ theme }) => ({
+  marginTop: "32px",
+  justifyContent: "flex-start",
+  [theme.breakpoints.up("sm")]: {
+    justifyContent: "flex-end",
+  },
+}));
+
 export const UserNameContainer = styled(Grid2)(({ theme }) => ({
   color: "white",
   padding: "24px",
