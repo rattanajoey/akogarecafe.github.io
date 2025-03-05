@@ -11,9 +11,9 @@ const SpeedDialComponent = ({ onIconSelect }) => {
   const navigate = useNavigate();
 
   const actions = [
-    { icon: <ArticleIcon />, name: "Portfolio" },
-    { icon: <LibraryMusicIcon />, name: "Music" },
-    { icon: <HomeIcon />, name: "" },
+    { icon: <ArticleIcon />, name: "Portfolio", route: "/portfolio" },
+    { icon: <LibraryMusicIcon />, name: "Music", route: "/music" },
+    { icon: <HomeIcon />, name: "Home", route: "/" },
   ];
 
   const handleIconClick = (iconName) => {
@@ -41,9 +41,10 @@ const SpeedDialComponent = ({ onIconSelect }) => {
           <SpeedDialAction
             key={action.name}
             icon={action.icon}
+            tooltipTitle={action.name}
             onClick={() => {
               handleIconClick(action.name);
-              handleAction(action.name.toLowerCase());
+              handleAction(action.route);
             }}
           />
         ))}

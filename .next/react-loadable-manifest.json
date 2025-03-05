@@ -1,0 +1,14 @@
+{
+  "app/page.js -> ../src/components/Shogi/ShogiBoardComponent": {
+    "id": "app/page.js -> ../src/components/Shogi/ShogiBoardComponent",
+    "files": [
+      "static/chunks/_app-pages-browser_src_components_Shogi_ShogiBoardComponent_jsx.js"
+    ]
+  },
+  "app/portfolio/page.js -> ../../src/components/Portfolio/Portfolio": {
+    "id": "app/portfolio/page.js -> ../../src/components/Portfolio/Portfolio",
+    "files": [
+      "static/chunks/_app-pages-browser_src_components_Portfolio_Portfolio_jsx.js"
+    ]
+  }
+}

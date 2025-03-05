@@ -18,3 +18,16 @@ export const Title = styled(Typography)(({ theme }) => ({
     padding: "8px 0",
   },
 }));
+
+// Navigation links container
+export const NavLinksContainer = styled(Box)(({ theme }) => ({
+  display: "none",
+  [theme.breakpoints.up("md")]: {
+    display: "flex",
+    position: "absolute",
+    right: theme.spacing(2),
+    "& > *": {
+      marginLeft: theme.spacing(1),
+    },
+  },
+}));

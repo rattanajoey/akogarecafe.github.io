@@ -1,11 +1,12 @@
 import React from "react";
-import { Box, IconButton } from "@mui/material";
+import { Box, IconButton, Button } from "@mui/material";
 import YouTubeIcon from "@mui/icons-material/YouTube";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import TwitterIcon from "@mui/icons-material/Twitter";
 import GamesIcon from "@mui/icons-material/Games";
 import GitHubIcon from "@mui/icons-material/GitHub";
-import { SocialMediaContainer, Title } from "./style";
+import { SocialMediaContainer, Title, NavLinksContainer } from "./style";
+import { Link } from "react-router-dom";
 
 const HeaderComponent = () => {
   return (
@@ -55,6 +56,17 @@ const HeaderComponent = () => {
         </IconButton>
       </SocialMediaContainer>
       <Title variant="h4">Akogare Cafe</Title>
+      <NavLinksContainer>
+        <Button component={Link} to="/" color="inherit">
+          Home
+        </Button>
+        <Button component={Link} to="/music" color="inherit">
+          Music
+        </Button>
+        <Button component={Link} to="/portfolio" color="inherit">
+          Portfolio
+        </Button>
+      </NavLinksContainer>
     </Box>
   );
 };
