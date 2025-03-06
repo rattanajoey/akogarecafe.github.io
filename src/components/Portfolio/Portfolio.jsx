@@ -150,6 +150,18 @@ const PortfolioSection = () => {
                   "Experienced",
                   "Developed and maintained a component library for consistent UI/UX across applications."
                 )}
+                {renderSkill(
+                  ViewQuiltIcon,
+                  "Material-UI (MUI)",
+                  "Experienced",
+                  "Built scalable UI components, customized themes, and ensured responsive design."
+                )}
+                {renderSkill(
+                  DesignServicesIcon,
+                  "Design System",
+                  "Experienced",
+                  "Developed and maintained a component library for consistent UI/UX across applications."
+                )}
               </SKillGrid>
               <Grid2 container mt={8}>
                 <Grid2 size={{ xs: 12, sm: 3 }}>
