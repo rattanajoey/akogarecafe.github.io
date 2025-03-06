@@ -18,9 +18,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "predeploy": "npm run build && cp CNAME .next/",
-    "deploy": "gh-pages -b gh-pages -d .next",
-    "deploy-all": "npm run build && npm run predeploy && npm run deploy"
+    "predeploy": "npm run build && cp CNAME out/ && touch out/.nojekyll",
+    "deploy": "gh-pages -b gh-pages -d out",
+    "deploy-all": "git add . && git commit -m 'Update site' && git push origin main"
   },
   "eslintConfig": {
     "extends": [

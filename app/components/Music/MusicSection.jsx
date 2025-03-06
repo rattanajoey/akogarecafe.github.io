@@ -1,6 +1,7 @@
 import React from "react";
 import { useState } from "react";
 import Grid from "@mui/material/Grid2";
+import Image from "next/image";
 import {
   Card,
   CardContent,
@@ -11,7 +12,6 @@ import {
 } from "@mui/material";
 import { MusicWrapper, SongContainer, SongList } from "./style";
 import { artists } from "../constants/MusicInfo";
-import { MusicWrapper, SongContainer, SongList } from "./style";
 import MusicEffect from "../MusicEffect/MusicEffect";
 
 const MusicSection = () => {
