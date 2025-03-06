@@ -16,7 +16,7 @@ window.onload = () => {
   setTimeout(() => {
     const rootElement = document.getElementById("root");
     const cssElements = rootElement.querySelectorAll(
-      'a, button, [role="button"], [tabindex]:not([tabindex="-1"]), div[style*="cursor: pointer"]'
+      'a, button, [role="button"], [tabindex]:not([tabindex="-1"]), div[style*="cursor: pointer"], .shogi-piece'
     );
 
     cssElements.forEach((element) => {
@@ -28,5 +28,5 @@ window.onload = () => {
         document.querySelector(".follower").classList.remove("is-active");
       });
     });
-  }, 2000); // Wait 2 seconds for React to finish rendering
+  }, 2000);
 };
