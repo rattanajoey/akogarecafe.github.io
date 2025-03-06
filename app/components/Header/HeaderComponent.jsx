@@ -6,7 +6,6 @@ import TwitterIcon from "@mui/icons-material/Twitter";
 import GamesIcon from "@mui/icons-material/Games";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import { SocialMediaContainer, Title, NavLinksContainer } from "./style";
-import Link from "next/link";
 
 const HeaderComponent = () => {
   return (
@@ -34,50 +33,30 @@ const HeaderComponent = () => {
           <InstagramIcon />
         </IconButton>
         <IconButton
-          href="https://twitter.com/akogarecafe"
+          href="https://x.com/AkogareCafe_JR"
           target="_blank"
           aria-label="Twitter"
         >
           <TwitterIcon />
         </IconButton>
         <IconButton
-          href="https://github.com/akogarecafe"
+          href="https://www.twitch.tv/akogarecafe"
+          target="_blank"
+          aria-label="Twitch"
+        >
+          <GamesIcon />
+        </IconButton>
+        <IconButton
+          href="https://github.com/rattanajoey"
           target="_blank"
           aria-label="GitHub"
         >
           <GitHubIcon />
         </IconButton>
       </SocialMediaContainer>
-
-      <Title>
-        <Link href="/" passHref>
-          <span>Akogare Cafe</span>
-        </Link>
-      </Title>
-
-      <NavLinksContainer>
-        <Link href="/" passHref>
-          <Button
-            startIcon={<GamesIcon />}
-            color="inherit"
-            sx={{ textTransform: "none" }}
-          >
-            Shogi
-          </Button>
-        </Link>
-        <Link href="/music" passHref>
-          <Button color="inherit" sx={{ textTransform: "none" }}>
-            Music
-          </Button>
-        </Link>
-        <Link href="/portfolio" passHref>
-          <Button color="inherit" sx={{ textTransform: "none" }}>
-            Portfolio
-          </Button>
-        </Link>
-      </NavLinksContainer>
+      <Title variant="h4">Akogare Cafe</Title>
     </Box>
   );
 };
 
-export default HeaderComponent; 
+export default HeaderComponent;

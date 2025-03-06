@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  output: 'export', // For static site generation
+  output: "export", // For static site generation
   images: {
     unoptimized: true, // For static export
   },
@@ -10,4 +10,4 @@ const nextConfig = {
   // basePath: '',
 };
 
-module.exports = nextConfig; 
+module.exports = nextConfig;

@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import MomoComponent from "../Momo/MomoComponent";
-import CustomTooltip from "../Tooltip/CustomTooltip";
 import { initialShogiPieces, pieceInfo } from "../constants/InitialShogiPieces";
 
 import { ShogiBoardWrapper, ShogiBoard, ShogiPiece, DropZone } from "./style"; // Import styled components
 
-import { getValidMoves } from "../PieceMechanics";
 import { calculatePosition } from "../utils";
+import CustomTooltip from "../Tooltip/CustomTooltip";
+import MomoComponent from "../Momo/MomoComponent";
+import { getValidMoves } from "../PieceMechanics";
 
 const ShogiBoardComponent = () => {
   const [pieces, setPieces] = useState(initialShogiPieces);

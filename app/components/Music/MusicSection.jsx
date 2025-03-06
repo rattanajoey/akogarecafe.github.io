@@ -10,8 +10,9 @@ import {
   Box,
   Slide,
 } from "@mui/material";
-import { artists } from "../constants/MusicInfo";
 import { SongContainer, SongList } from "./style";
+import { artists } from "../constants/MusicInfo";
+import Image from "next/image";
 
 const MusicSection = () => {
   const [expanded, setExpanded] = useState(null);
@@ -33,13 +34,13 @@ const MusicSection = () => {
               sx={{ position: "relative", cursor: "pointer", width: "70%" }}
             >
               <Box sx={{ position: "relative", paddingTop: "100%" }}>
-                <CardMedia
-                  component="img"
-                  height="100%"
-                  image={artist.albumCover}
+                <Image
+                  src={artist.albumCover}
                   alt={`${artist.name}'s album cover`}
-                  loading="lazy"
-                  sx={{
+                  width={300}
+                  height={300}
+                  priority
+                  style={{
                     position: "absolute",
                     top: 0,
                     left: 0,

@@ -1,13 +1,12 @@
-'use client';
+"use client";
 
-import dynamic from 'next/dynamic';
-import MainLayout from '../components/Layout/MainLayout';
+import dynamic from "next/dynamic";
+import MainLayout from "../components/Layout/MainLayout";
 
 // Dynamically import the MusicSection with SSR disabled
-const MusicSection = dynamic(
-  () => import('../../src/components/Music/MusicSection'),
-  { ssr: false }
-);
+const MusicSection = dynamic(() => import("../components/Music/MusicSection"), {
+  ssr: false,
+});
 
 export default function MusicPage() {
   return (
@@ -15,4 +14,4 @@ export default function MusicPage() {
       <MusicSection />
     </MainLayout>
   );
-} 
+}

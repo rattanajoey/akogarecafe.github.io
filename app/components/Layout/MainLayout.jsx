@@ -1,40 +1,34 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { Box } from '@mui/material';
-import HeaderComponent from '../Header/HeaderComponent';
-import SpeedDialComponent from '../SpeedDial/SpeedDialComponent';
-import { useCursorEffect } from '../../lib/useCursorEffect';
+import { useEffect, useState } from "react";
+import { Box } from "@mui/material";
+import HeaderComponent from "../Header/HeaderComponent";
+import SpeedDialComponent from "../SpeedDial/SpeedDialComponent";
 
 export default function MainLayout({ children }) {
-  // Use the custom cursor effect hook
-  useCursorEffect();
+  const [cursorInitialized, setCursorInitialized] = useState(false);
 
-  // Ensure cursor elements exist
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
+    if (cursorInitialized) return;
 
-    // Check if cursor elements already exist
-    let cursor = document.querySelector('.cursor');
-    let follower = document.querySelector('.follower');
+    let cursor = document.querySelector(".cursor");
+    let follower = document.querySelector(".follower");
 
-    // Create elements if they don't exist
     if (!cursor) {
-      cursor = document.createElement('div');
-      cursor.className = 'cursor';
+      cursor = document.createElement("div");
+      cursor.className = "cursor";
       document.body.appendChild(cursor);
     }
 
     if (!follower) {
-      follower = document.createElement('div');
-      follower.className = 'follower';
+      follower = document.createElement("div");
+      follower.className = "follower";
       document.body.appendChild(follower);
     }
 
-    return () => {
-      // Clean up is optional here since these elements are shared
-    };
-  }, []);
+    setCursorInitialized(true);
+  }, [cursorInitialized]);
 
   return (
     <div className="App">
@@ -45,4 +39,4 @@ export default function MainLayout({ children }) {
       <SpeedDialComponent />
     </div>
   );
-} 
+}
