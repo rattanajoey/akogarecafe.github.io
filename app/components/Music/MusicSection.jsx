@@ -3,16 +3,16 @@ import { useState } from "react";
 import Grid from "@mui/material/Grid2";
 import {
   Card,
-  CardMedia,
   CardContent,
   Typography,
   Button,
   Box,
   Slide,
 } from "@mui/material";
-import { SongContainer, SongList } from "./style";
+import { MusicWrapper, SongContainer, SongList } from "./style";
 import { artists } from "../constants/MusicInfo";
 import Image from "next/image";
+import MusicEffect from "../MusicEffect/MusicEffect";
 
 const MusicSection = () => {
   const [expanded, setExpanded] = useState(null);
@@ -22,8 +22,9 @@ const MusicSection = () => {
   };
 
   return (
-    <Box sx={{ flexGrow: 1, mb: 24 }}>
-      <Grid container spacing={3} mt={4} p={3}>
+    <MusicWrapper>
+      <MusicEffect />
+      <Grid container spacing={3} p={3} pb={32}>
         {artists.map((artist, index) => (
           <Grid
             size={{ xs: 12, sm: 6, md: 4 }}
@@ -31,7 +32,12 @@ const MusicSection = () => {
             justifyItems={"center"}
           >
             <Card
-              sx={{ position: "relative", cursor: "pointer", width: "70%" }}
+              sx={{
+                position: "relative",
+                cursor: "pointer",
+                width: "70%",
+                bgcolor: "transparent",
+              }}
             >
               <Box sx={{ position: "relative", paddingTop: "100%" }}>
                 <Image
@@ -94,7 +100,7 @@ const MusicSection = () => {
           </Grid>
         ))}
       </Grid>
-    </Box>
+    </MusicWrapper>
   );
 };
 

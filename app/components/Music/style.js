@@ -1,4 +1,4 @@
-import { Box } from "@mui/material";
+import { Box, Grid2 } from "@mui/material";
 import { styled } from "@mui/system";
 
 export const SongContainer = styled(Box)({
@@ -13,4 +13,9 @@ export const SongContainer = styled(Box)({
 
 export const SongList = styled("ul")({
   li: { padding: "8px", textAlign: "left" },
+});
+
+export const MusicWrapper = styled(Grid2)({
+  backgroundColor: "#000",
+  minHeight: "100vh",
 });
