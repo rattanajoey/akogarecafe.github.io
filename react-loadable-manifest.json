@@ -1,0 +1,38 @@
+{
+  "app\\music\\page.js -> ../components/Music/MusicSection": {
+    "id": 4927,
+    "files": [
+      "static/css/5146b0d92ceb5a0c.css",
+      "static/chunks/766.e91bd66160e86e78.js",
+      "static/chunks/771.e816f6c3de0b2b0b.js",
+      "static/chunks/996.a14c7f0ed46f0f36.js",
+      "static/chunks/927.a953bae3d2d94421.js"
+    ]
+  },
+  "app\\page.js -> ./components/Shogi/ShogiBoardComponent": {
+    "id": 9533,
+    "files": [
+      "static/chunks/766.e91bd66160e86e78.js",
+      "static/chunks/533.e27cb2fa2149811f.js"
+    ]
+  },
+  "app\\portfolio\\page.js -> ../components/Portfolio/Portfolio": {
+    "id": 2531,
+    "files": [
+      "static/chunks/771.e816f6c3de0b2b0b.js",
+      "static/chunks/531.3ac847a6221ca410.js"
+    ]
+  },
+  "node_modules\\next\\dist\\client\\index.js -> ../pages/_app": {
+    "id": 472,
+    "files": [
+      "static/chunks/472.a3826d29d6854395.js"
+    ]
+  },
+  "node_modules\\next\\dist\\client\\index.js -> ../pages/_error": {
+    "id": 9341,
+    "files": [
+      "static/chunks/341.34f2b76c309db662.js"
+    ]
+  }
+}
