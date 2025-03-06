@@ -33,7 +33,7 @@ const PortfolioSection = () => {
       <SkillIcon>
         <Icon fontSize="medium" />
       </SkillIcon>
-      <Grid2 container ml={2} gap={"0px"}>
+      <Grid2 container ml={2} gap={"0px"} flexDirection={"column"}>
         <Typography variant="body1">
           <strong>{title}</strong> - {level}
         </Typography>
