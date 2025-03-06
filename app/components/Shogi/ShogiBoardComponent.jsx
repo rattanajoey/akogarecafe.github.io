@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { initialShogiPieces, pieceInfo } from "../constants/InitialShogiPieces";
+import Image from "next/image";
 
 import { ShogiBoardWrapper, ShogiBoard, ShogiPiece, DropZone } from "./style"; // Import styled components
 
@@ -75,7 +76,13 @@ const ShogiBoardComponent = () => {
                   !selectedPiece && setHighlightedSquare(null)
                 }
               >
-                <img src={piece.image} alt={piece.name} />
+                <Image
+                  src={piece.image}
+                  alt={piece.name}
+                  width={50}
+                  height={50}
+                  priority={true}
+                />
               </ShogiPiece>
             );
           })}
