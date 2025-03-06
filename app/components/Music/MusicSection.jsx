@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import { MusicWrapper, SongContainer, SongList } from "./style";
 import { artists } from "../constants/MusicInfo";
-import Image from "next/image";
+import { MusicWrapper, SongContainer, SongList } from "./style";
 import MusicEffect from "../MusicEffect/MusicEffect";
 
 const MusicSection = () => {
@@ -24,7 +24,7 @@ const MusicSection = () => {
   return (
     <MusicWrapper>
       <MusicEffect />
-      <Grid container spacing={3} p={3} pb={32}>
+      <Grid container spacing={3} p={3} pb={48}>
         {artists.map((artist, index) => (
           <Grid
             size={{ xs: 12, sm: 6, md: 4 }}
