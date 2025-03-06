@@ -1,13 +1,37 @@
-import { getPawnMoves } from './Movement/PawnMovement';
-import { getKingMoves } from './Movement/KingMovement';
-// Map piece types to their movement logic
+import { getPawnMoves } from "./Movement/PawnMovement";
+import { getKingMoves } from "./Movement/KingMovement";
+import { getGoldGeneralMoves } from "./Movement/GoldGeneralMovement";
+import { getSilverGeneralMoves } from "./Movement/SilverGeneralMovement";
+import { getKnightMoves } from "./Movement/KnightMovement";
+import { getLanceMoves } from "./Movement/LanceMovement";
+import { getBishopMoves } from "./Movement/BishopMovement";
+import { getRookMoves } from "./Movement/RookMovement";
+import { getPromotedPieceMoves } from "./Movement/PromotedPieceMovement";
+
 const movementLogic = {
   Pawn: getPawnMoves,
   King: getKingMoves,
-  // Add other pieces here
+  OpposingKing: getKingMoves,
+  GoldGeneral: getGoldGeneralMoves,
+  SilverGeneral: getSilverGeneralMoves,
+  Knight: getKnightMoves,
+  Lance: getLanceMoves,
+  Bishop: getBishopMoves,
+  Rook: getRookMoves,
+  PromotedPawn: getPromotedPieceMoves,
+  PromotedSilver: getPromotedPieceMoves,
+  PromotedKnight: getPromotedPieceMoves,
+  PromotedLance: getPromotedPieceMoves,
+  PromotedBishop: (position, pieces, isPlayerTwo) => [
+    ...getBishopMoves(position, pieces),
+    ...getKingMoves(position, pieces),
+  ],
+  PromotedRook: (position, pieces, isPlayerTwo) => [
+    ...getRookMoves(position, pieces),
+    ...getKingMoves(position, pieces),
+  ],
 };
 
-// Dispatcher function to get valid moves for a given piece
 export const getValidMoves = (piece, pieces, isPlayerTwo) => {
   const movementFn = movementLogic[piece.name];
   return movementFn ? movementFn(piece.position, pieces, isPlayerTwo) : [];

@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import MomoComponent from "../Momo/MomoComponent";
 import CustomTooltip from "../Tooltip/CustomTooltip";
 import { initialShogiPieces, pieceInfo } from "../constants/InitialShogiPieces";
+import RestartAltIcon from "@mui/icons-material/RestartAlt"; // Importing the reset icon
 
-import { ShogiBoardWrapper, ShogiBoard, ShogiPiece, DropZone } from "./style"; // Import styled components
+import { ShogiBoardWrapper, ShogiBoard, ShogiPiece, DropZone } from "./style";
 
 import { getValidMoves } from "../PieceMechanics";
 import { calculatePosition } from "../utils";
+import { IconButton } from "@mui/material";
 
 const ShogiBoardComponent = () => {
   const [pieces, setPieces] = useState(initialShogiPieces);
@@ -52,6 +54,14 @@ const ShogiBoardComponent = () => {
     }
   };
 
+  // Function to reset the board
+  const resetBoard = () => {
+    setPieces(initialShogiPieces);
+    setSelectedPiece(null);
+    setHighlightedSquare(null);
+    setValidMoves(null);
+  };
+
   return (
     <div style={{ height: "100vh" }}>
       <ShogiBoardWrapper>
@@ -74,6 +84,7 @@ const ShogiBoardComponent = () => {
                 onMouseLeave={() =>
                   !selectedPiece && setHighlightedSquare(null)
                 }
+                className="shogi-piece"
               >
                 <img src={piece.image} alt={piece.name} />
               </ShogiPiece>
@@ -93,7 +104,7 @@ const ShogiBoardComponent = () => {
                     width: "50px",
                     height: "50px",
                     backgroundColor: validMoves?.includes(position)
-                      ? "teal"
+                      ? "rgba(173, 216, 230, 0.5)"
                       : "transparent",
                   }}
                   onClick={() => handleSquareClick(position)}
@@ -139,6 +150,9 @@ const ShogiBoardComponent = () => {
           </CustomTooltip>
         )}
       </ShogiBoardWrapper>
+      <IconButton onClick={resetBoard} sx={{ mt: 2 }}>
+        <RestartAltIcon />
+      </IconButton>
     </div>
   );
 };
