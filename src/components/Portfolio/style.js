@@ -8,7 +8,7 @@ export const PortfolioWrapper = styled(Grid2)({
 
 export const BackgroundContianer = styled(Grid2)(({ theme }) => ({
   width: "100%",
-  [theme.breakpoints.up("md")]: {
+  [theme.breakpoints.up("lg")]: {
     background: `url(${process.env.PUBLIC_URL}/portfolio/sao_bg.gif) fixed repeat-y 55px -10px, url(${process.env.PUBLIC_URL}/portfolio/sao_bg_line.png) fixed repeat-y 55px -10px`,
     minWidth: "1200px",
   },

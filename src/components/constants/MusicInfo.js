@@ -1,57 +1,89 @@
 export const artists = [
-    {
-      name: "Utada Hikaru",
-      albumCover: "/music/utada_hikaru_hatsukoi.jpg",
-      favoriteSongs: ["First Love", "Simple and Clean", "Passion"],
-      moreInfoLink: "https://www.en.utadahikaru.jp/",
-    },
-    {
-      name: "Aimer",
-      albumCover: "/music/aimer_haruka.jpg",
-      favoriteSongs: ["Brave Shine", "Kataomoi", "Ref:rain"],
-      moreInfoLink: "https://www.aimer-web.jp/",
-    },
-    {
-      name: "Riria.",
-      albumCover: "/music/riria_kioku.jpg",
-      favoriteSongs: ["Watashi ja Nakattan da ne", "Shitsuren Song Takusan Kiite Naite Bakari no Watashi Wa Mou", "Anata No Sobani"],
-      moreInfoLink: "https://www.toysfactory.co.jp/artist/riria",
-    },
-    {
-      name: "Hitsujibungaku",
-      albumCover: "/music/hitsujibungaku_our_hope.jpg",
-      favoriteSongs: ["More than Words", "Hikaru toki", "Milk"],
-      moreInfoLink: "https://www.hitsujibungaku.info/",
-    },
-    {
-      name: "Yorushika",
-      albumCover: "/music/yorushika_magic_lantern.jpeg",
-      favoriteSongs: ["Aporia", "Sun", "Eat the Wind"],
-      moreInfoLink: "https://yorushika.com/",
-    },
-    {
-      name: "Tuki.",
-      albumCover: "/music/tuki_bansanka.jpeg",
-      favoriteSongs: ["Banksanka", "Inferuno Love Letter", "Aimoraimo"],
-      moreInfoLink: "https://tuki-official.net/",
-    },
-    {
-      name: 'Hanayui',
-      albumCover: '/music/hanayui_when_freesia_blooms.jpg',
-      favoriteSongs: ['When Freesia Blooms', 'Iolite', 'NatunoSiori'],
-      moreInfoLink: 'https://lit.link/en/hanayui08'
-    },
-    {
-      name: 'The Toys',
-      albumCover: '/music/the_toys.jpg',
-      favoriteSongs: ['Before Rain', 'Spring', 'I Beg Your Pardon'],
-      moreInfoLink: 'https://www.facebook.com/thisisthetoys'
-    },
-    {
-      name: 'XG',
-      albumCover: '/music/xg_something_aint_right.jpg',
-      favoriteSongs: ['IS THIS LOVE', 'SOMETHING AINT RIGHT', 'WOKE UP'],
-      moreInfoLink: 'https://xgalx.com/en/xg/'
-    }
-  ];
-  
+  {
+    title: "Hatsukoi",
+    name: "Utada Hikaru",
+    albumCover: "/music/utada_hikaru_hatsukoi.jpg",
+    favoriteSongs: ["First Love", "Simple and Clean", "Passion"],
+    moreInfoLink: "https://www.en.utadahikaru.jp/",
+    year: 2018,
+    description: "A heartfelt album exploring themes of love and nostalgia.",
+  },
+  {
+    title: "Haruka",
+    name: "Aimer",
+    albumCover: "/music/aimer_haruka.jpg",
+    favoriteSongs: ["Brave Shine", "Kataomoi", "Ref:rain"],
+    moreInfoLink: "https://www.aimer-web.jp/",
+    year: 2016,
+    description: "An emotional journey through love and longing.",
+  },
+  {
+    title: "Kioku",
+    name: "Riria.",
+    albumCover: "/music/riria_kioku.jpg",
+    favoriteSongs: [
+      "Watashi ja Nakattan da ne",
+      "Shitsuren Song Takusan Kiite Naite Bakari no Watashi Wa Mou",
+      "Anata No Sobani",
+    ],
+    moreInfoLink: "https://www.toysfactory.co.jp/artist/riria",
+    year: 2020,
+    description: "A reflective album that captures memories and emotions.",
+  },
+  {
+    title: "Our Hope",
+    name: "Hitsujibungaku",
+    albumCover: "/music/hitsujibungaku_our_hope.jpg",
+    favoriteSongs: ["More than Words", "Hikaru toki", "Milk"],
+    moreInfoLink: "https://www.hitsujibungaku.info/",
+    year: 2019,
+    description: "A blend of hope and melancholy in a modern soundscape.",
+  },
+  {
+    title: "Magic Lantern",
+    name: "Yorushika",
+    albumCover: "/music/yorushika_magic_lantern.jpeg",
+    favoriteSongs: ["Aporia", "Sun", "Eat the Wind"],
+    moreInfoLink: "https://yorushika.com/",
+    year: 2021,
+    description:
+      "An imaginative album that takes listeners on a whimsical journey.",
+  },
+  {
+    title: "Bansanka",
+    name: "Tuki.",
+    albumCover: "/music/tuki_bansanka.jpeg",
+    favoriteSongs: ["Banksanka", "Inferuno Love Letter", "Aimoraimo"],
+    moreInfoLink: "https://tuki-official.net/",
+    year: 2022,
+    description: "A vibrant collection of songs celebrating love and life.",
+  },
+  {
+    title: "When Freesia Blooms",
+    name: "Hanayui",
+    albumCover: "/music/hanayui_when_freesia_blooms.jpg",
+    favoriteSongs: ["When Freesia Blooms", "Iolite", "NatunoSiori"],
+    moreInfoLink: "https://lit.link/en/hanayui08",
+    year: 2023,
+    description: "A fresh and uplifting album filled with beautiful melodies.",
+  },
+  {
+    title: "The Toys",
+    name: "The Toys",
+    albumCover: "/music/the_toys.jpg",
+    favoriteSongs: ["Before Rain", "Spring", "I Beg Your Pardon"],
+    moreInfoLink: "https://www.facebook.com/thisisthetoys",
+    year: 2020,
+    description:
+      "An eclectic mix of sounds that captures the essence of youth.",
+  },
+  {
+    title: "Something Aint Right",
+    name: "XG",
+    albumCover: "/music/xg_something_aint_right.jpg",
+    favoriteSongs: ["IS THIS LOVE", "SOMETHING AINT RIGHT", "WOKE UP"],
+    moreInfoLink: "https://xgalx.com/en/xg/",
+    year: 2021,
+    description: "A bold and experimental album that challenges musical norms.",
+  },
+];

@@ -24,6 +24,9 @@ import BugReportIcon from "@mui/icons-material/BugReport";
 import FactCheckIcon from "@mui/icons-material/FactCheck";
 import ViewQuiltIcon from "@mui/icons-material/ViewQuilt";
 import DesignServicesIcon from "@mui/icons-material/DesignServices";
+import LanguageIcon from "@mui/icons-material/Language";
+import TerminalIcon from "@mui/icons-material/Terminal";
+import SmartToyIcon from "@mui/icons-material/SmartToy";
 
 const PortfolioSection = () => {
   const [hoveredCompany, setHoveredCompany] = useState(null);
@@ -33,7 +36,7 @@ const PortfolioSection = () => {
       <SkillIcon>
         <Icon fontSize="medium" />
       </SkillIcon>
-      <Grid2 container ml={2} gap={"0px"}>
+      <Grid2 container ml={2} gap={"0px"} flexDirection={"column"}>
         <Typography variant="body1">
           <strong>{title}</strong> - {level}
         </Typography>
@@ -151,16 +154,16 @@ const PortfolioSection = () => {
                   "Developed and maintained a component library for consistent UI/UX across applications."
                 )}
                 {renderSkill(
-                  ViewQuiltIcon,
-                  "Material-UI (MUI)",
-                  "Experienced",
-                  "Built scalable UI components, customized themes, and ensured responsive design."
+                  LanguageIcon,
+                  "Webflow",
+                  "Intermediate",
+                  "Built and maintained responsive no-code websites, integrating animations and custom interactions."
                 )}
                 {renderSkill(
-                  DesignServicesIcon,
-                  "Design System",
+                  SmartToyIcon,
+                  "AI-Assisted Development & Research",
                   "Experienced",
-                  "Developed and maintained a component library for consistent UI/UX across applications."
+                  "Utilized AI tools (ChatGPT, Claude, Copilot) for accelerating development, debugging, and research."
                 )}
               </SKillGrid>
               <Grid2 container mt={8}>
@@ -201,6 +204,12 @@ const PortfolioSection = () => {
                   "React Native",
                   "Intermediate",
                   "Built a mobile companion app from scratch, integrating native features."
+                )}
+                {renderSkill(
+                  TerminalIcon,
+                  "Node.js",
+                  "Intermediate",
+                  "Developed backend services, RESTful APIs, and server-side logic for scalable applications."
                 )}
                 {renderSkill(
                   BugReportIcon,
