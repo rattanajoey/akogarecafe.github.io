@@ -9,7 +9,7 @@ export const MusicShelfWrapper = styled("div")(({ theme }) => ({
   gap: "32px",
   justifyContent: "center",
   alignItems: "flex-end", // Make albums align better with the shelf
-  padding: "48px 0",
+  padding: "48px",
   background: "radial-gradient(circle, #1e1e2e, #282a36)",
   position: "relative",
 }));
