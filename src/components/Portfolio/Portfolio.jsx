@@ -27,6 +27,7 @@ import DesignServicesIcon from "@mui/icons-material/DesignServices";
 import LanguageIcon from "@mui/icons-material/Language";
 import TerminalIcon from "@mui/icons-material/Terminal";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
+import BrushIcon from "@mui/icons-material/Brush";
 
 const PortfolioSection = () => {
   const [hoveredCompany, setHoveredCompany] = useState(null);
@@ -152,6 +153,12 @@ const PortfolioSection = () => {
                   "Design System",
                   "Experienced",
                   "Developed and maintained a component library for consistent UI/UX across applications."
+                )}
+                {renderSkill(
+                  BrushIcon,
+                  "Figma",
+                  "Intermediate",
+                  "Created wireframes, prototypes, and design assets for UI/UX workflows."
                 )}
                 {renderSkill(
                   LanguageIcon,
