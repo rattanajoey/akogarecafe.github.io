@@ -14,11 +14,15 @@ export const BackgroundContianer = styled(Grid2)(({ theme }) => ({
 }));
 
 export const SkillsContainerWrapper = styled(Grid2)(({ theme }) => ({
-  paddingLeft: "224px",
-  paddingRight: "32px",
+  padding: "32px",
   marginTop: "32px",
-  [theme.breakpoints.down("md")]: {
+  [theme.breakpoints.down("sm")]: {
     padding: 0,
+  },
+  [theme.breakpoints.up("lg")]: {
+    background: `url(${process.env.PUBLIC_URL}/portfolio/sao_bg.gif) fixed repeat-y 55px -10px, url(${process.env.PUBLIC_URL}/portfolio/sao_bg_line.png) fixed repeat-y 55px -10px`,
+    paddingLeft: "224px",
+    paddingRight: "32px",
   },
 }));
 
@@ -41,6 +45,8 @@ export const UserNameContainer = styled(Grid2)(({ theme }) => ({
     borderImageSource:
       "linear-gradient(to bottom right, #006672, rgba(0, 0, 0, 0) 50%, #006672)",
     borderImageSlice: 1,
+  },
+  [theme.breakpoints.up("md")]: {
     width: "80%",
   },
 }));

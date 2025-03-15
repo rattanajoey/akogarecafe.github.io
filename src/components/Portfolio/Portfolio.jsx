@@ -50,7 +50,7 @@ const PortfolioSection = () => {
     <PortfolioWrapper container>
       <BackgroundContianer>
         <SkillsContainerWrapper container>
-          <Grid2 size={{ xs: 12, sm: 5 }}>
+          <Grid2 size={{ xs: 12, md: 5 }} mb={{ xs: 0, sm: 2, md: 0 }}>
             <UserNameContainer>
               <Typography variant="h3">Joey Rattana</Typography>
               <Typography variant="h6" mt={1}>
@@ -63,7 +63,7 @@ const PortfolioSection = () => {
               </Typography>
             </UserNameContainer>
           </Grid2>
-          <Grid2 size={{ xs: 12, sm: 7 }} mb={24}>
+          <Grid2 size={{ xs: 12, md: 7 }} mb={24}>
             <SkillsContainer>
               <Typography variant="body1">
                 I&apos;m a <strong>Software Engineer</strong> with a commitment
