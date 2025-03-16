@@ -1,20 +1,18 @@
-// Import Firebase functions
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAnalytics } from "firebase/analytics";
 
-// Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyBBIHBda0v1uHor7HLhV4JeClj51c1jIsU",
-  authDomain: "ac-movie-club.firebaseapp.com",
-  projectId: "ac-movie-club",
-  storageBucket: "ac-movie-club.appspot.com", // Fixed the storageBucket URL
-  messagingSenderId: "712370038259",
-  appId: "1:712370038259:web:7bb4d0662aa226b56cde86",
-  measurementId: "G-95SX8B7T8M",
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID,
+  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID,
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app); // Firestore Database
-export const analytics = getAnalytics(app); // Firebase Analytics (if needed)
+export const db = getFirestore(app);
+export const analytics = getAnalytics(app);
