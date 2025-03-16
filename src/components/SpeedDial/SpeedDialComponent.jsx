@@ -3,6 +3,7 @@ import { SpeedDial, SpeedDialAction } from "@mui/material";
 import LibraryMusicIcon from "@mui/icons-material/LibraryMusic";
 import HomeIcon from "@mui/icons-material/Home";
 import ArticleIcon from "@mui/icons-material/Article";
+import MovieFilterIcon from "@mui/icons-material/MovieFilter";
 import { NiraImage, SpeedDialContainer } from "./style";
 import { useNavigate } from "react-router-dom";
 
@@ -12,6 +13,7 @@ const SpeedDialComponent = ({ onIconSelect }) => {
 
   const actions = [
     { icon: <ArticleIcon />, name: "Portfolio" },
+    { icon: <MovieFilterIcon />, name: "MovieClub" },
     { icon: <LibraryMusicIcon />, name: "Music" },
     { icon: <HomeIcon />, name: "" },
   ];
