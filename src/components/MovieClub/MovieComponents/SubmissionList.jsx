@@ -28,10 +28,11 @@ const SubmissionList = () => {
     <Box
       sx={{
         padding: "2rem",
-        backgroundColor: "rgba(255, 255, 255, 0.1)",
+        backgroundColor: "rgba(131, 167, 157, 0.8)",
         borderRadius: "10px",
         maxWidth: "100%",
         overflow: "hidden",
+        zIndex: 2,
       }}
     >
       <Typography
@@ -39,10 +40,12 @@ const SubmissionList = () => {
         fontWeight="bold"
         sx={{ mb: 2, color: "#bc252d" }}
       >
-        Submissions for {getCurrentMonth()}
+        Submissions for{" "}
+        {new Date().toLocaleString("default", {
+          month: "long",
+          year: "numeric",
+        })}
       </Typography>
-
-      {/* Scrollable Box for Cards */}
       <Box
         sx={{
           display: "flex",

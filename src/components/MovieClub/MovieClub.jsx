@@ -2,12 +2,13 @@ import React from "react";
 import MovieSubmission from "./MovieComponents/MovieSubmission";
 import SubmissionList from "./MovieComponents/SubmissionList";
 import { Box, Typography, Grid2 } from "@mui/material";
+import MovieClubInfoModal from "./MovieComponents/MovieClubInfoModal";
 
 const MovieClub = () => {
   return (
     <Box
       sx={{
-        minHeight: "100vh",
+        height: "100%",
         width: "100%",
         background: "linear-gradient(to bottom, #d2d2cb, #4d695d)",
         color: "#bc252d",
@@ -32,14 +33,18 @@ const MovieClub = () => {
         container
         spacing={4}
         justifyContent={{ xs: "center", lg: "flex-start" }}
-        sx={{ mt: 4, width: "100%" }}
+        sx={{ mt: 4, width: "100%", overflow: "hidden" }}
         px={2}
       >
-        <Grid2 size={{ xs: 12, md: 6 }}>
+        <Grid2 size={{ xs: 12, md: 6 }} zIndex={2}>
           <SubmissionList />
         </Grid2>
 
-        <Grid2 size={{ xs: 12, md: 6 }} mb={{ xs: 20, md: 0 }}>
+        <Grid2 size={{ xs: 12, md: 6 }}>
+          <MovieClubInfoModal />
+        </Grid2>
+
+        <Grid2 size={{ xs: 12, md: 6 }} mb={{ xs: "50vh" }} zIndex={2}>
           <MovieSubmission />
         </Grid2>
       </Grid2>
