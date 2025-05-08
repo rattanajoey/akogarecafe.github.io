@@ -25,12 +25,12 @@ const MovieSubmission = () => {
     setErrorMessage("");
 
     if (!nickname || !accessCode) {
-      setErrorMessage("Nickname & Access Code are required!");
+      setErrorMessage("Nickname & Password are required!");
       return;
     }
 
     if (accessCode !== VALID_ACCESS_CODE) {
-      setErrorMessage("Incorrect Access Code!");
+      setErrorMessage("Incorrect Password!");
       return;
     }
 
@@ -64,7 +64,6 @@ const MovieSubmission = () => {
       console.error("🔥 Firestore Error:", error);
     }
   };
-
   return (
     <Box
       sx={{
@@ -81,7 +80,7 @@ const MovieSubmission = () => {
       {errorMessage && <Typography color="error">{errorMessage}</Typography>}
 
       <TextField
-        label="Nickname"
+        label="Nickname (Case Sensitive)"
         fullWidth
         variant="outlined"
         sx={{ mb: 2 }}
@@ -89,7 +88,7 @@ const MovieSubmission = () => {
         onChange={(e) => setNickname(e.target.value)}
       />
       <TextField
-        label="Access Code"
+        label="Password (Check your partiful invite)"
         fullWidth
         type="password"
         variant="outlined"
@@ -98,21 +97,21 @@ const MovieSubmission = () => {
         onChange={(e) => setAccessCode(e.target.value)}
       />
       <TextField
-        label="Action/Sci-Fi"
+        label="Action/Sci-Fi/Fantasy"
         fullWidth
         sx={{ mb: 2 }}
         value={movies.action}
         onChange={(e) => setMovies({ ...movies, action: e.target.value })}
       />
       <TextField
-        label="Drama"
+        label="Drama/Documentary"
         fullWidth
         sx={{ mb: 2 }}
         value={movies.drama}
         onChange={(e) => setMovies({ ...movies, drama: e.target.value })}
       />
       <TextField
-        label="Comedy"
+        label="Comedy/Musical"
         fullWidth
         sx={{ mb: 2 }}
         value={movies.comedy}

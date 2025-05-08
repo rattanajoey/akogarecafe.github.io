@@ -52,19 +52,19 @@ const MovieClubInfoModal = () => {
           <Divider sx={{ mb: 2, backgroundColor: "rgba(255,255,255,0.2)" }} />
 
           <Typography variant="body2" gutterBottom>
-            Each month, submit up to one movie per genre:
+            Each month, submit up to one movie per catergory.:
           </Typography>
           <ul>
             <li>🎬 Action / Sci-Fi / Fantasy</li>
-            <li>🎭 Drama</li>
-            <li>😂 Comedy</li>
+            <li>🎭 Drama / Documentary</li>
+            <li>😂 Comedy / Musical</li>
             <li>😱 Thriller / Horror</li>
           </ul>
 
           <Typography variant="body2" gutterBottom mt={2}>
             You can resubmit to update your picks until the submission period
             closes (usually one week). Submitting again with the same nickname
-            and access code will replace your prior selections.
+            and password will replace your priorsubmission.
           </Typography>
 
           <Typography variant="body2" gutterBottom mt={2}>
@@ -72,19 +72,13 @@ const MovieClubInfoModal = () => {
           </Typography>
 
           <Typography variant="body2" gutterBottom mt={2}>
-            After the period ends, one movie per genre is selected randomly from
-            all submissions. These will be displayed as the official Movie Club
-            picks for the month.
+            After the period ends, one movie per catergory will be selected
+            randomly from all submissions. These will be displayed as the
+            official Movie Club picks for the month.
           </Typography>
 
           <Typography variant="body2" gutterBottom mt={2}>
-            Movies not picked will carry over to the next month, and you can
-            continue adding new ones.
-          </Typography>
-
-          <Typography variant="body2" gutterBottom mt={2}>
-            You must be on the approved list to submit. Use your assigned
-            nickname and access code to participate!
+            Movies not picked will carry over to the next month.
           </Typography>
         </Box>
       </Drawer>
