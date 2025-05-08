@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { db } from "../../../config/firebase";
-import { doc, setDoc, getDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { Box, TextField, Button, Typography } from "@mui/material";
 
 const getCurrentMonth = () => {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 };
+
+const VALID_ACCESS_CODE = "thunderbolts";
 
 const MovieSubmission = () => {
   const [nickname, setNickname] = useState("");
@@ -27,36 +29,19 @@ const MovieSubmission = () => {
       return;
     }
 
+    if (accessCode !== VALID_ACCESS_CODE) {
+      setErrorMessage("Incorrect Access Code!");
+      return;
+    }
+
     try {
-      console.log(`🔍 Checking Firestore for ApprovedUsers/${nickname}`);
-
-      // 🔹 Step 1: Try to read from ApprovedUsers
-      const approvedUserRef = doc(db, "ApprovedUsers", nickname);
-      const approvedUserSnap = await getDoc(approvedUserRef);
-
-      if (!approvedUserSnap.exists()) {
-        setErrorMessage("🚫 Access Denied: You are not an approved user.");
-        console.log("❌ User not found in ApprovedUsers collection");
-        return;
-      }
-
-      const approvedUserData = approvedUserSnap.data();
-      console.log("✅ User found:", approvedUserData);
-
-      // 🔹 Step 2: Check if the access code matches
-      if (approvedUserData.accesscode !== accessCode) {
-        setErrorMessage("Incorrect Access Code!");
-        console.log(
-          `❌ Access code mismatch: Expected '${approvedUserData.accesscode}', got '${accessCode}'`
-        );
-        return;
-      }
-
-      console.log("✅ Access code verified. Proceeding with submission...");
-
-      // 🔹 Step 3: Try writing to Submissions
       const currentMonth = getCurrentMonth();
       const userRef = doc(db, "Submissions", currentMonth, "users", nickname);
+      const userSnap = await getDoc(userRef);
+
+      const message = userSnap.exists()
+        ? "Submission updated!"
+        : "Submission added!";
 
       await setDoc(
         userRef,
@@ -71,8 +56,7 @@ const MovieSubmission = () => {
         { merge: true }
       );
 
-      console.log("✅ Submission saved successfully!");
-      alert("Submission saved!");
+      alert(message);
     } catch (error) {
       setErrorMessage(
         "🔥 Firestore Error: Failed to submit. Please try again."
