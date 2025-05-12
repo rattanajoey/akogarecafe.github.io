@@ -4,7 +4,7 @@ import { styled } from "@mui/system";
 export const NiraImage = styled("img")(({ theme }) => ({
   height: "auto",
   [theme.breakpoints.down("sm")]: {
-    width: "80%",
+    width: "70%",
   },
 }));
 

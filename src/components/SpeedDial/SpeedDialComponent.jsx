@@ -34,7 +34,7 @@ const SpeedDialComponent = ({ onIconSelect }) => {
     <SpeedDialContainer>
       <SpeedDial
         ariaLabel="SpeedDial openIcon example"
-        sx={{ position: "fixed", bottom: 0, right: 48 }}
+        sx={{ position: "fixed", bottom: 0, right: { xs: 0, sm: 48 } }}
         icon={<NiraImage src={imageSrc} alt="Nira" />}
         onClick={() => setOpen((prev) => !prev)}
         open={open}
