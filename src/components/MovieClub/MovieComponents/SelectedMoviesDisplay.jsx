@@ -12,7 +12,7 @@ const SelectedMoviesDisplay = ({ selections = {} }) => {
   const genres = ["action", "drama", "comedy", "thriller"];
 
   return (
-    <Box sx={{ width: "90%", mb: 5, mt: 5 }}>
+    <Box sx={{ width: "90%", mb: 5, mt: 5, mx: "auto" }}>
       <Typography variant="h4" sx={{ mb: 2 }}>
         {(() => {
           const now = new Date();

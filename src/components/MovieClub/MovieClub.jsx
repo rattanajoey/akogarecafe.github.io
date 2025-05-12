@@ -87,7 +87,7 @@ const MovieClub = () => {
           </Grid2>
         </Grid2>
       ) : (
-        <Box justifyItems={"center"}>
+        <Box>
           <SelectedMoviesDisplay selections={selections} />
           <GenrePool pools={pools} />
         </Box>

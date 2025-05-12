@@ -23,7 +23,6 @@ const MovieClubAdmin = () => {
     comedy: [],
     thriller: [],
   });
-  console.log(pools);
   const [selections, setSelections] = useState({});
   const [loading, setLoading] = useState(false);
 

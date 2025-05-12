@@ -5,7 +5,7 @@ const genres = ["action", "drama", "comedy", "thriller"];
 
 const GenrePool = ({ pools }) => {
   return (
-    <Box sx={{ width: "90%", mb: 20, mt: 5 }}>
+    <Box sx={{ width: "90%", mb: 20, mt: 5, mx: "auto" }}>
       <Typography variant="h4" sx={{ mb: 2 }}>
         🎬 Genre Pools
       </Typography>
