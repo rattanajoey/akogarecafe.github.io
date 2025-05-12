@@ -9,6 +9,7 @@ import SpeedDialComponent from "./components/SpeedDial/SpeedDialComponent";
 import MusicSection from "./components/Music/MusicSection";
 import PortfolioSection from "./components/Portfolio/Portfolio";
 import MovieClub from "./components/MovieClub/MovieClub";
+import MovieClubAdmin from "./components/MovieClub/MovieComponents/MovieClubAdmin";
 
 const RedirectToHash = () => {
   useEffect(() => {
@@ -40,6 +41,7 @@ const App = () => {
             <Route path="/music" element={<MusicSection />} />
             <Route path="/portfolio" element={<PortfolioSection />} />
             <Route path="/MovieClub" element={<MovieClub />} />
+            <Route path="/Admin" element={<MovieClubAdmin />} />
           </Routes>
           <SpeedDialComponent />
         </div>

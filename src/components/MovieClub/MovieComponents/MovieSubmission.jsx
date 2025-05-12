@@ -2,11 +2,7 @@ import { useState } from "react";
 import { db } from "../../../config/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { Box, TextField, Button, Typography } from "@mui/material";
-
-const getCurrentMonth = () => {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-};
+import { getCurrentMonth } from "../../utils";
 
 const VALID_ACCESS_CODE = "thunderbolts";
 
