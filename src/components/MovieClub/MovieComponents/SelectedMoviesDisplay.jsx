@@ -26,7 +26,7 @@ const SelectedMoviesDisplay = ({ selections = {} }) => {
     "Ran (1985)": [{ date: "May 25 (Sun)", time: "2 PM", duration: "162 min" }],
   };
 
-  const createCalendarLink = (movieTitle, screening) => {
+  const createGoogleCalendarLink = (movieTitle, screening) => {
     try {
       // Parse the date string (e.g., "May 18 (Sun)" -> "May 18")
       const dateStr = screening.date.split("(")[0].trim();
@@ -47,46 +47,20 @@ const SelectedMoviesDisplay = ({ selections = {} }) => {
       const startDate = new Date(dateString);
       const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
 
-      // Format dates for calendar
+      // Format dates for Google Calendar
       const formatDate = (date) => {
         return date.toISOString().replace(/-|:|\.\d+/g, "");
       };
 
-      // Check if device is iOS
-      const isIOS =
-        /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      const params = new URLSearchParams({
+        action: "TEMPLATE",
+        text: `Movie Screening: ${movieTitle}`,
+        details: `Join us for a screening of ${movieTitle} (${screening.duration})`,
+        location: "Yiqing's Place",
+        dates: `${formatDate(startDate)}/${formatDate(endDate)}`,
+      });
 
-      if (isIOS) {
-        // Create ICS file content
-        const icsContent = [
-          "BEGIN:VCALENDAR",
-          "VERSION:2.0",
-          "BEGIN:VEVENT",
-          `DTSTART:${formatDate(startDate)}`,
-          `DTEND:${formatDate(endDate)}`,
-          `SUMMARY:Movie Screening: ${movieTitle}`,
-          `DESCRIPTION:Join us for a screening of ${movieTitle} (${screening.duration})`,
-          `LOCATION:Yiqing's Place`,
-          "END:VEVENT",
-          "END:VCALENDAR",
-        ].join("\r\n");
-
-        // Create data URI for ICS file
-        return `data:text/calendar;charset=utf-8,${encodeURIComponent(
-          icsContent
-        )}`;
-      } else {
-        // For non-iOS devices, use Google Calendar
-        const params = new URLSearchParams({
-          action: "TEMPLATE",
-          text: `Movie Screening: ${movieTitle}`,
-          details: `Join us for a screening of ${movieTitle} (${screening.duration})`,
-          location: "Yiqing's Place",
-          dates: `${formatDate(startDate)}/${formatDate(endDate)}`,
-        });
-
-        return `https://calendar.google.com/calendar/render?${params.toString()}`;
-      }
+      return `https://calendar.google.com/calendar/render?${params.toString()}`;
     } catch (error) {
       console.error("Error creating calendar link:", error);
       return "#";
@@ -202,7 +176,10 @@ const SelectedMoviesDisplay = ({ selections = {} }) => {
                             variant="outlined"
                             size="small"
                             startIcon={<CalendarMonthIcon />}
-                            href={createCalendarLink(movie.title, screening)}
+                            href={createGoogleCalendarLink(
+                              movie.title,
+                              screening
+                            )}
                             target="_blank"
                             rel="noopener noreferrer"
                             sx={{ ml: 1, p: 1 }}
