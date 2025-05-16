@@ -27,44 +27,63 @@ const SelectedMoviesDisplay = ({ selections = {} }) => {
   };
 
   const createGoogleCalendarLink = (movieTitle, screening) => {
-    // Extract date parts
-    const dateMatch = screening.date.match(/(\w+)\s+(\d+)/);
-    if (!dateMatch) return "#";
+    try {
+      // Parse the date string (e.g., "May 18 (Sun)" -> "May 18")
+      const dateStr = screening.date.split("(")[0].trim();
+      const [month, day] = dateStr.split(" ");
+      const year = new Date().getFullYear();
 
-    const month = dateMatch[1];
-    const day = dateMatch[2];
-    const year = new Date().getFullYear();
+      // Parse the time string (e.g., "6 PM" -> {hour: 6, period: "PM"})
+      const [hour, period] = screening.time.split(" ");
+      let hour24 = parseInt(hour);
+      if (period === "PM" && hour24 !== 12) hour24 += 12;
+      if (period === "AM" && hour24 === 12) hour24 = 0;
 
-    // Extract time parts
-    const timeMatch = screening.time.match(/(\d+)\s+(AM|PM)/);
-    if (!timeMatch) return "#";
+      // Create a valid date string that works across all browsers
+      const dateString = `${year}-${getMonthNumber(month)}-${day.padStart(
+        2,
+        "0"
+      )}T${hour24.toString().padStart(2, "0")}:00:00`;
+      const startDate = new Date(dateString);
+      const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
 
-    const hour = parseInt(timeMatch[1]);
-    const period = timeMatch[2];
+      // Format dates for Google Calendar
+      const formatDate = (date) => {
+        return date.toISOString().replace(/-|:|\.\d+/g, "");
+      };
 
-    // Convert to 24-hour format
-    let hour24 = hour;
-    if (period === "PM" && hour !== 12) hour24 += 12;
-    if (period === "AM" && hour === 12) hour24 = 0;
+      const params = new URLSearchParams({
+        action: "TEMPLATE",
+        text: `Movie Screening: ${movieTitle}`,
+        details: `Join us for a screening of ${movieTitle} (${screening.duration})`,
+        location: "Yiqing's Place",
+        dates: `${formatDate(startDate)}/${formatDate(endDate)}`,
+      });
 
-    // Create dates
-    const startDate = new Date(`${year} ${month} ${day} ${hour24}:00`);
-    const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
+      return `https://calendar.google.com/calendar/render?${params.toString()}`;
+    } catch (error) {
+      console.error("Error creating calendar link:", error);
+      return "#";
+    }
+  };
 
-    // Format dates for Google Calendar
-    const formatDate = (date) => {
-      return date.toISOString().replace(/-|:|\.\d+/g, "");
+  // Helper function to convert month name to number
+  const getMonthNumber = (monthName) => {
+    const months = {
+      January: "01",
+      February: "02",
+      March: "03",
+      April: "04",
+      May: "05",
+      June: "06",
+      July: "07",
+      August: "08",
+      September: "09",
+      October: "10",
+      November: "11",
+      December: "12",
     };
-
-    const params = new URLSearchParams({
-      action: "TEMPLATE",
-      text: `Movie Screening: ${movieTitle}`,
-      details: `Join us for a screening of ${movieTitle} (${screening.duration})`,
-      location: "Yiqing's Place",
-      dates: `${formatDate(startDate)}/${formatDate(endDate)}`,
-    });
-
-    return `https://calendar.google.com/calendar/render?${params.toString()}`;
+    return months[monthName] || "01";
   };
 
   return (
