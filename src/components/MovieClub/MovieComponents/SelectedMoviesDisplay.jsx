@@ -27,20 +27,31 @@ const SelectedMoviesDisplay = ({ selections = {} }) => {
   };
 
   const createGoogleCalendarLink = (movieTitle, screening) => {
-    const [date, time] = [screening.date, screening.time];
-    const [month, day] = date.split(" ");
-    const [hour, period] = time.split(" ");
+    // Extract date parts
+    const dateMatch = screening.date.match(/(\w+)\s+(\d+)/);
+    if (!dateMatch) return "#";
+
+    const month = dateMatch[1];
+    const day = dateMatch[2];
     const year = new Date().getFullYear();
 
-    // Convert to 24-hour format
-    let hour24 = parseInt(hour);
-    if (period === "PM" && hour24 !== 12) hour24 += 12;
-    if (period === "AM" && hour24 === 12) hour24 = 0;
+    // Extract time parts
+    const timeMatch = screening.time.match(/(\d+)\s+(AM|PM)/);
+    if (!timeMatch) return "#";
 
-    // Create start and end times (assuming 2 hours duration)
+    const hour = parseInt(timeMatch[1]);
+    const period = timeMatch[2];
+
+    // Convert to 24-hour format
+    let hour24 = hour;
+    if (period === "PM" && hour !== 12) hour24 += 12;
+    if (period === "AM" && hour === 12) hour24 = 0;
+
+    // Create dates
     const startDate = new Date(`${year} ${month} ${day} ${hour24}:00`);
     const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
 
+    // Format dates for Google Calendar
     const formatDate = (date) => {
       return date.toISOString().replace(/-|:|\.\d+/g, "");
     };
