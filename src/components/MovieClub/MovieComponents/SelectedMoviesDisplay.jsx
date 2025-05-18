@@ -102,19 +102,29 @@ const SelectedMoviesDisplay = ({ selections = {} }) => {
       const startDate = new Date(dateString);
       const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
 
+      // Format dates for ICS file
       const formatDate = (date) => {
         return date.toISOString().replace(/-|:|\.\d+/g, "");
       };
 
-      const params = new URLSearchParams({
-        title: `Movie Screening: ${movieTitle}`,
-        description: `Join us for a screening of ${movieTitle} (${screening.duration})`,
-        location: "Yiqing's Place",
-        start: formatDate(startDate),
-        end: formatDate(endDate),
-      });
+      const icsContent = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "BEGIN:VEVENT",
+        `SUMMARY:Movie Screening: ${movieTitle}`,
+        `DESCRIPTION:Join us for a screening of ${movieTitle} (${screening.duration})`,
+        `LOCATION:Yiqing's Place`,
+        `DTSTART:${formatDate(startDate)}`,
+        `DTEND:${formatDate(endDate)}`,
+        "END:VEVENT",
+        "END:VCALENDAR",
+      ].join("\n");
 
-      return `webcal://calendar.google.com/calendar/ical?${params.toString()}`;
+      // Create a Blob with the ICS content
+      const blob = new Blob([icsContent], {
+        type: "text/calendar;charset=utf-8",
+      });
+      return URL.createObjectURL(blob);
     } catch (error) {
       console.error("Error creating iOS calendar link:", error);
       return "#";
