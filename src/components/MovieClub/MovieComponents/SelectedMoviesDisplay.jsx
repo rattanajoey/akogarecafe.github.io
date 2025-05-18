@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   Typography,
@@ -7,10 +7,17 @@ import {
   CardMedia,
   CardContent,
   Button,
+  Menu,
+  MenuItem,
 } from "@mui/material";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 
 const SelectedMoviesDisplay = ({ selections = {} }) => {
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [selectedMovie, setSelectedMovie] = useState(null);
+  const [selectedScreening, setSelectedScreening] = useState(null);
+
   const genres = ["action", "drama", "comedy", "thriller"];
 
   const screeningTimes = {
@@ -24,6 +31,16 @@ const SelectedMoviesDisplay = ({ selections = {} }) => {
       { date: "May 24 (Sat)", time: "2 PM", duration: "116 min" },
     ],
     "Ran (1985)": [{ date: "May 25 (Sun)", time: "2 PM", duration: "162 min" }],
+  };
+
+  const handleMenuClick = (event, movie, screening) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedMovie(movie);
+    setSelectedScreening(screening);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
   };
 
   const createGoogleCalendarLink = (movieTitle, screening) => {
@@ -63,6 +80,43 @@ const SelectedMoviesDisplay = ({ selections = {} }) => {
       return `https://calendar.google.com/calendar/render?${params.toString()}`;
     } catch (error) {
       console.error("Error creating calendar link:", error);
+      return "#";
+    }
+  };
+
+  const createIOSCalendarLink = (movieTitle, screening) => {
+    try {
+      const dateStr = screening.date.split("(")[0].trim();
+      const [month, day] = dateStr.split(" ");
+      const year = new Date().getFullYear();
+
+      const [hour, period] = screening.time.split(" ");
+      let hour24 = parseInt(hour);
+      if (period === "PM" && hour24 !== 12) hour24 += 12;
+      if (period === "AM" && hour24 === 12) hour24 = 0;
+
+      const dateString = `${year}-${getMonthNumber(month)}-${day.padStart(
+        2,
+        "0"
+      )}T${hour24.toString().padStart(2, "0")}:00:00`;
+      const startDate = new Date(dateString);
+      const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
+
+      const formatDate = (date) => {
+        return date.toISOString().replace(/-|:|\.\d+/g, "");
+      };
+
+      const params = new URLSearchParams({
+        title: `Movie Screening: ${movieTitle}`,
+        description: `Join us for a screening of ${movieTitle} (${screening.duration})`,
+        location: "Yiqing's Place",
+        start: formatDate(startDate),
+        end: formatDate(endDate),
+      });
+
+      return `webcal://calendar.google.com/calendar/ical?${params.toString()}`;
+    } catch (error) {
+      console.error("Error creating iOS calendar link:", error);
       return "#";
     }
   };
@@ -176,12 +230,10 @@ const SelectedMoviesDisplay = ({ selections = {} }) => {
                             variant="outlined"
                             size="small"
                             startIcon={<CalendarMonthIcon />}
-                            href={createGoogleCalendarLink(
-                              movie.title,
-                              screening
-                            )}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                            endIcon={<ArrowDropDownIcon />}
+                            onClick={(e) =>
+                              handleMenuClick(e, movie, screening)
+                            }
                             sx={{ ml: 1, p: 1 }}
                           >
                             Add to Calendar
@@ -196,6 +248,34 @@ const SelectedMoviesDisplay = ({ selections = {} }) => {
           );
         })}
       </Grid2>
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+      >
+        <MenuItem
+          onClick={() => {
+            window.open(
+              createGoogleCalendarLink(selectedMovie?.title, selectedScreening),
+              "_blank"
+            );
+            handleMenuClose();
+          }}
+        >
+          Google Calendar
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            window.open(
+              createIOSCalendarLink(selectedMovie?.title, selectedScreening),
+              "_blank"
+            );
+            handleMenuClose();
+          }}
+        >
+          iOS Calendar
+        </MenuItem>
+      </Menu>
     </Box>
   );
 };
