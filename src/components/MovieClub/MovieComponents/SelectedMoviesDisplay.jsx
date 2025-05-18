@@ -22,7 +22,7 @@ const SelectedMoviesDisplay = ({ selections = {} }) => {
 
   const screeningTimes = {
     "The Way He Looks (2014)": [
-      { date: "May 18 (Sun)", time: "6 PM", duration: "96 min" },
+      { date: "May 18 (Sun)", time: "2 PM", duration: "96 min" },
     ],
     "Scary Movie 4": [
       { date: "May 21 (Wed)", time: "8 PM", duration: "83 min" },
@@ -120,11 +120,25 @@ const SelectedMoviesDisplay = ({ selections = {} }) => {
         "END:VCALENDAR",
       ].join("\n");
 
-      // Create a Blob with the ICS content
-      const blob = new Blob([icsContent], {
-        type: "text/calendar;charset=utf-8",
-      });
-      return URL.createObjectURL(blob);
+      // Create a data URL for the ICS content
+      const dataUrl = `data:text/calendar;charset=utf-8,${encodeURIComponent(
+        icsContent
+      )}`;
+
+      // Check if the user is on iOS
+      const isIOS =
+        /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+      if (isIOS) {
+        // For iOS devices, we'll use the data URL directly
+        return dataUrl;
+      } else {
+        // For non-iOS devices (like Chrome on Android), we'll show a message
+        alert(
+          "For the best experience, please use Safari on iOS devices to add this event to your calendar. Alternatively, you can use the Google Calendar option."
+        );
+        return "#";
+      }
     } catch (error) {
       console.error("Error creating iOS calendar link:", error);
       return "#";
@@ -276,10 +290,13 @@ const SelectedMoviesDisplay = ({ selections = {} }) => {
         </MenuItem>
         <MenuItem
           onClick={() => {
-            window.open(
-              createIOSCalendarLink(selectedMovie?.title, selectedScreening),
-              "_blank"
+            const link = createIOSCalendarLink(
+              selectedMovie?.title,
+              selectedScreening
             );
+            if (link !== "#") {
+              window.location.href = link;
+            }
             handleMenuClose();
           }}
         >
