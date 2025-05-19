@@ -28,9 +28,9 @@ const SelectedMoviesDisplay = ({ selections = {} }) => {
       { date: "May 21 (Wed)", time: "8 PM", duration: "83 min" },
     ],
     "Life is beautiful": [
-      { date: "May 24 (Sat)", time: "2 PM", duration: "116 min" },
+      { date: "May 27 (Tue)", time: "8 PM", duration: "116 min" },
     ],
-    "Ran (1985)": [{ date: "May 25 (Sun)", time: "2 PM", duration: "162 min" }],
+    "Ran (1985)": [{ date: "May 30 (Fri)", time: "8 PM", duration: "162 min" }],
   };
 
   const handleMenuClick = (event, movie, screening) => {
