@@ -7,10 +7,15 @@ import {
   Grid2,
   Paper,
   Divider,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 import { collection, getDocs, setDoc, doc, getDoc } from "firebase/firestore";
 import { db } from "../../../config/firebase";
 import { getCurrentMonth, getNextMonth } from "../../utils";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 
 const genres = ["action", "drama", "comedy", "thriller"];
 
@@ -25,9 +30,29 @@ const MovieClubAdmin = () => {
   });
   const [selections, setSelections] = useState({});
   const [loading, setLoading] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
+  const [existingSelections, setExistingSelections] = useState({});
 
   const currentMonth = getCurrentMonth();
   const nextMonth = getNextMonth();
+
+  // Generate array of last 3 months and next 3 months
+  const getMonthOptions = () => {
+    const options = [];
+    const now = new Date();
+    for (let i = -3; i <= 3; i++) {
+      const date = new Date(now.getFullYear(), now.getMonth() + i, 1);
+      const monthStr = `${date.getFullYear()}-${String(
+        date.getMonth() + 1
+      ).padStart(2, "0")}`;
+      const displayStr = date.toLocaleString("default", {
+        month: "long",
+        year: "numeric",
+      });
+      options.push({ value: monthStr, label: displayStr });
+    }
+    return options;
+  };
 
   const handleLogin = () => {
     if (password === "adminpass") setAccess(true);
@@ -72,6 +97,24 @@ const MovieClubAdmin = () => {
     setLoading(false);
   }, [currentMonth, nextMonth]);
 
+  // Fetch existing selections for the selected month
+  const fetchExistingSelections = useCallback(async (month) => {
+    const selectionsRef = doc(db, "MonthlySelections", month);
+    const selectionsSnap = await getDoc(selectionsRef);
+    if (selectionsSnap.exists()) {
+      setExistingSelections(selectionsSnap.data());
+    } else {
+      setExistingSelections({});
+    }
+  }, []);
+
+  // Update selections when month changes
+  useEffect(() => {
+    if (access) {
+      fetchExistingSelections(selectedMonth);
+    }
+  }, [access, selectedMonth, fetchExistingSelections]);
+
   const randomize = () => {
     const result = {};
     genres.forEach((genre) => {
@@ -91,8 +134,8 @@ const MovieClubAdmin = () => {
     }
 
     try {
-      // Save monthly winners
-      await setDoc(doc(db, "MonthlySelections", currentMonth), selections);
+      // Save monthly winners to selected month
+      await setDoc(doc(db, "MonthlySelections", selectedMonth), selections);
 
       // Save leftovers for next month
       const leftovers = {};
@@ -104,8 +147,18 @@ const MovieClubAdmin = () => {
         );
       });
 
-      await setDoc(doc(db, "GenrePools", nextMonth), leftovers);
+      // Calculate next month based on selected month
+      const [year, month] = selectedMonth.split("-");
+      const nextMonthDate = new Date(parseInt(year), parseInt(month), 1);
+      nextMonthDate.setMonth(nextMonthDate.getMonth() + 1);
+      const nextMonthStr = `${nextMonthDate.getFullYear()}-${String(
+        nextMonthDate.getMonth() + 1
+      ).padStart(2, "0")}`;
 
+      await setDoc(doc(db, "GenrePools", nextMonthStr), leftovers);
+
+      // Update existing selections after save
+      setExistingSelections(selections);
       alert("Selections saved successfully!");
     } catch (err) {
       console.error("Error saving:", err);
@@ -140,8 +193,47 @@ const MovieClubAdmin = () => {
   return (
     <Box p={4}>
       <Typography variant="h4" fontWeight="bold" mb={3}>
-        🎬 Movie Club Admin — {currentMonth}
+        🎬 Movie Club Admin
       </Typography>
+
+      <FormControl sx={{ mb: 3, minWidth: 200 }}>
+        <InputLabel>Select Month</InputLabel>
+        <Select
+          value={selectedMonth}
+          label="Select Month"
+          onChange={(e) => setSelectedMonth(e.target.value)}
+        >
+          {getMonthOptions().map((option) => (
+            <MenuItem key={option.value} value={option.value}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  width: "100%",
+                }}
+              >
+                <span>{option.label}</span>
+                {existingSelections[option.value] && (
+                  <CheckCircleIcon sx={{ color: "success.main", ml: 1 }} />
+                )}
+              </Box>
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+
+      {Object.keys(existingSelections).length > 0 && (
+        <Box mb={3}>
+          <Typography
+            variant="subtitle1"
+            color="success.main"
+            sx={{ display: "flex", alignItems: "center", gap: 1 }}
+          >
+            <CheckCircleIcon /> This month already has selections saved
+          </Typography>
+        </Box>
+      )}
 
       {loading ? (
         <Typography>Loading submissions...</Typography>
@@ -184,23 +276,23 @@ const MovieClubAdmin = () => {
         >
           💾 Save to Firestore
         </Button>
-      </Box>
 
-      {Object.keys(selections).length > 0 && (
-        <Box mt={4}>
-          <Typography variant="h5" fontWeight="bold" gutterBottom>
-            🎉 Selected Movies
-          </Typography>
-          {genres.map((g) =>
-            selections[g] ? (
-              <Typography key={g}>
-                {g.toUpperCase()}: {selections[g].title} —{" "}
-                <i>{selections[g].submittedBy}</i>
-              </Typography>
-            ) : null
-          )}
-        </Box>
-      )}
+        {Object.keys(selections).length > 0 && (
+          <Box mt={4}>
+            <Typography variant="h5" fontWeight="bold" gutterBottom>
+              🎉 Selected Movies
+            </Typography>
+            {genres.map((g) =>
+              selections[g] ? (
+                <Typography key={g}>
+                  {g.toUpperCase()}: {selections[g].title} —{" "}
+                  <i>{selections[g].submittedBy}</i>
+                </Typography>
+              ) : null
+            )}
+          </Box>
+        )}
+      </Box>
     </Box>
   );
 };
