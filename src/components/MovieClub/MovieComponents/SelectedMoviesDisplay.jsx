@@ -16,7 +16,7 @@ import { db } from "../../../config/firebase";
 import { getCurrentMonth } from "../../utils";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 
-const SelectedMoviesDisplay = ({ selections = {} }) => {
+const SelectedMoviesDisplay = ({ selections = {}, onMonthChange }) => {
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
   const [monthSelections, setMonthSelections] = useState(selections);
   const [availableMonths, setAvailableMonths] = useState([]);
@@ -76,6 +76,14 @@ const SelectedMoviesDisplay = ({ selections = {} }) => {
     fetchSelections();
   }, [selectedMonth]);
 
+  const handleMonthChange = (event) => {
+    const newMonth = event.target.value;
+    setSelectedMonth(newMonth);
+    if (onMonthChange) {
+      onMonthChange(newMonth);
+    }
+  };
+
   return (
     <Box sx={{ width: "90%", mb: 5, mt: 5, mx: "auto" }}>
       <Box
@@ -89,7 +97,7 @@ const SelectedMoviesDisplay = ({ selections = {} }) => {
       >
         <Select
           value={selectedMonth}
-          onChange={(e) => setSelectedMonth(e.target.value)}
+          onChange={handleMonthChange}
           IconComponent={KeyboardArrowDownIcon}
           sx={{
             "& .MuiSelect-select": {

@@ -6,7 +6,7 @@ import MovieClubInfoModal from "./MovieComponents/MovieClubInfoModal";
 import SelectedMoviesDisplay from "./MovieComponents/SelectedMoviesDisplay";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../config/firebase";
-import { getCurrentMonth, getNextMonth } from "../utils";
+import { getCurrentMonth } from "../utils";
 import GenrePool from "./MovieComponents/GenrePool";
 
 const MovieClub = () => {
@@ -18,21 +18,19 @@ const MovieClub = () => {
     comedy: [],
     thriller: [],
   });
+  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
 
   useEffect(() => {
     const fetchData = async () => {
-      const currentMonth = getCurrentMonth();
-      const nextMonth = getNextMonth();
-
-      // Fetch selected movies
-      const selectionsRef = doc(db, "MonthlySelections", currentMonth);
+      // Fetch selected movies for the selected month
+      const selectionsRef = doc(db, "MonthlySelections", selectedMonth);
       const selectionsSnap = await getDoc(selectionsRef);
       if (selectionsSnap.exists()) {
         setSelections(selectionsSnap.data());
       }
 
-      // Fetch remaining pool
-      const genrePoolsRef = doc(db, "GenrePools", nextMonth);
+      // Fetch the current remaining pool (independent of month)
+      const genrePoolsRef = doc(db, "GenrePools", "current");
       const genrePoolsSnap = await getDoc(genrePoolsRef);
       if (genrePoolsSnap.exists()) {
         setPools(genrePoolsSnap.data());
@@ -40,7 +38,11 @@ const MovieClub = () => {
     };
 
     fetchData();
-  }, []);
+  }, [selectedMonth]);
+
+  const handleMonthChange = (month) => {
+    setSelectedMonth(month);
+  };
 
   return (
     <Box
@@ -88,7 +90,10 @@ const MovieClub = () => {
         </Grid2>
       ) : (
         <Box>
-          <SelectedMoviesDisplay selections={selections} />
+          <SelectedMoviesDisplay
+            selections={selections}
+            onMonthChange={handleMonthChange}
+          />
           <GenrePool pools={pools} />
         </Box>
       )}
