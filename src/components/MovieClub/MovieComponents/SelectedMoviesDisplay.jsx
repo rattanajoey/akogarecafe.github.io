@@ -8,6 +8,8 @@ import {
   CardContent,
   Select,
   MenuItem,
+  Fade,
+  CircularProgress,
 } from "@mui/material";
 import { doc, getDoc, collection, getDocs } from "firebase/firestore";
 import { db } from "../../../config/firebase";
@@ -18,6 +20,7 @@ const SelectedMoviesDisplay = ({ selections = {} }) => {
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
   const [monthSelections, setMonthSelections] = useState(selections);
   const [availableMonths, setAvailableMonths] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const genres = ["action", "drama", "comedy", "thriller"];
 
   // Fetch available months from Firestore
@@ -25,13 +28,18 @@ const SelectedMoviesDisplay = ({ selections = {} }) => {
     const fetchAvailableMonths = async () => {
       const selectionsRef = collection(db, "MonthlySelections");
       const snapshot = await getDocs(selectionsRef);
-      const months = snapshot.docs.map((doc) => ({
-        value: doc.id,
-        label: new Date(doc.id).toLocaleString("default", {
-          month: "long",
-          year: "numeric",
-        }),
-      }));
+      const months = snapshot.docs.map((doc) => {
+        const [year, month] = doc.id.split("-");
+        // Create date with month-1 because JavaScript months are 0-based
+        const date = new Date(parseInt(year), parseInt(month) - 1, 1);
+        return {
+          value: doc.id,
+          label: date.toLocaleString("default", {
+            month: "long",
+            year: "numeric",
+          }),
+        };
+      });
       // Sort months in descending order (newest first)
       months.sort((a, b) => b.value.localeCompare(a.value));
       setAvailableMonths(months);
@@ -48,12 +56,20 @@ const SelectedMoviesDisplay = ({ selections = {} }) => {
   // Fetch selections when month changes
   useEffect(() => {
     const fetchSelections = async () => {
-      const selectionsRef = doc(db, "MonthlySelections", selectedMonth);
-      const selectionsSnap = await getDoc(selectionsRef);
-      if (selectionsSnap.exists()) {
-        setMonthSelections(selectionsSnap.data());
-      } else {
-        setMonthSelections({});
+      setIsLoading(true);
+      try {
+        const selectionsRef = doc(db, "MonthlySelections", selectedMonth);
+        const selectionsSnap = await getDoc(selectionsRef);
+        if (selectionsSnap.exists()) {
+          setMonthSelections(selectionsSnap.data());
+        } else {
+          setMonthSelections({});
+        }
+      } finally {
+        // Add a small delay to make the loading state visible
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 300);
       }
     };
 
@@ -125,69 +141,94 @@ const SelectedMoviesDisplay = ({ selections = {} }) => {
           ))}
         </Select>
       </Box>
-      <Grid2 container spacing={4}>
-        {genres.map((genre) => {
-          const movie = monthSelections[genre];
-          if (!movie) return null;
-
-          return (
-            <Grid2
-              size={{ xs: 12, sm: 6, md: 3 }}
-              key={genre}
-              display={"flex"}
-              flexDirection={"column"}
-              justifyContent={"space-between"}
+      <Fade in={!isLoading} timeout={300}>
+        <Box>
+          {isLoading ? (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                minHeight: "400px",
+              }}
             >
-              <Typography variant="h4" sx={{ mb: 1 }}>
-                {(() => {
-                  switch (genre) {
-                    case "action":
-                      return "Action / Sci-Fi / Fantasy";
-                    case "drama":
-                      return "Drama / Documentary";
-                    case "comedy":
-                      return "Comedy / Musical";
-                    case "thriller":
-                      return "Thriller / Horror";
-                    default:
-                      return genre.charAt(0).toUpperCase() + genre.slice(1);
-                  }
-                })()}
-              </Typography>
-              <Card sx={{ backgroundColor: "rgba(255, 255, 255, 0.9)" }}>
-                <CardMedia
-                  component="img"
-                  width="100%"
-                  image={movie.posterUrl || "/placeholder.jpg"}
-                  alt={movie.title}
-                />
-                <CardContent>
-                  <Typography
-                    variant="h6"
-                    component="div"
-                    whiteSpace={"nowrap"}
+              <CircularProgress
+                sx={{
+                  color: "#bc252d",
+                  width: "60px !important",
+                  height: "60px !important",
+                }}
+              />
+            </Box>
+          ) : (
+            <Grid2 container spacing={4}>
+              {genres.map((genre) => {
+                const movie = monthSelections[genre];
+                if (!movie) return null;
+
+                return (
+                  <Grid2
+                    size={{ xs: 12, sm: 6, md: 3 }}
+                    key={genre}
+                    display={"flex"}
+                    flexDirection={"column"}
+                    justifyContent={"space-between"}
                   >
-                    {movie.title}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Submitted by: {movie.submittedBy}
-                  </Typography>
-                  {movie.director && (
-                    <Typography variant="body2" color="text.secondary">
-                      Director: {movie.director}
+                    <Typography variant="h4" sx={{ mb: 1 }}>
+                      {(() => {
+                        switch (genre) {
+                          case "action":
+                            return "Action / Sci-Fi / Fantasy";
+                          case "drama":
+                            return "Drama / Documentary";
+                          case "comedy":
+                            return "Comedy / Musical";
+                          case "thriller":
+                            return "Thriller / Horror";
+                          default:
+                            return (
+                              genre.charAt(0).toUpperCase() + genre.slice(1)
+                            );
+                        }
+                      })()}
                     </Typography>
-                  )}
-                  {movie.year && (
-                    <Typography variant="body2" color="text.secondary">
-                      Year: {movie.year}
-                    </Typography>
-                  )}
-                </CardContent>
-              </Card>
+                    <Card sx={{ backgroundColor: "rgba(255, 255, 255, 0.9)" }}>
+                      <CardMedia
+                        component="img"
+                        width="100%"
+                        image={movie.posterUrl || "/placeholder.jpg"}
+                        alt={movie.title}
+                      />
+                      <CardContent>
+                        <Typography
+                          variant="h6"
+                          component="div"
+                          whiteSpace={"nowrap"}
+                        >
+                          {movie.title}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Submitted by: {movie.submittedBy}
+                        </Typography>
+                        {movie.director && (
+                          <Typography variant="body2" color="text.secondary">
+                            Director: {movie.director}
+                          </Typography>
+                        )}
+                        {movie.year && (
+                          <Typography variant="body2" color="text.secondary">
+                            Year: {movie.year}
+                          </Typography>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </Grid2>
+                );
+              })}
             </Grid2>
-          );
-        })}
-      </Grid2>
+          )}
+        </Box>
+      </Fade>
     </Box>
   );
 };
