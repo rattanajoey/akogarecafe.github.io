@@ -18,6 +18,10 @@ import {
   TableHead,
   TableRow,
   Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import { collection, getDocs, setDoc, doc, getDoc } from "firebase/firestore";
 import { db } from "../../../config/firebase";
@@ -27,6 +31,7 @@ import LocalMoviesIcon from "@mui/icons-material/LocalMovies";
 import PersonIcon from "@mui/icons-material/Person";
 
 const genres = ["action", "drama", "comedy", "thriller"];
+const SAVE_PASSWORD = "thunderbolts"; // Same as submission password
 
 const MovieClubAdmin = () => {
   const [access, setAccess] = useState(false);
@@ -42,6 +47,8 @@ const MovieClubAdmin = () => {
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
   const [existingSelections, setExistingSelections] = useState({});
   const [monthlyHistory, setMonthlyHistory] = useState([]);
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [savePassword, setSavePassword] = useState("");
 
   const currentMonth = getCurrentMonth();
 
@@ -149,9 +156,18 @@ const MovieClubAdmin = () => {
     setSelections(result);
   };
 
-  const saveSelections = async () => {
+  const handleSaveClick = () => {
     if (!Object.keys(selections).length) {
       alert("No selections to save!");
+      return;
+    }
+    setSaveDialogOpen(true);
+  };
+
+  const handleSaveConfirm = async () => {
+    if (savePassword !== SAVE_PASSWORD) {
+      alert("Incorrect password!");
+      setSavePassword("");
       return;
     }
 
@@ -187,31 +203,16 @@ const MovieClubAdmin = () => {
       // Update existing selections after save
       setExistingSelections(selections);
       alert("Selections saved successfully!");
+
+      // Reset and close dialog
+      setSavePassword("");
+      setSaveDialogOpen(false);
+
+      // Refresh history
+      fetchMonthlyHistory();
     } catch (err) {
       console.error("Error saving:", err);
       alert("Failed to save selections.");
-    }
-  };
-
-  // Migration function to move existing pool to "current"
-  const migratePool = async () => {
-    try {
-      // Get the existing pool from 2025-07
-      const oldPoolRef = doc(db, "GenrePools", "2025-07");
-      const oldPoolSnap = await getDoc(oldPoolRef);
-
-      if (oldPoolSnap.exists()) {
-        // Save it to the new "current" pool
-        await setDoc(doc(db, "GenrePools", "current"), oldPoolSnap.data());
-        alert("Pool migration completed successfully!");
-        // Refresh the pools display
-        fetchPools();
-      } else {
-        alert("No existing pool found to migrate.");
-      }
-    } catch (error) {
-      console.error("Error during migration:", error);
-      alert("Failed to migrate pool data.");
     }
   };
 
@@ -330,14 +331,6 @@ const MovieClubAdmin = () => {
               <Typography>Loading submissions...</Typography>
             ) : (
               <>
-                <Button
-                  variant="contained"
-                  color="warning"
-                  onClick={migratePool}
-                  sx={{ mb: 3 }}
-                >
-                  🔄 Migrate Pool Data
-                </Button>
                 <Grid2 container spacing={3}>
                   {genres.map((genre) => (
                     <Grid2 item xs={12} md={6} key={genre}>
@@ -373,7 +366,7 @@ const MovieClubAdmin = () => {
               <Button
                 variant="contained"
                 sx={{ backgroundColor: "#bc252d" }}
-                onClick={saveSelections}
+                onClick={handleSaveClick}
               >
                 💾 Save to Firestore
               </Button>
@@ -477,6 +470,38 @@ const MovieClubAdmin = () => {
           </Paper>
         </Grid2>
       </Grid2>
+
+      <Dialog open={saveDialogOpen} onClose={() => setSaveDialogOpen(false)}>
+        <DialogTitle>Confirm Save</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" gutterBottom>
+            Please enter the save password to confirm:
+          </Typography>
+          <TextField
+            autoFocus
+            margin="dense"
+            type="password"
+            fullWidth
+            value={savePassword}
+            onChange={(e) => setSavePassword(e.target.value)}
+            onKeyPress={(e) => {
+              if (e.key === "Enter") {
+                handleSaveConfirm();
+              }
+            }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSaveDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={handleSaveConfirm}
+            variant="contained"
+            color="primary"
+          >
+            Confirm Save
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

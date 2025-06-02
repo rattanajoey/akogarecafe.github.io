@@ -186,13 +186,81 @@ const SelectedMoviesDisplay = ({ selections = {}, onMonthChange }) => {
                       {(() => {
                         switch (genre) {
                           case "action":
-                            return "Action / Sci-Fi / Fantasy";
+                            return (
+                              <Box>
+                                <Typography
+                                  variant="h4"
+                                  component="span"
+                                  sx={{ fontWeight: "bold" }}
+                                >
+                                  Action
+                                </Typography>
+                                <Typography
+                                  variant="subtitle1"
+                                  color="text.secondary"
+                                  sx={{ mt: 0.5 }}
+                                >
+                                  Adventure • Sci-Fi • Fantasy
+                                </Typography>
+                              </Box>
+                            );
                           case "drama":
-                            return "Drama / Documentary";
+                            return (
+                              <Box>
+                                <Typography
+                                  variant="h4"
+                                  component="span"
+                                  sx={{ fontWeight: "bold" }}
+                                >
+                                  Drama
+                                </Typography>
+                                <Typography
+                                  variant="subtitle1"
+                                  color="text.secondary"
+                                  sx={{ mt: 0.5 }}
+                                >
+                                  Documentary • Biopic • Historical
+                                </Typography>
+                              </Box>
+                            );
                           case "comedy":
-                            return "Comedy / Musical";
+                            return (
+                              <Box>
+                                <Typography
+                                  variant="h4"
+                                  component="span"
+                                  sx={{ fontWeight: "bold" }}
+                                >
+                                  Comedy
+                                </Typography>
+                                <Typography
+                                  variant="subtitle1"
+                                  color="text.secondary"
+                                  sx={{ mt: 0.5 }}
+                                >
+                                  Romance • Musical
+                                </Typography>
+                              </Box>
+                            );
                           case "thriller":
-                            return "Thriller / Horror";
+                            return (
+                              <Box>
+                                <Typography
+                                  variant="h4"
+                                  component="span"
+                                  sx={{ fontWeight: "bold" }}
+                                >
+                                  Thriller
+                                </Typography>
+                                <Typography
+                                  variant="subtitle1"
+                                  color="text.secondary"
+                                  sx={{ mt: 0.5 }}
+                                >
+                                  Horror • Mystery • Crime
+                                </Typography>
+                              </Box>
+                            );
                           default:
                             return (
                               genre.charAt(0).toUpperCase() + genre.slice(1)

@@ -65,7 +65,7 @@ const MovieClub = () => {
           textShadow: "2px 2px 6px rgba(0,0,0,0.5)",
         }}
       >
-        🎥 Movie Club
+        Movie Club
       </Typography>
 
       {submissionsOpen ? (
