@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -6,177 +6,128 @@ import {
   Card,
   CardMedia,
   CardContent,
-  Button,
-  Menu,
+  Select,
   MenuItem,
 } from "@mui/material";
-import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import { doc, getDoc, collection, getDocs } from "firebase/firestore";
+import { db } from "../../../config/firebase";
+import { getCurrentMonth } from "../../utils";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 
 const SelectedMoviesDisplay = ({ selections = {} }) => {
-  const [anchorEl, setAnchorEl] = useState(null);
-  const [selectedMovie, setSelectedMovie] = useState(null);
-  const [selectedScreening, setSelectedScreening] = useState(null);
-
+  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
+  const [monthSelections, setMonthSelections] = useState(selections);
+  const [availableMonths, setAvailableMonths] = useState([]);
   const genres = ["action", "drama", "comedy", "thriller"];
 
-  const screeningTimes = {
-    "The Way He Looks (2014)": [
-      { date: "May 18 (Sun)", time: "2 PM", duration: "96 min" },
-    ],
-    "Scary Movie 4": [
-      { date: "May 21 (Wed)", time: "8 PM", duration: "83 min" },
-    ],
-    "Life is beautiful": [
-      { date: "May 27 (Tue)", time: "8 PM", duration: "116 min" },
-    ],
-    "Ran (1985)": [{ date: "May 30 (Fri)", time: "8 PM", duration: "162 min" }],
-  };
+  // Fetch available months from Firestore
+  useEffect(() => {
+    const fetchAvailableMonths = async () => {
+      const selectionsRef = collection(db, "MonthlySelections");
+      const snapshot = await getDocs(selectionsRef);
+      const months = snapshot.docs.map((doc) => ({
+        value: doc.id,
+        label: new Date(doc.id).toLocaleString("default", {
+          month: "long",
+          year: "numeric",
+        }),
+      }));
+      // Sort months in descending order (newest first)
+      months.sort((a, b) => b.value.localeCompare(a.value));
+      setAvailableMonths(months);
 
-  const handleMenuClick = (event, movie, screening) => {
-    setAnchorEl(event.currentTarget);
-    setSelectedMovie(movie);
-    setSelectedScreening(screening);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const createGoogleCalendarLink = (movieTitle, screening) => {
-    try {
-      // Parse the date string (e.g., "May 18 (Sun)" -> "May 18")
-      const dateStr = screening.date.split("(")[0].trim();
-      const [month, day] = dateStr.split(" ");
-      const year = new Date().getFullYear();
-
-      // Parse the time string (e.g., "6 PM" -> {hour: 6, period: "PM"})
-      const [hour, period] = screening.time.split(" ");
-      let hour24 = parseInt(hour);
-      if (period === "PM" && hour24 !== 12) hour24 += 12;
-      if (period === "AM" && hour24 === 12) hour24 = 0;
-
-      // Create a valid date string that works across all browsers
-      const dateString = `${year}-${getMonthNumber(month)}-${day.padStart(
-        2,
-        "0"
-      )}T${hour24.toString().padStart(2, "0")}:00:00`;
-      const startDate = new Date(dateString);
-      const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
-
-      // Format dates for Google Calendar
-      const formatDate = (date) => {
-        return date.toISOString().replace(/-|:|\.\d+/g, "");
-      };
-
-      const params = new URLSearchParams({
-        action: "TEMPLATE",
-        text: `Movie Screening: ${movieTitle}`,
-        details: `Join us for a screening of ${movieTitle} (${screening.duration})`,
-        location: "Yiqing's Place",
-        dates: `${formatDate(startDate)}/${formatDate(endDate)}`,
-      });
-
-      return `https://calendar.google.com/calendar/render?${params.toString()}`;
-    } catch (error) {
-      console.error("Error creating calendar link:", error);
-      return "#";
-    }
-  };
-
-  const createIOSCalendarLink = (movieTitle, screening) => {
-    try {
-      const dateStr = screening.date.split("(")[0].trim();
-      const [month, day] = dateStr.split(" ");
-      const year = new Date().getFullYear();
-
-      const [hour, period] = screening.time.split(" ");
-      let hour24 = parseInt(hour);
-      if (period === "PM" && hour24 !== 12) hour24 += 12;
-      if (period === "AM" && hour24 === 12) hour24 = 0;
-
-      const dateString = `${year}-${getMonthNumber(month)}-${day.padStart(
-        2,
-        "0"
-      )}T${hour24.toString().padStart(2, "0")}:00:00`;
-      const startDate = new Date(dateString);
-      const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
-
-      // Format dates for ICS file
-      const formatDate = (date) => {
-        return date.toISOString().replace(/-|:|\.\d+/g, "");
-      };
-
-      const icsContent = [
-        "BEGIN:VCALENDAR",
-        "VERSION:2.0",
-        "BEGIN:VEVENT",
-        `SUMMARY:Movie Screening: ${movieTitle}`,
-        `DESCRIPTION:Join us for a screening of ${movieTitle} (${screening.duration})`,
-        `LOCATION:Yiqing's Place`,
-        `DTSTART:${formatDate(startDate)}`,
-        `DTEND:${formatDate(endDate)}`,
-        "END:VEVENT",
-        "END:VCALENDAR",
-      ].join("\n");
-
-      // Create a data URL for the ICS content
-      const dataUrl = `data:text/calendar;charset=utf-8,${encodeURIComponent(
-        icsContent
-      )}`;
-
-      // Check if the user is on iOS
-      const isIOS =
-        /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-
-      if (isIOS) {
-        // For iOS devices, we'll use the data URL directly
-        return dataUrl;
-      } else {
-        // For non-iOS devices (like Chrome on Android), we'll show a message
-        alert(
-          "For the best experience, please use Safari on iOS devices to add this event to your calendar. Alternatively, you can use the Google Calendar option."
-        );
-        return "#";
+      // If current month isn't in the list, select the most recent month
+      if (months.length > 0 && !months.find((m) => m.value === selectedMonth)) {
+        setSelectedMonth(months[0].value);
       }
-    } catch (error) {
-      console.error("Error creating iOS calendar link:", error);
-      return "#";
-    }
-  };
-
-  // Helper function to convert month name to number
-  const getMonthNumber = (monthName) => {
-    const months = {
-      January: "01",
-      February: "02",
-      March: "03",
-      April: "04",
-      May: "05",
-      June: "06",
-      July: "07",
-      August: "08",
-      September: "09",
-      October: "10",
-      November: "11",
-      December: "12",
     };
-    return months[monthName] || "01";
-  };
+
+    fetchAvailableMonths();
+  }, [selectedMonth]);
+
+  // Fetch selections when month changes
+  useEffect(() => {
+    const fetchSelections = async () => {
+      const selectionsRef = doc(db, "MonthlySelections", selectedMonth);
+      const selectionsSnap = await getDoc(selectionsRef);
+      if (selectionsSnap.exists()) {
+        setMonthSelections(selectionsSnap.data());
+      } else {
+        setMonthSelections({});
+      }
+    };
+
+    fetchSelections();
+  }, [selectedMonth]);
 
   return (
     <Box sx={{ width: "90%", mb: 5, mt: 5, mx: "auto" }}>
-      <Typography variant="h4" sx={{ mb: 2 }}>
-        {(() => {
-          const now = new Date();
-          const month = now.toLocaleString("default", { month: "long" });
-          const year = now.getFullYear();
-          return `${month} ${year}`;
-        })()}
-      </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          mb: 4,
+          gap: 1,
+        }}
+      >
+        <Select
+          value={selectedMonth}
+          onChange={(e) => setSelectedMonth(e.target.value)}
+          IconComponent={KeyboardArrowDownIcon}
+          sx={{
+            "& .MuiSelect-select": {
+              typography: "h4",
+              color: "#2c2c2c",
+              fontWeight: 500,
+              pr: 6,
+              display: "flex",
+              alignItems: "center",
+            },
+            "& .MuiOutlinedInput-notchedOutline": {
+              border: "none",
+            },
+            "&:hover .MuiOutlinedInput-notchedOutline": {
+              border: "none",
+            },
+            "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+              border: "none",
+            },
+            "& .MuiSvgIcon-root": {
+              color: "#bc252d",
+              fontSize: "2rem",
+              position: "absolute",
+              right: 0,
+              top: "50%",
+              transform: "translateY(-50%)",
+            },
+          }}
+        >
+          {availableMonths.map((option) => (
+            <MenuItem
+              key={option.value}
+              value={option.value}
+              sx={{
+                typography: "h4",
+                "&:hover": {
+                  backgroundColor: "rgba(188, 37, 45, 0.1)",
+                },
+                "&.Mui-selected": {
+                  backgroundColor: "rgba(188, 37, 45, 0.2)",
+                  "&:hover": {
+                    backgroundColor: "rgba(188, 37, 45, 0.3)",
+                  },
+                },
+              }}
+            >
+              {option.label}
+            </MenuItem>
+          ))}
+        </Select>
+      </Box>
       <Grid2 container spacing={4}>
         {genres.map((genre) => {
-          const movie = selections[genre];
+          const movie = monthSelections[genre];
           if (!movie) return null;
 
           return (
@@ -231,78 +182,12 @@ const SelectedMoviesDisplay = ({ selections = {} }) => {
                       Year: {movie.year}
                     </Typography>
                   )}
-                  {screeningTimes[movie.title] && (
-                    <Box sx={{ mt: 2 }}>
-                      <Typography variant="subtitle2" color="primary">
-                        Screening Time:
-                      </Typography>
-                      {screeningTimes[movie.title].map((screening, index) => (
-                        <Box
-                          key={index}
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 1,
-                            mt: 1,
-                          }}
-                        >
-                          <Typography variant="body2" color="text.secondary">
-                            {screening.date} at {screening.time} (
-                            {screening.duration})
-                          </Typography>
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            startIcon={<CalendarMonthIcon />}
-                            endIcon={<ArrowDropDownIcon />}
-                            onClick={(e) =>
-                              handleMenuClick(e, movie, screening)
-                            }
-                            sx={{ ml: 1, p: 1 }}
-                          >
-                            Add to Calendar
-                          </Button>
-                        </Box>
-                      ))}
-                    </Box>
-                  )}
                 </CardContent>
               </Card>
             </Grid2>
           );
         })}
       </Grid2>
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-      >
-        <MenuItem
-          onClick={() => {
-            window.open(
-              createGoogleCalendarLink(selectedMovie?.title, selectedScreening),
-              "_blank"
-            );
-            handleMenuClose();
-          }}
-        >
-          Google Calendar
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            const link = createIOSCalendarLink(
-              selectedMovie?.title,
-              selectedScreening
-            );
-            if (link !== "#") {
-              window.location.href = link;
-            }
-            handleMenuClose();
-          }}
-        >
-          iOS Calendar
-        </MenuItem>
-      </Menu>
     </Box>
   );
 };

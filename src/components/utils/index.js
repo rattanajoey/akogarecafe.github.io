@@ -13,8 +13,26 @@ export const getCurrentMonth = () => {
 export const getNextMonth = () => {
   const now = new Date();
   const year = now.getFullYear();
-  const month = now.getMonth() + 2;
+  const month = now.getMonth() + 1;
   return `${month > 12 ? year + 1 : year}-${String(
     ((month - 1) % 12) + 1
   ).padStart(2, "0")}`;
+};
+
+export const getMonthNumber = (monthName) => {
+  const months = {
+    January: "01",
+    February: "02",
+    March: "03",
+    April: "04",
+    May: "05",
+    June: "06",
+    July: "07",
+    August: "08",
+    September: "09",
+    October: "10",
+    November: "11",
+    December: "12",
+  };
+  return months[monthName] || "01";
 };
