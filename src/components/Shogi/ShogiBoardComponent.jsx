@@ -38,14 +38,13 @@ const ShogiBoardComponent = () => {
         setSelectedPiece(null); // Deselect piece if clicked on the same square
         setHighlightedSquare(null); // Remove highlight
         setValidMoves(null);
-      } else {
+      } else if (validMoves?.includes(position)) {
         // Move the piece to the new position
-        const newPieces = pieces.map((piece) => {
-          if (piece.id === selectedPiece.id) {
-            return { ...piece, position }; // Move piece to the new position
-          }
-          return piece;
-        });
+        const newPieces = pieces.filter(
+          (p) => p.id !== selectedPiece.id && p.position !== position
+        );
+        newPieces.push({ ...selectedPiece, position });
+
         setPieces(newPieces);
         setSelectedPiece(null); // Deselect the piece after move
         setHighlightedSquare(null); // Remove highlight from squares
@@ -76,6 +75,16 @@ const ShogiBoardComponent = () => {
                   top: `${piecePosition.top}px`,
                   cursor: "pointer",
                   transform: piece.playerTwo ? "rotate(180deg)" : "none",
+                  pointerEvents: selectedPiece && validMoves ? "none" : "auto",
+                  border:
+                    selectedPiece?.id === piece.id
+                      ? "2px solid #ff0000"
+                      : "none",
+                  borderRadius: selectedPiece?.id === piece.id ? "50%" : "0",
+                  boxShadow:
+                    selectedPiece?.id === piece.id
+                      ? "0 0 10px rgba(255, 0, 0, 0.5)"
+                      : "none",
                 }}
                 onClick={() => handlePieceClick(piece)}
                 onMouseEnter={() =>

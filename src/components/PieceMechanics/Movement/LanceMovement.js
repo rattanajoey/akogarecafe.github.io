@@ -7,7 +7,15 @@ export const getLanceMoves = (position, pieces, isPlayerTwo) => {
 
   for (let r = row + direction; r >= 1 && r <= 9; r += direction) {
     const move = `${String.fromCharCode(col)}${r}`;
-    if (pieces.some((piece) => piece.position === move)) break;
+    const pieceAtPosition = pieces.find((p) => p.position === move);
+
+    if (pieceAtPosition) {
+      // If the piece is an enemy piece, we can capture it
+      if (pieceAtPosition.playerTwo !== isPlayerTwo) {
+        moves.push(move);
+      }
+      break; // Stop in either case - can't move through pieces
+    }
     moves.push(move);
   }
 

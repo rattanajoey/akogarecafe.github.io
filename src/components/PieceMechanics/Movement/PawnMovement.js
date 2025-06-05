@@ -9,7 +9,12 @@ export const getPawnMoves = (position, pieces, isPlayerTwo) => {
   if (forwardRow < 1 || forwardRow > 9) return [];
 
   const forwardPosition = `${String.fromCharCode(col)}${forwardRow}`;
-  const isBlocked = pieces.some(piece => piece.position === forwardPosition);
+  const pieceAtPosition = pieces.find((p) => p.position === forwardPosition);
 
-  return isBlocked ? [] : [forwardPosition];
+  // Can only move forward if the square is empty or contains an enemy piece
+  if (!pieceAtPosition || pieceAtPosition.playerTwo !== isPlayerTwo) {
+    return [forwardPosition];
+  }
+
+  return [];
 };

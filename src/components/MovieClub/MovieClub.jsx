@@ -60,7 +60,7 @@ const MovieClub = () => {
       <Box
         sx={{
           display: "flex",
-          alignItems: "center",
+          alignItems: "baseline",
           gap: 2,
           flexDirection: { xs: "column", sm: "row" },
           mb: { xs: 2, sm: 0 },
