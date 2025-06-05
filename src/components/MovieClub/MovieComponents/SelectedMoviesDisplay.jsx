@@ -12,10 +12,12 @@ import {
   CircularProgress,
   Link,
   Rating,
+  useMediaQuery,
 } from "@mui/material";
 import { doc, getDoc, collection, getDocs } from "firebase/firestore";
 import { db } from "../../../config/firebase";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import {
   searchMovie,
   getMovieDetails,
@@ -31,6 +33,7 @@ const SelectedMoviesDisplay = ({ selections = {}, onMonthChange }) => {
   const [availableMonths, setAvailableMonths] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [movieDetails, setMovieDetails] = useState({});
+  const isMobile = useMediaQuery("(max-width:600px)");
 
   const genres = useMemo(() => ["action", "drama", "comedy", "thriller"], []);
 
@@ -319,6 +322,28 @@ const SelectedMoviesDisplay = ({ selections = {}, onMonthChange }) => {
                           image={posterUrl}
                           alt={movie.title}
                         />
+                        {/* Add indicator when overlay is hidden */}
+                        {!movieDetails[genre]?.showOverlay && isMobile && (
+                          <Box
+                            sx={{
+                              position: "absolute",
+                              bottom: 0,
+                              left: 0,
+                              right: 0,
+                              backgroundColor: "rgba(0, 0, 0, 0.7)",
+                              color: "white",
+                              p: 1,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: 1,
+                              fontSize: "0.875rem",
+                            }}
+                          >
+                            <KeyboardArrowUpIcon fontSize="small" />
+                            Tap for details
+                          </Box>
+                        )}
                         <Box
                           sx={{
                             position: "absolute",
