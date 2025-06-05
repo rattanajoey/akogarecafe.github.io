@@ -36,3 +36,19 @@ export const getMonthNumber = (monthName) => {
   };
   return months[monthName] || "01";
 };
+
+export const getLanguageName = (code) => {
+  const languages = {
+    en: "English",
+    ja: "Japanese",
+    zh: "Chinese",
+    ko: "Korean",
+    fr: "French",
+    yue: "Cantonese",
+    it: "Italian",
+    da: "Danish",
+    pt: "Portuguese",
+    de: "German",
+  };
+  return languages[code?.toLowerCase()] || code?.toUpperCase() || "";
+};

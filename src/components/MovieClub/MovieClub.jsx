@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import MovieSubmission from "./MovieComponents/MovieSubmission";
 import SubmissionList from "./MovieComponents/SubmissionList";
-import { Box, Typography, Grid2 } from "@mui/material";
+import { Box, Typography, Grid2, Link } from "@mui/material";
 import MovieClubInfoModal from "./MovieComponents/MovieClubInfoModal";
 import SelectedMoviesDisplay from "./MovieComponents/SelectedMoviesDisplay";
 import { doc, getDoc } from "firebase/firestore";
@@ -57,16 +57,48 @@ const MovieClub = () => {
       }}
       pt={{ xs: 4, md: 6 }}
     >
-      <Typography
-        variant="h2"
+      <Box
         sx={{
-          fontWeight: "bold",
-          fontFamily: "'Merriweather', serif",
-          textShadow: "2px 2px 6px rgba(0,0,0,0.5)",
+          display: "flex",
+          alignItems: "center",
+          gap: 2,
+          flexDirection: { xs: "column", sm: "row" },
+          mb: { xs: 2, sm: 0 },
         }}
       >
-        Movie Club
-      </Typography>
+        <Typography
+          variant="h2"
+          sx={{
+            fontWeight: "bold",
+            fontFamily: "'Merriweather', serif",
+            textShadow: "2px 2px 6px rgba(0,0,0,0.5)",
+          }}
+        >
+          Movie Club
+        </Typography>
+        <Link
+          href="https://www.themoviedb.org/"
+          target="_blank"
+          rel="noopener noreferrer"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            textDecoration: "none",
+            "&:hover": {
+              opacity: 0.8,
+            },
+          }}
+        >
+          <img
+            src="/logos/tmdb.svg"
+            alt="TMDB"
+            style={{
+              height: "22px",
+              width: "auto",
+            }}
+          />
+        </Link>
+      </Box>
 
       {submissionsOpen ? (
         <Grid2
