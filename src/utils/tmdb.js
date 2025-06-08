@@ -5,19 +5,69 @@ const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 
 const cleanMovieTitle = (title) => {
   // Remove year in parentheses and trim any extra spaces
-  return title.replace(/\s*\(\d{4}\)\s*$/, "").trim();
+  const yearMatch = title.match(/\((\d{4})\)/);
+  const year = yearMatch ? yearMatch[1] : null;
+  const cleanTitle = title.replace(/\s*\(\d{4}\)\s*$/, "").trim();
+  return { cleanTitle, year };
 };
 
 export const searchMovie = async (title) => {
   try {
-    const cleanTitle = cleanMovieTitle(title);
+    const { cleanTitle, year } = cleanMovieTitle(title);
     const response = await fetch(
       `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(
         cleanTitle
       )}`
     );
     const data = await response.json();
-    return data.results[0]; // Return the first matching movie
+
+    if (!data.results || data.results.length === 0) {
+      return null;
+    }
+
+    // If year is provided, try to find exact match with year
+    if (year) {
+      const yearMatch = data.results.find((movie) =>
+        movie.release_date.startsWith(year)
+      );
+      if (yearMatch) return yearMatch;
+    }
+
+    // Filter results to only include movies with sufficient votes and popularity
+    const validResults = data.results.filter(
+      (movie) => movie.vote_count > 10 && movie.popularity > 0.5
+    );
+
+    if (validResults.length > 0) {
+      // Sort by a weighted score that considers:
+      // 1. Vote average weighted by vote count (more votes = more reliable rating)
+      // 2. Popularity (but weighted less than votes)
+      // 3. Exact title match bonus
+      validResults.sort((a, b) => {
+        const voteScoreA =
+          (a.vote_average * Math.min(a.vote_count, 1000)) / 1000;
+        const voteScoreB =
+          (b.vote_average * Math.min(b.vote_count, 1000)) / 1000;
+
+        const popularityScoreA = a.popularity * 0.1;
+        const popularityScoreB = b.popularity * 0.1;
+
+        // Give bonus for exact title matches
+        const titleBonusA =
+          a.title.toLowerCase() === cleanTitle.toLowerCase() ? 1 : 0;
+        const titleBonusB =
+          b.title.toLowerCase() === cleanTitle.toLowerCase() ? 1 : 0;
+
+        const scoreA = voteScoreA + popularityScoreA + titleBonusA;
+        const scoreB = voteScoreB + popularityScoreB + titleBonusB;
+
+        return scoreB - scoreA;
+      });
+      return validResults[0];
+    }
+
+    // Fallback to first result if no good matches found
+    return data.results[0];
   } catch (error) {
     console.error("Error searching movie:", error);
     return null;
