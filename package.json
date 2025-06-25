@@ -4,8 +4,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@emotion/react": "^11.13.3",
-    "@emotion/styled": "^11.13.0",
+    "@emotion/react": "^11.9.3",
+    "@emotion/styled": "^11.9.3",
     "@mui/icons-material": "^6.1.9",
     "@mui/material": "^6.1.6",
     "@tanstack/react-query": "^5.68.0",
@@ -26,9 +26,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "predeploy": "npm run build && copy CNAME build\\",
-    "deploy": "gh-pages -b gh-pages -d build",
-    "deploy-all": "npm run build && npm run predeploy && npm run deploy"
+    "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
     "extends": [
