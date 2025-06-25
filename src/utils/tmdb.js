@@ -1,6 +1,5 @@
 const TMDB_API_KEY =
   process.env.REACT_APP_TMDB_API_KEY || "576be59b6712fa18658df8a825ba434e";
-console.log("TMDB API Key:", TMDB_API_KEY); // Debug line
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 
 const cleanMovieTitle = (title) => {

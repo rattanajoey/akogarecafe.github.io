@@ -213,11 +213,14 @@ const HomeComponent = () => {
             <Link to="/music" className="action-button">
               Music
             </Link>
-            <Link to="/portfolio" className="action-button">
-              Portfolio
-            </Link>
+            <Link to="/MovieClub" className="action-button">
+              Movie Club
+            </Link>{" "}
             <Link to="/shogi" className="action-button">
               Shogi
+            </Link>{" "}
+            <Link to="/portfolio" className="action-button">
+              Portfolio
             </Link>
           </div>
         </div>
