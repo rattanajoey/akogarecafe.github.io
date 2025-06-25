@@ -10,6 +10,7 @@ import MusicSection from "./components/Music/MusicSection";
 import PortfolioSection from "./components/Portfolio/Portfolio";
 import MovieClub from "./components/MovieClub/MovieClub";
 import MovieClubAdmin from "./components/MovieClub/MovieComponents/MovieClubAdmin";
+import HomeComponent from "./components/Home/Home";
 
 const RedirectToHash = () => {
   useEffect(() => {
@@ -37,7 +38,8 @@ const App = () => {
             className="follower"
           ></Box>
           <Routes>
-            <Route path="/" element={<ShogiBoardComponent />} />
+            <Route path="/" element={<HomeComponent />} />
+            <Route path="/shogi" element={<ShogiBoardComponent />} />
             <Route path="/music" element={<MusicSection />} />
             <Route path="/portfolio" element={<PortfolioSection />} />
             <Route path="/MovieClub" element={<MovieClub />} />
