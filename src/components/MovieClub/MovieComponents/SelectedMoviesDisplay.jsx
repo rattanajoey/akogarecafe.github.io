@@ -507,7 +507,8 @@ const SelectedMoviesDisplay = ({ selections = {}, onMonthChange }) => {
                         >
                           {movie.title}
                         </Typography>
-                        {tmdbData && (
+                        {tmdbData &&
+                        typeof tmdbData.vote_average === "number" ? (
                           <Box
                             sx={{
                               display: "flex",
@@ -527,6 +528,10 @@ const SelectedMoviesDisplay = ({ selections = {}, onMonthChange }) => {
                               ({tmdbData.vote_average.toFixed(1)})
                             </Typography>
                           </Box>
+                        ) : (
+                          <Typography variant="body2" color="text.secondary">
+                            (No rating)
+                          </Typography>
                         )}
                         <Typography variant="body2" color="text.secondary">
                           Submitted by: {movie.submittedBy}
