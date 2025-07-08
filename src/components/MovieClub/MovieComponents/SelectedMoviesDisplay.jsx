@@ -318,11 +318,15 @@ const SelectedMoviesDisplay = ({ selections = {}, onMonthChange }) => {
                       <Box sx={{ position: "relative" }}>
                         <CardMedia
                           component="img"
-                          width="100%"
                           image={posterUrl}
                           alt={movie.title}
+                          sx={{
+                            height: 320,
+                            width: "100%",
+                            objectFit: "cover",
+                            backgroundColor: "#eee",
+                          }}
                         />
-                        {/* Add indicator when overlay is hidden */}
                         {!movieDetails[genre]?.showOverlay && isMobile && (
                           <Box
                             sx={{
@@ -391,6 +395,13 @@ const SelectedMoviesDisplay = ({ selections = {}, onMonthChange }) => {
                         >
                           {tmdbData && (
                             <>
+                              <Typography
+                                variant="h6"
+                                color="white"
+                                sx={{ mb: 1, fontWeight: "bold" }}
+                              >
+                                {movie.title}
+                              </Typography>
                               {tmdbData.original_title !== tmdbData.title && (
                                 <Typography
                                   variant="subtitle1"
@@ -503,7 +514,14 @@ const SelectedMoviesDisplay = ({ selections = {}, onMonthChange }) => {
                         <Typography
                           variant="h6"
                           component="div"
-                          whiteSpace={"nowrap"}
+                          sx={{
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            width: "100%",
+                            display: "block",
+                          }}
+                          title={movie.title}
                         >
                           {movie.title}
                         </Typography>
