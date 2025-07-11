@@ -13,6 +13,8 @@ import {
   Link,
   Rating,
   useMediaQuery,
+  Button,
+  Modal,
 } from "@mui/material";
 import { doc, getDoc, collection, getDocs } from "firebase/firestore";
 import { db } from "../../../config/firebase";
@@ -26,6 +28,7 @@ import {
 } from "../../../utils/tmdb";
 import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutline";
 import { getLanguageName } from "../../utils";
+import YouTubeIcon from "@mui/icons-material/YouTube";
 
 const SelectedMoviesDisplay = ({ selections = {}, onMonthChange }) => {
   const [selectedMonth, setSelectedMonth] = useState("");
@@ -34,8 +37,15 @@ const SelectedMoviesDisplay = ({ selections = {}, onMonthChange }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [movieDetails, setMovieDetails] = useState({});
   const isMobile = useMediaQuery("(max-width:600px)");
+  const [recapOpen, setRecapOpen] = useState(false);
 
   const genres = useMemo(() => ["action", "drama", "comedy", "thriller"], []);
+
+  const recapLinks = {
+    "2025-06": "https://www.youtube.com/watch?v=zmPYwEZrs_s",
+    "2025-05": "https://www.youtube.com/watch?v=_7H2Ny_QxGA&t=16s",
+    // Add more as needed
+  };
 
   // Fetch available months from Firestore
   useEffect(() => {
@@ -187,7 +197,52 @@ const SelectedMoviesDisplay = ({ selections = {}, onMonthChange }) => {
             </MenuItem>
           ))}
         </Select>
+        {recapLinks[selectedMonth] && (
+          <Button
+            variant="outlined"
+            startIcon={<YouTubeIcon />}
+            onClick={() => {
+              if (isMobile) {
+                window.open(
+                  recapLinks[selectedMonth],
+                  "_blank",
+                  "noopener,noreferrer"
+                );
+              } else {
+                setRecapOpen(true);
+              }
+            }}
+            sx={{ ml: 2, borderColor: "#bc252d", color: "#bc252d" }}
+          >
+            Watch Recap
+          </Button>
+        )}
       </Box>
+      <Modal open={recapOpen} onClose={() => setRecapOpen(false)}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            bgcolor: "background.paper",
+            boxShadow: 24,
+            p: 2,
+            borderRadius: 2,
+            outline: "none",
+          }}
+        >
+          <iframe
+            width={isMobile ? 300 : 800}
+            height={isMobile ? 170 : 450}
+            src={recapLinks[selectedMonth]?.replace("watch?v=", "embed/")}
+            title="YouTube video player"
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </Box>
+      </Modal>
       <Fade in={!isLoading} timeout={300}>
         <Box>
           {isLoading ? (
