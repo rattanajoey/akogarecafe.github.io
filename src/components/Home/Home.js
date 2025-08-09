@@ -199,7 +199,7 @@ const HomeComponent = () => {
         pt: { xs: 2, md: 5 },
         boxSizing: "border-box",
         px: { xs: 1.5, sm: 2, md: 0 },
-        pb: { xs: 20, md: 0 },
+        pb: { xs: 25, md: 15 },
       }}
     >
       <Box
@@ -213,6 +213,7 @@ const HomeComponent = () => {
         }}
         className="room-background"
       />
+
       <Grid2
         container
         spacing={{ xs: 1, md: 4 }}
@@ -448,7 +449,7 @@ const HomeComponent = () => {
               overflow: "hidden",
               display: "flex",
               flexDirection: "column",
-              height: { md: "100%" },
+              maxHeight: { xs: "400px", md: "500px" },
               minWidth: 0,
               width: "100%",
               maxWidth: "100vw",
