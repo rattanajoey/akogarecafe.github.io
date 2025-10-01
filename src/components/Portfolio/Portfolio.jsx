@@ -97,7 +97,7 @@ const PortfolioSection = () => {
                 Beyond development, I&apos;m passionate about anime, gaming,
                 music, collecting, filming, and content creation. I apply the
                 same attention to detail and innovation in my personal projects
-                as I do in my professional work—always striving to create
+                as I do in my professional work, always striving to create
                 experiences that are both visually compelling and technically
                 sound.
               </Typography>

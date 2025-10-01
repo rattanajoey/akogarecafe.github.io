@@ -22,14 +22,16 @@ const movementLogic = {
   PromotedSilver: getPromotedPieceMoves,
   PromotedKnight: getPromotedPieceMoves,
   PromotedLance: getPromotedPieceMoves,
-  PromotedBishop: (position, pieces, isPlayerTwo) => [
-    ...getBishopMoves(position, pieces),
-    ...getKingMoves(position, pieces),
-  ],
-  PromotedRook: (position, pieces, isPlayerTwo) => [
-    ...getRookMoves(position, pieces),
-    ...getKingMoves(position, pieces),
-  ],
+  PromotedBishop: (position, pieces, isPlayerTwo) => {
+    const bishopMoves = getBishopMoves(position, pieces, isPlayerTwo);
+    const kingMoves = getKingMoves(position, pieces, isPlayerTwo);
+    return [...bishopMoves, ...kingMoves];
+  },
+  PromotedRook: (position, pieces, isPlayerTwo) => {
+    const rookMoves = getRookMoves(position, pieces, isPlayerTwo);
+    const kingMoves = getKingMoves(position, pieces, isPlayerTwo);
+    return [...rookMoves, ...kingMoves];
+  },
 };
 
 export const getValidMoves = (piece, pieces, isPlayerTwo) => {

@@ -2,8 +2,13 @@ import React, { useState } from "react";
 import { Box, Typography } from "@mui/material";
 import MomoComponent from "../Momo/MomoComponent";
 import CustomTooltip from "../Tooltip/CustomTooltip";
-import { initialShogiPieces, pieceInfo } from "../constants/InitialShogiPieces";
+import {
+  initialShogiPieces,
+  pieceInfo,
+  promotionRules,
+} from "../constants/InitialShogiPieces";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import PromotionModal from "./PromotionModal";
 
 import { ShogiBoardWrapper, ShogiBoard, ShogiPiece, DropZone } from "./style";
 
@@ -16,33 +21,77 @@ const ShogiBoardComponent = () => {
   const [selectedPiece, setSelectedPiece] = useState(null);
   const [highlightedSquare, setHighlightedSquare] = useState(null);
   const [validMoves, setValidMoves] = useState(null);
+  const [promotionModal, setPromotionModal] = useState({
+    open: false,
+    piece: null,
+  });
 
   const handlePieceClick = (piece) => {
-    const moves = getValidMoves(piece, pieces, piece.playerTwo);
+    // Find the current piece data from the pieces state to ensure we have the latest data
+    const currentPiece = pieces.find((p) => p.id === piece.id) || piece;
+    const moves = getValidMoves(currentPiece, pieces, currentPiece.playerTwo);
     setValidMoves(moves);
 
-    if (selectedPiece?.id === piece.id) {
+    if (selectedPiece?.id === currentPiece.id) {
       setSelectedPiece(null);
       setHighlightedSquare(null);
       setValidMoves(null);
     } else {
-      setSelectedPiece(piece);
-      setHighlightedSquare(piece.position);
+      setSelectedPiece(currentPiece);
+      setHighlightedSquare(currentPiece.position);
     }
   };
 
   const handleSquareClick = (position) => {
     if (selectedPiece) {
-      if (selectedPiece.position === position) {
+      // Get the current piece data from state to ensure we have the latest data
+      const currentSelectedPiece =
+        pieces.find((p) => p.id === selectedPiece.id) || selectedPiece;
+
+      if (currentSelectedPiece.position === position) {
         setSelectedPiece(null);
         setHighlightedSquare(null);
         setValidMoves(null);
       } else if (validMoves?.includes(position)) {
+        // Remove the moving piece and any piece at the target position (capture)
         const newPieces = pieces.filter(
-          (p) => p.id !== selectedPiece.id && p.position !== position
+          (p) => p.id !== currentSelectedPiece.id && p.position !== position
         );
-        newPieces.push({ ...selectedPiece, position });
 
+        const movedPiece = { ...currentSelectedPiece, position };
+
+        // Check for promotion opportunity
+        const promotionRule = promotionRules[currentSelectedPiece.name];
+        if (promotionRule) {
+          const promotionZone = currentSelectedPiece.playerTwo
+            ? promotionRule.playerTwoPromotionZone
+            : promotionRule.promotionZone;
+
+          const mandatoryPromotionZone = currentSelectedPiece.playerTwo
+            ? promotionRule.playerTwoMandatoryPromotionZone
+            : promotionRule.mandatoryPromotionZone;
+
+          if (promotionZone.includes(position)) {
+            // Check if promotion is mandatory
+            const isMandatory =
+              mandatoryPromotionZone &&
+              mandatoryPromotionZone.includes(position);
+
+            // Show promotion modal with the moved piece
+            setPromotionModal({
+              open: true,
+              piece: movedPiece,
+              mandatory: isMandatory,
+            });
+
+            // Add the moved piece to the board immediately
+            newPieces.push(movedPiece);
+            setPieces(newPieces);
+            return;
+          }
+        }
+
+        newPieces.push(movedPiece);
         setPieces(newPieces);
         setSelectedPiece(null);
         setHighlightedSquare(null);
@@ -53,6 +102,45 @@ const ShogiBoardComponent = () => {
 
   const resetBoard = () => {
     setPieces(initialShogiPieces);
+    setSelectedPiece(null);
+    setHighlightedSquare(null);
+    setValidMoves(null);
+    setPromotionModal({ open: false, piece: null });
+  };
+
+  const handlePromotion = (pieceId, promotedName, promotedImage) => {
+    setPieces((currentPieces) => {
+      const newPieces = currentPieces.map((piece) =>
+        piece.id === pieceId
+          ? { ...piece, name: promotedName, image: promotedImage }
+          : piece
+      );
+      return newPieces;
+    });
+    // Clear the promotion modal state to prevent handlePromotionModalClose from running
+    setPromotionModal({ open: false, piece: null });
+    setSelectedPiece(null);
+    setHighlightedSquare(null);
+    setValidMoves(null);
+  };
+
+  const handlePromotionModalClose = () => {
+    // Only complete the move if the modal is closed without promoting
+    // (i.e., if the piece hasn't been promoted yet)
+    if (promotionModal.piece) {
+      const currentPiece = pieces.find((p) => p.id === promotionModal.piece.id);
+      // Only add the piece if it hasn't been promoted (still has original name)
+      if (currentPiece && currentPiece.name === promotionModal.piece.name) {
+        const newPieces = pieces.filter(
+          (p) =>
+            p.id !== promotionModal.piece.id &&
+            p.position !== promotionModal.piece.position
+        );
+        newPieces.push(promotionModal.piece);
+        setPieces(newPieces);
+      }
+    }
+    setPromotionModal({ open: false, piece: null });
     setSelectedPiece(null);
     setHighlightedSquare(null);
     setValidMoves(null);
@@ -353,9 +441,9 @@ const ShogiBoardComponent = () => {
         <Box
           sx={{
             background:
-              "linear-gradient(135deg, rgba(69, 183, 209, 0.1) 0%, rgba(0,0,0,0.3) 100%)",
+              "linear-gradient(135deg, rgba(255, 182, 193, 0.1) 0%, rgba(0,0,0,0.3) 100%)",
             backdropFilter: "blur(10px)",
-            border: "1px solid rgba(69, 183, 209, 0.2)",
+            border: "1px solid rgba(255, 182, 193, 0.2)",
             borderRadius: 3,
             p: 3,
             color: "white",
@@ -365,83 +453,175 @@ const ShogiBoardComponent = () => {
           <Typography
             variant="h6"
             sx={{
-              color: "#45b7d1",
+              color: "#ffb6c1",
               mb: 3,
               fontWeight: "bold",
               textAlign: "center",
             }}
           >
-            Cultural Significance
+            🌸 3-gatsu no Lion
           </Typography>
 
-          <Typography
-            variant="body2"
+          <Box
             sx={{
+              textAlign: "center",
               mb: 3,
-              lineHeight: 1.6,
-              color: "rgba(255,255,255,0.9)",
-              fontSize: "0.9rem",
             }}
           >
-            Shogi embodies Japanese philosophy in its very mechanics. The
-            concept of bringing captured pieces back to fight for you reflects
-            ideas of redemption, second chances, and the transformative power of
-            perspective.
-          </Typography>
+            {/* Manga Cover Image - Clickable */}
+            <Box
+              component="a"
+              href="https://amzn.to/3VNpLpF"
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={{
+                display: "block",
+                mb: 2,
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  transform: "scale(1.05)",
+                  filter: "brightness(1.1)",
+                },
+              }}
+            >
+              <Box
+                component="img"
+                src="/manga/march_comes_like_a_lion_1.jpg"
+                alt="3-gatsu no Lion Volume 1 Cover"
+                sx={{
+                  width: "120px",
+                  height: "160px",
+                  margin: "0 auto",
+                  borderRadius: 2,
+                  boxShadow: "0 4px 15px rgba(255, 182, 193, 0.3)",
+                  border: "2px solid rgba(255, 255, 255, 0.2)",
+                  objectFit: "cover",
+                }}
+              />
+            </Box>
+
+            <Typography
+              variant="body2"
+              sx={{
+                color: "rgba(255,255,255,0.9)",
+                fontSize: "0.9rem",
+                fontStyle: "italic",
+                mb: 2,
+              }}
+            >
+              "March Comes in Like a Lion"
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "rgba(255,255,255,0.8)",
+                fontSize: "0.85rem",
+                lineHeight: 1.6,
+              }}
+            >
+              The beautiful anime that brought Shogi to life through the story
+              of Rei Kiriyama, a young professional Shogi player navigating
+              loneliness, family, and the profound beauty of the game.
+            </Typography>
+          </Box>
 
           <Typography
             variant="h6"
             sx={{
-              color: "#45b7d1",
+              color: "#ffb6c1",
               mb: 2,
               fontWeight: "bold",
               fontSize: "1rem",
             }}
           >
-            Historical Roots
+            Why It Matters
           </Typography>
 
           <Typography
             variant="body2"
             sx={{
+              lineHeight: 1.6,
+              color: "rgba(255,255,255,0.8)",
+              fontSize: "0.9rem",
               mb: 3,
-              lineHeight: 1.6,
-              color: "rgba(255,255,255,0.8)",
-              fontSize: "0.9rem",
             }}
           >
-            Dating back over 1,000 years, Shogi evolved from ancient Indian
-            Chaturanga through Chinese Xiangqi. The Japanese added the
-            revolutionary "drop rule" that makes the game uniquely dynamic.
+            This series beautifully captures the emotional depth of Shogi, how
+            each move reflects the player's inner world, how the game connects
+            people across generations, and how strategy becomes poetry.
           </Typography>
 
-          <Typography
-            variant="h6"
+          <Box
             sx={{
-              color: "#45b7d1",
-              mb: 2,
-              fontWeight: "bold",
-              fontSize: "1rem",
+              textAlign: "center",
+              mt: 3,
             }}
           >
-            Strategic Depth
-          </Typography>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "#ffb6c1",
+                fontSize: "0.9rem",
+                fontWeight: "bold",
+                mb: 2,
+              }}
+            >
+              Experience the Series
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "rgba(255,255,255,0.8)",
+                fontSize: "0.85rem",
+                lineHeight: 1.6,
+                mb: 3,
+              }}
+            >
+              Watch the anime or read the manga to see how Shogi becomes a
+              metaphor for life itself, every decision, every connection, every
+              moment of growth reflected in the pieces on the board.
+            </Typography>
 
-          <Typography
-            variant="body2"
-            sx={{
-              lineHeight: 1.6,
-              color: "rgba(255,255,255,0.8)",
-              fontSize: "0.9rem",
-            }}
-          >
-            With approximately 10^226 possible games (compared to chess's
-            10^120), Shogi offers nearly infinite strategic possibilities. Every
-            captured piece becomes a potential future threat, keeping players
-            constantly engaged.
-          </Typography>
+            <Box
+              component="a"
+              href="https://amzn.to/3VNpLpF"
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={{
+                display: "inline-block",
+                background: "linear-gradient(135deg, #ffb6c1 0%, #ff69b4 100%)",
+                color: "white",
+                textDecoration: "none",
+                px: 3,
+                py: 1.5,
+                borderRadius: 2,
+                fontWeight: "bold",
+                fontSize: "0.9rem",
+                textTransform: "uppercase",
+                letterSpacing: 1,
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  transform: "translateY(-2px)",
+                  boxShadow: "0 8px 25px rgba(255, 182, 193, 0.4)",
+                  textDecoration: "none",
+                  color: "white",
+                },
+              }}
+            >
+              📚 Read Volume 1
+            </Box>
+          </Box>
         </Box>
       </Box>
+
+      {/* Promotion Modal */}
+      <PromotionModal
+        open={promotionModal.open}
+        onClose={handlePromotionModalClose}
+        onPromote={handlePromotion}
+        piece={promotionModal.piece}
+        mandatory={promotionModal.mandatory}
+      />
     </Box>
   );
 };

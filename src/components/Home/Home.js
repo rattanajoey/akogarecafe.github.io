@@ -534,6 +534,102 @@ const HomeComponent = () => {
             >
               Full Channel
             </Button>
+
+            {/* Subtle Social Media Section */}
+            <Box
+              sx={{
+                mt: 2,
+                p: 2,
+                bgcolor: "rgba(255,255,255,0.05)",
+                borderRadius: 2,
+                border: "1px solid rgba(255,255,255,0.1)",
+              }}
+            >
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "rgba(255,255,255,0.8)",
+                  fontSize: "0.85rem",
+                  textAlign: "center",
+                  mb: 1.5,
+                  fontWeight: "medium",
+                }}
+              >
+                Stay Connected
+              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  gap: 1.5,
+                  flexWrap: "wrap",
+                }}
+              >
+                <Box
+                  component="a"
+                  href="https://www.youtube.com/c/akogarecafe"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.5,
+                    color: "rgba(255,255,255,0.7)",
+                    textDecoration: "none",
+                    fontSize: "0.8rem",
+                    transition: "color 0.3s ease",
+                    "&:hover": {
+                      color: "#ff4757",
+                      textDecoration: "none",
+                    },
+                  }}
+                >
+                  📺 YouTube
+                </Box>
+                <Box
+                  component="a"
+                  href="https://www.twitch.tv/akogarecafe"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.5,
+                    color: "rgba(255,255,255,0.7)",
+                    textDecoration: "none",
+                    fontSize: "0.8rem",
+                    transition: "color 0.3s ease",
+                    "&:hover": {
+                      color: "#9146ff",
+                      textDecoration: "none",
+                    },
+                  }}
+                >
+                  🎮 Twitch
+                </Box>
+                <Box
+                  component="a"
+                  href="https://linktr.ee/akogarecafe"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.5,
+                    color: "rgba(255,255,255,0.7)",
+                    textDecoration: "none",
+                    fontSize: "0.8rem",
+                    transition: "color 0.3s ease",
+                    "&:hover": {
+                      color: "#00d4aa",
+                      textDecoration: "none",
+                    },
+                  }}
+                >
+                  🔗 All Links
+                </Box>
+              </Box>
+            </Box>
           </Box>
         </Grid2>
       </Grid2>
