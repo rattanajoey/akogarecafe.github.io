@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
 import MovieSubmission from "./MovieComponents/MovieSubmission";
 import SubmissionList from "./MovieComponents/SubmissionList";
-import { Box, Typography, Grid2, Link } from "@mui/material";
+import { Box, Typography, Grid2, Link, Button } from "@mui/material";
 import MovieClubInfoModal from "./MovieComponents/MovieClubInfoModal";
 import SelectedMoviesDisplay from "./MovieComponents/SelectedMoviesDisplay";
+import OscarVotingModal from "./MovieComponents/OscarVotingModal";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { getCurrentMonth } from "../utils";
 import GenrePool from "./MovieComponents/GenrePool";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 
 const MovieClub = () => {
   const [submissionsOpen] = useState(false);
@@ -19,6 +21,7 @@ const MovieClub = () => {
     thriller: [],
   });
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
+  const [oscarModalOpen, setOscarModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -127,8 +130,45 @@ const MovieClub = () => {
             onMonthChange={handleMonthChange}
           />
           <GenrePool pools={pools} />
+
+          {/* Oscar Voting Button */}
+          <Box sx={{ textAlign: "center", mt: 4, mb: 4 }}>
+            <Button
+              variant="contained"
+              size="large"
+              startIcon={<EmojiEventsIcon />}
+              onClick={() => setOscarModalOpen(true)}
+              sx={{
+                backgroundColor: "#FFD700",
+                color: "#000",
+                fontWeight: "bold",
+                fontSize: "1.2rem",
+                px: 4,
+                py: 2,
+                borderRadius: 3,
+                boxShadow: "0 4px 8px rgba(0,0,0,0.3)",
+                "&:hover": {
+                  backgroundColor: "#FFC107",
+                  transform: "translateY(-2px)",
+                  boxShadow: "0 6px 12px rgba(0,0,0,0.4)",
+                },
+                transition: "all 0.3s ease",
+              }}
+            >
+              🏆 Oscar Voting
+            </Button>
+            <Typography variant="body2" color="text.secondary" mt={1}>
+              Vote for your favorite movies in various categories
+            </Typography>
+          </Box>
         </Box>
       )}
+
+      {/* Oscar Voting Modal */}
+      <OscarVotingModal
+        open={oscarModalOpen}
+        onClose={() => setOscarModalOpen(false)}
+      />
     </Box>
   );
 };

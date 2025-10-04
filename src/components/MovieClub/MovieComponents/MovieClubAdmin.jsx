@@ -23,12 +23,23 @@ import {
   DialogContent,
   DialogActions,
 } from "@mui/material";
-import { collection, getDocs, setDoc, doc, getDoc } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  setDoc,
+  doc,
+  getDoc,
+  deleteDoc,
+} from "firebase/firestore";
 import { db } from "../../../config/firebase";
 import { getCurrentMonth } from "../../utils";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import LocalMoviesIcon from "@mui/icons-material/LocalMovies";
 import PersonIcon from "@mui/icons-material/Person";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
+import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
+import ClearIcon from "@mui/icons-material/Clear";
 
 const genres = ["action", "drama", "comedy", "thriller"];
 const SAVE_PASSWORD = "thunderbolts"; // Same as submission password
@@ -49,6 +60,13 @@ const MovieClubAdmin = () => {
   const [monthlyHistory, setMonthlyHistory] = useState([]);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [savePassword, setSavePassword] = useState("");
+
+  // Oscar voting states
+  const [oscarCategories, setOscarCategories] = useState([]);
+  const [oscarVotes, setOscarVotes] = useState([]);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [selectedMovies, setSelectedMovies] = useState({});
+  const [allMovies, setAllMovies] = useState([]);
 
   const currentMonth = getCurrentMonth();
 
@@ -251,8 +269,184 @@ const MovieClubAdmin = () => {
   }, [access, fetchMonthlyHistory]);
 
   useEffect(() => {
-    if (access) fetchPools();
+    if (access) {
+      fetchPools();
+      fetchOscarData();
+    }
   }, [access, fetchPools]);
+
+  // Oscar voting functions
+  const fetchOscarData = async () => {
+    try {
+      // Fetch categories
+      const categoriesRef = collection(db, "OscarCategories");
+      const categoriesSnapshot = await getDocs(categoriesRef);
+      const categoriesData = [];
+
+      categoriesSnapshot.forEach((doc) => {
+        categoriesData.push({
+          id: doc.id,
+          name: doc.data().name,
+          movies: doc.data().movies || [],
+        });
+      });
+
+      setOscarCategories(categoriesData);
+
+      // Fetch votes
+      const votesRef = collection(db, "OscarVotes");
+      const votesSnapshot = await getDocs(votesRef);
+      const votesData = [];
+
+      votesSnapshot.forEach((doc) => {
+        votesData.push({
+          id: doc.id,
+          ...doc.data(),
+        });
+      });
+
+      setOscarVotes(votesData);
+
+      // Fetch all movies from monthly selections for the movie pool
+      const allMoviesSet = new Set();
+      const selectionsRef = collection(db, "MonthlySelections");
+      const selectionsSnapshot = await getDocs(selectionsRef);
+
+      selectionsSnapshot.forEach((doc) => {
+        const data = doc.data();
+        Object.values(data).forEach((movie) => {
+          if (movie && movie.title) {
+            allMoviesSet.add(movie.title);
+          }
+        });
+      });
+
+      setAllMovies(Array.from(allMoviesSet).sort());
+    } catch (error) {
+      console.error("Error fetching Oscar data:", error);
+    }
+  };
+
+  const addOscarCategory = async () => {
+    if (!newCategoryName.trim()) {
+      alert("Please enter a category name");
+      return;
+    }
+
+    try {
+      console.log("Adding category:", newCategoryName.trim());
+      const categoryRef = doc(collection(db, "OscarCategories"));
+      await setDoc(categoryRef, {
+        name: newCategoryName.trim(),
+        movies: [],
+      });
+
+      console.log("Category added successfully");
+      setNewCategoryName("");
+      fetchOscarData();
+      alert("Category added successfully!");
+    } catch (error) {
+      console.error("Error adding category:", error);
+      alert("Failed to add category: " + error.message);
+    }
+  };
+
+  const deleteOscarCategory = async (categoryId) => {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this category? This will also delete all votes for this category."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await deleteDoc(doc(db, "OscarCategories", categoryId));
+
+      // Also delete all votes for this category
+      const votesToDelete = oscarVotes.filter(
+        (vote) => vote.categoryId === categoryId
+      );
+      for (const vote of votesToDelete) {
+        await deleteDoc(doc(db, "OscarVotes", vote.id));
+      }
+
+      fetchOscarData();
+    } catch (error) {
+      console.error("Error deleting category:", error);
+    }
+  };
+
+  const updateCategoryMovies = async (categoryId, movies) => {
+    try {
+      await setDoc(
+        doc(db, "OscarCategories", categoryId),
+        {
+          name:
+            oscarCategories.find((cat) => cat.id === categoryId)?.name || "",
+          movies: movies,
+        },
+        { merge: true }
+      );
+
+      fetchOscarData();
+    } catch (error) {
+      console.error("Error updating category movies:", error);
+    }
+  };
+
+  const handleSelectAllMovies = (categoryId) => {
+    setSelectedMovies((prev) => ({
+      ...prev,
+      [categoryId]: [...allMovies],
+    }));
+  };
+
+  const handleDeselectAllMovies = (categoryId) => {
+    setSelectedMovies((prev) => ({
+      ...prev,
+      [categoryId]: [],
+    }));
+  };
+
+  const handleMovieToggle = (categoryId, movie) => {
+    setSelectedMovies((prev) => {
+      const current = prev[categoryId] || [];
+      const updated = current.includes(movie)
+        ? current.filter((m) => m !== movie)
+        : [...current, movie];
+
+      return {
+        ...prev,
+        [categoryId]: updated,
+      };
+    });
+  };
+
+  const saveCategoryMovies = async (categoryId) => {
+    const movies = selectedMovies[categoryId] || [];
+    await updateCategoryMovies(categoryId, movies);
+    setSelectedMovies((prev) => ({
+      ...prev,
+      [categoryId]: [],
+    }));
+  };
+
+  const deleteOscarVote = async (voteId) => {
+    if (!window.confirm("Are you sure you want to delete this vote?")) {
+      return;
+    }
+
+    try {
+      await deleteDoc(doc(db, "OscarVotes", voteId));
+      console.log("Vote deleted successfully");
+      fetchOscarData();
+      alert("Vote deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting vote:", error);
+      alert("Failed to delete vote: " + error.message);
+    }
+  };
 
   if (!access) {
     return (
@@ -281,7 +475,280 @@ const MovieClubAdmin = () => {
       </Typography>
 
       <Grid2 container spacing={4}>
-        <Grid2 item xs={12} md={6}>
+        {/* Oscar Voting Admin Section */}
+        <Grid2 size={12}>
+          <Paper sx={{ p: 3, mb: 4 }}>
+            <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+              <EmojiEventsIcon sx={{ fontSize: 40, color: "#FFD700", mr: 2 }} />
+              <Typography variant="h5" fontWeight="bold">
+                🏆 Oscar Voting Admin
+              </Typography>
+            </Box>
+
+            {/* Add New Category */}
+            <Box sx={{ display: "flex", gap: 2, mb: 4 }}>
+              <TextField
+                label="New Category Name"
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && addOscarCategory()}
+                sx={{ flexGrow: 1 }}
+                placeholder="e.g., Best Picture, Best Director"
+              />
+              <Button
+                variant="contained"
+                onClick={addOscarCategory}
+                startIcon={<AddIcon />}
+                sx={{ backgroundColor: "#FFD700", color: "#000" }}
+              >
+                Add Category
+              </Button>
+            </Box>
+
+            {/* Categories Management */}
+            <Grid2 container spacing={3}>
+              {oscarCategories.map((category) => (
+                <Grid2 size={{ xs: 12, md: 6 }} key={category.id}>
+                  <Paper sx={{ p: 2, border: "1px solid #FFD700" }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        mb: 2,
+                      }}
+                    >
+                      <Typography
+                        variant="h6"
+                        fontWeight="bold"
+                        color="#FFD700"
+                      >
+                        {category.name}
+                      </Typography>
+                      <Button
+                        size="small"
+                        color="error"
+                        onClick={() => deleteOscarCategory(category.id)}
+                        startIcon={<DeleteIcon />}
+                      >
+                        Delete
+                      </Button>
+                    </Box>
+
+                    {/* Movie Selection */}
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="subtitle2" gutterBottom>
+                        Select Movies ({category.movies.length} selected):
+                      </Typography>
+
+                      <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          onClick={() => handleSelectAllMovies(category.id)}
+                        >
+                          Select All
+                        </Button>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          onClick={() => handleDeselectAllMovies(category.id)}
+                        >
+                          Deselect All
+                        </Button>
+                        <Button
+                          size="small"
+                          variant="contained"
+                          onClick={() => saveCategoryMovies(category.id)}
+                          disabled={
+                            !selectedMovies[category.id] ||
+                            selectedMovies[category.id].length === 0
+                          }
+                        >
+                          Save Movies
+                        </Button>
+                      </Box>
+
+                      <Box
+                        sx={{
+                          maxHeight: 200,
+                          overflowY: "auto",
+                          border: "1px solid #ccc",
+                          p: 1,
+                          borderRadius: 1,
+                        }}
+                      >
+                        {allMovies.map((movie) => {
+                          const isSelected = (
+                            selectedMovies[category.id] || []
+                          ).includes(movie);
+                          const isCurrentlyInCategory =
+                            category.movies.includes(movie);
+
+                          return (
+                            <Box
+                              key={movie}
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                p: 0.5,
+                                cursor: "pointer",
+                                backgroundColor: isSelected
+                                  ? "#FFD700"
+                                  : isCurrentlyInCategory
+                                  ? "#4CAF50"
+                                  : "transparent",
+                                color:
+                                  isSelected || isCurrentlyInCategory
+                                    ? "#000"
+                                    : "inherit",
+                                borderRadius: 0.5,
+                                mb: 0.5,
+                              }}
+                              onClick={() =>
+                                handleMovieToggle(category.id, movie)
+                              }
+                            >
+                              <Typography variant="body2">
+                                {movie}
+                                {isCurrentlyInCategory && !isSelected && " ✓"}
+                              </Typography>
+                            </Box>
+                          );
+                        })}
+                      </Box>
+                    </Box>
+
+                    {/* Current Movies */}
+                    {category.movies.length > 0 && (
+                      <Box>
+                        <Typography variant="subtitle2" gutterBottom>
+                          Current Movies in Category:
+                        </Typography>
+                        <Box
+                          sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}
+                        >
+                          {category.movies.map((movie) => (
+                            <Chip
+                              key={movie}
+                              label={movie}
+                              size="small"
+                              sx={{ backgroundColor: "#4CAF50", color: "#000" }}
+                            />
+                          ))}
+                        </Box>
+                      </Box>
+                    )}
+                  </Paper>
+                </Grid2>
+              ))}
+            </Grid2>
+
+            {/* Vote Results */}
+            {oscarVotes.length > 0 && (
+              <Box sx={{ mt: 4 }}>
+                <Typography variant="h6" fontWeight="bold" gutterBottom>
+                  📊 Vote Results
+                </Typography>
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Category</TableCell>
+                        <TableCell>Movie</TableCell>
+                        <TableCell>Voter</TableCell>
+                        <TableCell>Vote Date</TableCell>
+                        <TableCell>Updated</TableCell>
+                        <TableCell>Actions</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {oscarVotes.map((vote) => {
+                        const category = oscarCategories.find(
+                          (cat) => cat.id === vote.categoryId
+                        );
+                        return (
+                          <TableRow key={vote.id}>
+                            <TableCell>
+                              <Chip
+                                label={category?.name || "Unknown Category"}
+                                color="primary"
+                                variant="outlined"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 1,
+                                }}
+                              >
+                                <LocalMoviesIcon fontSize="small" />
+                                <Typography variant="body2" fontWeight="bold">
+                                  {vote.movie}
+                                </Typography>
+                              </Box>
+                            </TableCell>
+                            <TableCell>
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 1,
+                                }}
+                              >
+                                <PersonIcon fontSize="small" />
+                                <Typography variant="body2">
+                                  {vote.voterName}
+                                </Typography>
+                              </Box>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2">
+                                {vote.timestamp
+                                  ?.toDate?.()
+                                  ?.toLocaleDateString() || "Unknown"}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              {vote.updated ? (
+                                <Chip
+                                  label="Updated"
+                                  color="warning"
+                                  size="small"
+                                />
+                              ) : (
+                                <Chip
+                                  label="Original"
+                                  color="success"
+                                  size="small"
+                                />
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                size="small"
+                                color="error"
+                                onClick={() => deleteOscarVote(vote.id)}
+                                startIcon={<ClearIcon />}
+                                variant="outlined"
+                              >
+                                Delete
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Box>
+            )}
+          </Paper>
+        </Grid2>
+
+        <Grid2 size={{ xs: 12, md: 6 }}>
           <Paper sx={{ p: 3, mb: 4 }}>
             <Typography variant="h6" gutterBottom>
               Next Month Selection
@@ -333,7 +800,7 @@ const MovieClubAdmin = () => {
               <>
                 <Grid2 container spacing={3}>
                   {genres.map((genre) => (
-                    <Grid2 item xs={12} md={6} key={genre}>
+                    <Grid2 size={{ xs: 12, md: 6 }} key={genre}>
                       <Paper sx={{ p: 2 }}>
                         <Typography variant="h6" gutterBottom>
                           {genre.toUpperCase()} Pool
@@ -390,7 +857,7 @@ const MovieClubAdmin = () => {
           </Paper>
         </Grid2>
 
-        <Grid2 item xs={12} md={6}>
+        <Grid2 size={{ xs: 12, md: 6 }}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
               Movie Club History
