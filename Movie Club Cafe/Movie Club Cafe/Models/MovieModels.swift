@@ -17,12 +17,14 @@ struct Movie: Codable, Identifiable, Equatable {
     let eventDate: Date?
     let eventDescription: String?
     let eventLocation: String?
+    let streamingProviders: [StreamingProvider]?
+    let watchProvidersLink: String?
     
     enum CodingKeys: String, CodingKey {
-        case title, submittedBy, director, year, posterUrl, eventDate, eventDescription, eventLocation
+        case title, submittedBy, director, year, posterUrl, eventDate, eventDescription, eventLocation, streamingProviders, watchProvidersLink
     }
     
-    init(title: String, submittedBy: String, director: String? = nil, year: String? = nil, posterUrl: String? = nil, eventDate: Date? = nil, eventDescription: String? = nil, eventLocation: String? = nil) {
+    init(title: String, submittedBy: String, director: String? = nil, year: String? = nil, posterUrl: String? = nil, eventDate: Date? = nil, eventDescription: String? = nil, eventLocation: String? = nil, streamingProviders: [StreamingProvider]? = nil, watchProvidersLink: String? = nil) {
         self.title = title
         self.submittedBy = submittedBy
         self.director = director
@@ -31,6 +33,8 @@ struct Movie: Codable, Identifiable, Equatable {
         self.eventDate = eventDate
         self.eventDescription = eventDescription
         self.eventLocation = eventLocation
+        self.streamingProviders = streamingProviders
+        self.watchProvidersLink = watchProvidersLink
     }
     
     static func == (lhs: Movie, rhs: Movie) -> Bool {
@@ -38,6 +42,16 @@ struct Movie: Codable, Identifiable, Equatable {
         lhs.submittedBy == rhs.submittedBy &&
         lhs.director == rhs.director &&
         lhs.year == rhs.year
+    }
+}
+
+struct StreamingProvider: Codable, Identifiable, Equatable {
+    let id: Int
+    let name: String
+    let logoUrl: String?
+    
+    static func == (lhs: StreamingProvider, rhs: StreamingProvider) -> Bool {
+        lhs.id == rhs.id
     }
 }
 

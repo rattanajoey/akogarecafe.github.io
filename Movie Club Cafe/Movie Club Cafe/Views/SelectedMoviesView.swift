@@ -348,6 +348,58 @@ struct MovieCard: View {
                                 .foregroundColor(AppTheme.accentColor)
                             }
                         }
+                        
+                        // Streaming providers
+                        if let tmdbData = tmdbData,
+                           let providers = tmdbData.watchProviders,
+                           let countryProviders = TMDBService.shared.getWatchProviders(watchProviders: providers) {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("Available on:")
+                                    .font(.caption2)
+                                    .foregroundColor(AppTheme.textSecondary)
+                                
+                                if let streamingProviders = countryProviders.flatrate, !streamingProviders.isEmpty {
+                                    HStack(spacing: 6) {
+                                        ForEach(streamingProviders.prefix(3)) { provider in
+                                            if let logoUrl = TMDBService.shared.getProviderLogoURL(logoPath: provider.logoPath) {
+                                                AsyncImage(url: logoUrl) { phase in
+                                                    switch phase {
+                                                    case .success(let image):
+                                                        image
+                                                            .resizable()
+                                                            .aspectRatio(contentMode: .fit)
+                                                            .frame(width: 30, height: 30)
+                                                            .cornerRadius(6)
+                                                    case .empty:
+                                                        ProgressView()
+                                                            .frame(width: 30, height: 30)
+                                                    case .failure:
+                                                        Image(systemName: "tv")
+                                                            .frame(width: 30, height: 30)
+                                                    @unknown default:
+                                                        EmptyView()
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        if streamingProviders.count > 3 {
+                                            Text("+\(streamingProviders.count - 3)")
+                                                .font(.caption2)
+                                                .foregroundColor(AppTheme.textSecondary)
+                                        }
+                                    }
+                                }
+                                
+                                if let link = countryProviders.link {
+                                    Link(destination: URL(string: link)!) {
+                                        Text("See all options")
+                                            .font(.caption2)
+                                            .foregroundColor(AppTheme.accentColor)
+                                    }
+                                }
+                            }
+                            .padding(.top, 4)
+                        }
                     }
                     .padding(12)
                 }

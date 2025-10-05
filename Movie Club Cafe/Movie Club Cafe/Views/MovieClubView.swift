@@ -265,6 +265,17 @@ struct MovieClubView: View {
         if let eventDate = movie.eventDate { dict["eventDate"] = eventDate }
         if let eventDescription = movie.eventDescription { dict["eventDescription"] = eventDescription }
         if let eventLocation = movie.eventLocation { dict["eventLocation"] = eventLocation }
+        if let watchProvidersLink = movie.watchProvidersLink { dict["watchProvidersLink"] = watchProvidersLink }
+        
+        if let streamingProviders = movie.streamingProviders {
+            dict["streamingProviders"] = streamingProviders.map { provider in
+                [
+                    "id": provider.id,
+                    "name": provider.name,
+                    "logoUrl": provider.logoUrl as Any
+                ]
+            }
+        }
         
         return dict
     }

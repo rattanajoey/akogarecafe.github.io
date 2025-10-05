@@ -25,6 +25,7 @@ struct TMDBMovie: Codable {
     let genres: [TMDBGenre]?
     let productionCompanies: [TMDBProductionCompany]?
     let videos: TMDBVideos?
+    let watchProviders: TMDBWatchProvidersResponse?
     
     enum CodingKeys: String, CodingKey {
         case id, title, overview, popularity, runtime, budget, revenue, genres, videos
@@ -36,6 +37,7 @@ struct TMDBMovie: Codable {
         case voteCount = "vote_count"
         case originalLanguage = "original_language"
         case productionCompanies = "production_companies"
+        case watchProviders = "watch/providers"
     }
 }
 
@@ -63,6 +65,33 @@ struct TMDBVideo: Codable {
     let key: String
     let site: String
     let type: String
+}
+
+struct TMDBWatchProvidersResponse: Codable {
+    let results: [String: TMDBCountryProviders]
+}
+
+struct TMDBCountryProviders: Codable {
+    let link: String?
+    let flatrate: [TMDBProvider]?  // Streaming services
+    let rent: [TMDBProvider]?      // Rental options
+    let buy: [TMDBProvider]?       // Purchase options
+}
+
+struct TMDBProvider: Codable, Identifiable {
+    let providerId: Int
+    let providerName: String
+    let logoPath: String?
+    let displayPriority: Int
+    
+    var id: Int { providerId }
+    
+    enum CodingKeys: String, CodingKey {
+        case providerId = "provider_id"
+        case providerName = "provider_name"
+        case logoPath = "logo_path"
+        case displayPriority = "display_priority"
+    }
 }
 
 struct TMDBSearchResponse: Codable {
@@ -126,7 +155,7 @@ class TMDBService {
     }
     
     func getMovieDetails(movieId: Int) async throws -> TMDBMovie {
-        let urlString = "\(baseURL)/movie/\(movieId)?api_key=\(apiKey)&append_to_response=videos"
+        let urlString = "\(baseURL)/movie/\(movieId)?api_key=\(apiKey)&append_to_response=videos,watch/providers"
         
         guard let url = URL(string: urlString) else {
             throw URLError(.badURL)
@@ -147,6 +176,22 @@ class TMDBService {
         let trailer = results.first { $0.type == "Trailer" && $0.site == "YouTube" }
         guard let key = trailer?.key else { return nil }
         return URL(string: "https://www.youtube.com/watch?v=\(key)")
+    }
+    
+    func getWatchProviders(watchProviders: TMDBWatchProvidersResponse?, countryCode: String = "US") -> TMDBCountryProviders? {
+        return watchProviders?.results[countryCode]
+    }
+    
+    func getProviderLogoURL(logoPath: String?) -> URL? {
+        guard let logoPath = logoPath else { return nil }
+        return URL(string: "https://image.tmdb.org/t/p/original\(logoPath)")
+    }
+    
+    func getStreamingProviders(watchProviders: TMDBWatchProvidersResponse?, countryCode: String = "US") -> [TMDBProvider] {
+        guard let providers = getWatchProviders(watchProviders: watchProviders, countryCode: countryCode) else {
+            return []
+        }
+        return providers.flatrate ?? []
     }
     
     private func cleanMovieTitle(_ title: String) -> (String, String?) {

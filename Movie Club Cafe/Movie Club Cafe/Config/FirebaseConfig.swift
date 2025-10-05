@@ -8,6 +8,7 @@
 import Foundation
 import FirebaseCore
 import FirebaseFirestore
+import FirebaseAuth
 
 class FirebaseConfig {
     static let shared = FirebaseConfig()
@@ -22,6 +23,10 @@ class FirebaseConfig {
     
     var db: Firestore {
         return Firestore.firestore()
+    }
+    
+    var auth: Auth {
+        return Auth.auth()
     }
 }
 

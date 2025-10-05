@@ -10,6 +10,8 @@ import FirebaseCore
 
 @main
 struct Movie_Club_CafeApp: App {
+    @StateObject private var authService = AuthenticationService()
+    
     init() {
         // Initialize Firebase
         FirebaseConfig.shared.configure()
@@ -18,6 +20,7 @@ struct Movie_Club_CafeApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(authService)
         }
     }
 }
