@@ -14,9 +14,23 @@ struct Movie: Codable, Identifiable, Equatable {
     let director: String?
     let year: String?
     let posterUrl: String?
+    let eventDate: Date?
+    let eventDescription: String?
+    let eventLocation: String?
     
     enum CodingKeys: String, CodingKey {
-        case title, submittedBy, director, year, posterUrl
+        case title, submittedBy, director, year, posterUrl, eventDate, eventDescription, eventLocation
+    }
+    
+    init(title: String, submittedBy: String, director: String? = nil, year: String? = nil, posterUrl: String? = nil, eventDate: Date? = nil, eventDescription: String? = nil, eventLocation: String? = nil) {
+        self.title = title
+        self.submittedBy = submittedBy
+        self.director = director
+        self.year = year
+        self.posterUrl = posterUrl
+        self.eventDate = eventDate
+        self.eventDescription = eventDescription
+        self.eventLocation = eventLocation
     }
     
     static func == (lhs: Movie, rhs: Movie) -> Bool {

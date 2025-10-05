@@ -290,6 +290,31 @@ struct MovieCard: View {
                             .fontWeight(.medium)
                             .lineLimit(1)
                         
+                        // Event Date and Time
+                        if let eventDate = movie.eventDate {
+                            HStack(spacing: 4) {
+                                Image(systemName: "calendar")
+                                    .font(.caption2)
+                                Text(formatEventDate(eventDate))
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                            }
+                            .foregroundColor(AppTheme.accentColor)
+                            .padding(.vertical, 2)
+                        }
+                        
+                        // Event Location
+                        if let location = movie.eventLocation {
+                            HStack(spacing: 4) {
+                                Image(systemName: "mappin.circle")
+                                    .font(.caption2)
+                                Text(location)
+                                    .font(.caption)
+                                    .lineLimit(1)
+                            }
+                            .foregroundColor(AppTheme.textSecondary)
+                        }
+                        
                         if let tmdbData = tmdbData {
                             HStack(spacing: 4) {
                                 ForEach(0..<5) { index in
@@ -344,6 +369,13 @@ struct MovieCard: View {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         return formatter.string(from: NSNumber(value: value)) ?? "\(value)"
+    }
+    
+    private func formatEventDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
     }
 }
 

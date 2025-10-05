@@ -89,9 +89,10 @@ fastlane/test_output
 
 iOSInjectionProject/
 
-# Firebase
+# Firebase & API Keys
 GoogleService-Info.plist
 .env
+GoogleCalendarConfig.plist
 
 # macOS
 .DS_Store

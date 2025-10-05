@@ -1,0 +1,64 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#d2d2cb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4d695d;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1024" height="1024" fill="url(#bgGradient)" rx="226"/>
+  
+  <!-- Coffee Cup -->
+  <g transform="translate(512, 600)">
+    <!-- Cup body -->
+    <path d="M -120 -80 L -100 80 L 100 80 L 120 -80 Z" fill="#2c2c2c" stroke="#bc252d" stroke-width="8"/>
+    <!-- Cup handle -->
+    <path d="M 120 -40 Q 180 -40 180 20 Q 180 60 140 70" fill="none" stroke="#bc252d" stroke-width="12" stroke-linecap="round"/>
+    <!-- Coffee surface -->
+    <ellipse cx="0" cy="-80" rx="120" ry="20" fill="#bc252d"/>
+    <!-- Steam -->
+    <path d="M -60 -100 Q -70 -140 -60 -160" fill="none" stroke="#d2d2cb" stroke-width="6" stroke-linecap="round" opacity="0.7"/>
+    <path d="M 0 -100 Q -10 -150 0 -180" fill="none" stroke="#d2d2cb" stroke-width="6" stroke-linecap="round" opacity="0.7"/>
+    <path d="M 60 -100 Q 50 -140 60 -160" fill="none" stroke="#d2d2cb" stroke-width="6" stroke-linecap="round" opacity="0.7"/>
+  </g>
+  
+  <!-- Film Reel -->
+  <g transform="translate(512, 280)">
+    <!-- Outer ring -->
+    <circle cx="0" cy="0" r="160" fill="none" stroke="#2c2c2c" stroke-width="24"/>
+    <circle cx="0" cy="0" r="160" fill="none" stroke="#bc252d" stroke-width="8"/>
+    
+    <!-- Inner hub -->
+    <circle cx="0" cy="0" r="50" fill="#2c2c2c"/>
+    <circle cx="0" cy="0" r="50" fill="none" stroke="#bc252d" stroke-width="4"/>
+    
+    <!-- Spokes -->
+    <line x1="0" y1="-50" x2="0" y2="-136" stroke="#2c2c2c" stroke-width="12"/>
+    <line x1="43" y1="-25" x2="118" y2="-68" stroke="#2c2c2c" stroke-width="12"/>
+    <line x1="43" y1="25" x2="118" y2="68" stroke="#2c2c2c" stroke-width="12"/>
+    <line x1="0" y1="50" x2="0" y2="136" stroke="#2c2c2c" stroke-width="12"/>
+    <line x1="-43" y1="25" x2="-118" y2="68" stroke="#2c2c2c" stroke-width="12"/>
+    <line x1="-43" y1="-25" x2="-118" y2="-68" stroke="#2c2c2c" stroke-width="12"/>
+    
+    <!-- Film holes around the edge -->
+    <circle cx="0" cy="-160" r="15" fill="#bc252d"/>
+    <circle cx="113" cy="-113" r="15" fill="#bc252d"/>
+    <circle cx="160" cy="0" r="15" fill="#bc252d"/>
+    <circle cx="113" cy="113" r="15" fill="#bc252d"/>
+    <circle cx="0" cy="160" r="15" fill="#bc252d"/>
+    <circle cx="-113" cy="113" r="15" fill="#bc252d"/>
+    <circle cx="-160" cy="0" r="15" fill="#bc252d"/>
+    <circle cx="-113" cy="-113" r="15" fill="#bc252d"/>
+  </g>
+  
+  <!-- Decorative film strip accent -->
+  <rect x="412" y="460" width="200" height="8" fill="#bc252d" opacity="0.8"/>
+  <rect x="420" y="465" width="8" height="18" fill="#bc252d" opacity="0.6"/>
+  <rect x="450" y="465" width="8" height="18" fill="#bc252d" opacity="0.6"/>
+  <rect x="480" y="465" width="8" height="18" fill="#bc252d" opacity="0.6"/>
+  <rect x="510" y="465" width="8" height="18" fill="#bc252d" opacity="0.6"/>
+  <rect x="540" y="465" width="8" height="18" fill="#bc252d" opacity="0.6"/>
+  <rect x="570" y="465" width="8" height="18" fill="#bc252d" opacity="0.6"/>
+  <rect x="596" y="465" width="8" height="18" fill="#bc252d" opacity="0.6"/>
+</svg>
