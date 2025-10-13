@@ -96,3 +96,4 @@ Xcode will automatically generate all required sizes!
 3. Download the zip file
 4. Unzip and drag all images to Xcode's AppIcon asset catalog
 5. Done! ✅
+

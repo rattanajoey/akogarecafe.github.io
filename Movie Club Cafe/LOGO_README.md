@@ -88,3 +88,4 @@ The `logo.svg` file can be edited with:
 **Tip**: For the best quality, always start with the SVG file and generate PNGs at the exact sizes you need, rather than resizing PNGs.
 
 Enjoy your new app icon! 🎉
+

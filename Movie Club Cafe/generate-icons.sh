@@ -84,3 +84,4 @@ echo "OR (Xcode 14+):"
 echo "1. In Xcode AppIcon, select 'Single Size' in Attributes Inspector"
 echo "2. Drag icon-1024.png to the single slot"
 echo ""
+
