@@ -1,0 +1,24 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+Allow: /ads.txt
+Disallow: /Admin
+
+# Sitemap
+Sitemap: https://akogarecafe.github.io/sitemap.xml
+
+# Allow Google crawler specifically
+User-agent: Googlebot
+Allow: /
+Allow: /ads.txt
+
+# Allow AdSense crawlers
+User-agent: Mediapartners-Google
+Allow: /
+
+# Allow other major search engines
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
