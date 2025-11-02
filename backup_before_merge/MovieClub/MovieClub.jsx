@@ -9,9 +9,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { getCurrentMonth } from "../utils";
 import GenrePool from "./MovieComponents/GenrePool";
-import HoldingPool from "./MovieComponents/HoldingPool";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 
 const MovieClub = () => {
   const [submissionsOpen] = useState(false);
@@ -105,39 +103,6 @@ const MovieClub = () => {
         </Link>
       </Box>
 
-      {/* Scroll Notice */}
-      <Box
-        sx={{
-          mt: 2,
-          mb: 2,
-          textAlign: "center",
-          animation: "bounce 2s infinite",
-          "@keyframes bounce": {
-            "0%, 100%": {
-              transform: "translateY(0)",
-            },
-            "50%": {
-              transform: "translateY(-10px)",
-            },
-          },
-        }}
-      >
-        <Typography
-          variant="h6"
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 1,
-            color: "#FFD700",
-            fontWeight: "bold",
-          }}
-        >
-          📝 Submissions Open - Scroll Down
-          <KeyboardArrowDownIcon sx={{ animation: "bounce 2s infinite" }} />
-        </Typography>
-      </Box>
-
       {submissionsOpen ? (
         <Grid2
           container
@@ -196,8 +161,6 @@ const MovieClub = () => {
               Vote for your favorite movies in various categories
             </Typography>
           </Box>
-
-          <HoldingPool />
 
           {/* Submission Form */}
           <Box sx={{ width: "90%", mb: 4 }}>
