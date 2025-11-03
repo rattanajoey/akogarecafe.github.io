@@ -12,21 +12,18 @@ export const MusicShelfWrapper = styled("div")(({ theme }) => ({
   padding: "48px",
   background: "radial-gradient(circle, #1e1e2e, #282a36)",
   position: "relative",
+  zIndex: 1,
 }));
 
 // Album Container
-export const Album = styled(motion.div)(({ theme }) => ({
+export const Album = styled("div")(({ theme }) => ({
   width: "clamp(100px, 12vw, 180px)",
   height: "clamp(100px, 12vw, 180px)",
   borderRadius: "12px",
   background: "#333",
-  boxShadow: "0 5px 15px rgba(0, 0, 0, 0.4)", // Stronger shadow to give a floating look
-  cursor: "pointer",
-  transform: "perspective(800px) rotateX(10deg)", // Adds slight 3D tilt
-  transition: "transform 0.3s ease-in-out",
-  "&:hover": {
-    transform: "perspective(800px) rotateX(5deg) scale(1.05)",
-  },
+  boxShadow: "0 5px 15px rgba(0, 0, 0, 0.4)",
+  overflow: "hidden",
+  transformStyle: "preserve-3d",
 }));
 
 // Album Cover Image
@@ -40,18 +37,16 @@ export const AlbumCover = styled("img")({
 // Album Details (Expanded View)
 export const AlbumDetails = styled(motion.div)({
   position: "fixed",
-  top: "60%",
-  left: "50%",
-  transform: "translate(-50%, -50%) perspective(800px) rotateX(-5deg)",
   width: "clamp(280px, 40vw, 500px)",
   background: "#1e1e2e",
   borderRadius: "16px",
-  boxShadow: "0 20px 50px rgba(0, 0, 0, 0.5)",
+  boxShadow: "0 20px 60px rgba(0, 0, 0, 0.8)",
   padding: "24px",
   color: "white",
   textAlign: "center",
   zIndex: 1000,
-  transition: "transform 0.4s ease-out",
+  transformStyle: "preserve-3d",
+  perspective: "1000px",
 });
 
 export const CloseIconContainer = styled(Box)({
