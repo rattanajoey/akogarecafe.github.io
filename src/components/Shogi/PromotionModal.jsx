@@ -57,8 +57,7 @@ const PromotionModal = ({
       slotProps={{
         paper: {
           sx: {
-            background:
-              "linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)",
+            background: "#1a1a1a",
             border: "2px solid rgba(78, 205, 196, 0.3)",
             borderRadius: 3,
           },
@@ -73,23 +72,27 @@ const PromotionModal = ({
           fontWeight: "bold",
           borderBottom: "1px solid rgba(78, 205, 196, 0.2)",
           pb: 2,
+          backgroundColor: "#1a1a1a",
+          textShadow: "0 2px 4px rgba(0,0,0,0.5)",
         }}
       >
         {mandatory ? "⚠️ Mandatory Promotion!" : "🎯 Promotion Opportunity!"}
       </DialogTitle>
 
-      <DialogContent sx={{ p: 4 }}>
-        <Box sx={{ textAlign: "center", mb: 4 }}>
+      <DialogContent sx={{ p: 4, backgroundColor: "rgba(26, 26, 26, 0.98)" }}>
+        <Box sx={{ textAlign: "center", mb: 4, mt: 2 }}>
           <Typography
             variant="h6"
             sx={{
-              color: "rgba(255,255,255,0.9)",
+              color: "#ffffff",
               mb: 2,
               fontSize: "1.2rem",
+              fontWeight: "600",
+              textShadow: "0 2px 4px rgba(0,0,0,0.5)",
             }}
           >
             Your{" "}
-            <strong style={{ color: "#ff6b6b" }}>
+            <strong style={{ color: "#ff6b6b", fontWeight: "bold" }}>
               {pieceInfo[piece.name]?.englishName}
             </strong>{" "}
             has entered the promotion zone!
@@ -98,9 +101,10 @@ const PromotionModal = ({
           <Typography
             variant="body1"
             sx={{
-              color: "rgba(255,255,255,0.8)",
+              color: "#ffffff",
               mb: 3,
-              lineHeight: 1.6,
+              lineHeight: 1.7,
+              textShadow: "0 1px 2px rgba(0,0,0,0.5)",
             }}
           >
             {mandatory
@@ -113,10 +117,11 @@ const PromotionModal = ({
           <Grid2 size={{ xs: 12, md: 6 }}>
             <Card
               sx={{
-                background: "rgba(255, 107, 107, 0.1)",
-                border: "1px solid rgba(255, 107, 107, 0.3)",
+                background: "rgba(30, 30, 30, 0.95)",
+                border: "2px solid rgba(255, 107, 107, 0.6)",
                 borderRadius: 2,
                 height: "100%",
+                boxShadow: "0 4px 20px rgba(255, 107, 107, 0.3)",
               }}
             >
               <CardContent sx={{ textAlign: "center", p: 3 }}>
@@ -134,18 +139,23 @@ const PromotionModal = ({
                     width: 60,
                     height: 60,
                     mb: 2,
-                    filter: "drop-shadow(0 0 8px rgba(255, 107, 107, 0.3))",
+                    filter: "drop-shadow(0 0 8px rgba(255, 107, 107, 0.5))",
                   }}
                 />
                 <Typography
                   variant="body2"
-                  sx={{ color: "rgba(255,255,255,0.9)", fontWeight: "bold" }}
+                  sx={{ color: "#ff6b6b", fontWeight: "bold", mb: 1 }}
                 >
                   {pieceInfo[piece.name]?.englishName}
                 </Typography>
                 <Typography
                   variant="body2"
-                  sx={{ color: "rgba(255,255,255,0.7)", fontSize: "0.9rem" }}
+                  sx={{
+                    color: "rgba(255,255,255,0.9)",
+                    fontSize: "0.9rem",
+                    mt: 1,
+                    lineHeight: 1.6,
+                  }}
                 >
                   {pieceInfo[piece.name]?.description}
                 </Typography>
@@ -156,10 +166,11 @@ const PromotionModal = ({
           <Grid2 size={{ xs: 12, md: 6 }}>
             <Card
               sx={{
-                background: "rgba(78, 205, 196, 0.1)",
-                border: "1px solid rgba(78, 205, 196, 0.3)",
+                background: "rgba(30, 30, 30, 0.95)",
+                border: "2px solid rgba(78, 205, 196, 0.6)",
                 borderRadius: 2,
                 height: "100%",
+                boxShadow: "0 4px 20px rgba(78, 205, 196, 0.3)",
               }}
             >
               <CardContent sx={{ textAlign: "center", p: 3 }}>
@@ -177,20 +188,26 @@ const PromotionModal = ({
                     width: 60,
                     height: 60,
                     mb: 2,
-                    filter: "drop-shadow(0 0 8px rgba(78, 205, 196, 0.3))",
+                    filter: "drop-shadow(0 0 8px rgba(78, 205, 196, 0.5))",
                   }}
                 />
                 <Typography
                   variant="body2"
-                  sx={{ color: "rgba(255,255,255,0.9)", fontWeight: "bold" }}
+                  sx={{ color: "#4ecdc4", fontWeight: "bold", mb: 1 }}
                 >
                   {promotedPieceInfo?.englishName}
                 </Typography>
                 <Typography
                   variant="body2"
-                  sx={{ color: "rgba(255,255,255,0.7)", fontSize: "0.9rem" }}
+                  sx={{
+                    color: "rgba(255,255,255,0.9)",
+                    fontSize: "0.9rem",
+                    mt: 1,
+                    lineHeight: 1.6,
+                  }}
                 >
-                  {promotedPieceInfo?.description}
+                  {promotedPieceInfo?.description ||
+                    "Promoted piece description"}
                 </Typography>
               </CardContent>
             </Card>
@@ -199,11 +216,12 @@ const PromotionModal = ({
 
         <Box
           sx={{
-            background: "rgba(69, 183, 209, 0.1)",
-            border: "1px solid rgba(69, 183, 209, 0.3)",
+            background: "rgba(30, 30, 30, 0.95)",
+            border: "2px solid rgba(69, 183, 209, 0.6)",
             borderRadius: 2,
             p: 3,
             mb: 3,
+            boxShadow: "0 4px 20px rgba(69, 183, 209, 0.3)",
           }}
         >
           <Typography
@@ -220,13 +238,14 @@ const PromotionModal = ({
           <Typography
             variant="body2"
             sx={{
-              color: "rgba(255,255,255,0.8)",
-              lineHeight: 1.6,
+              color: "rgba(255,255,255,0.9)",
+              lineHeight: 1.8,
               textAlign: "center",
             }}
           >
-            • Promotion is <strong>optional</strong> - you can choose to promote
-            or not
+            • Promotion is{" "}
+            <strong style={{ color: "#45b7d1" }}>optional</strong> - you can
+            choose to promote or not
             <br />
             • Once promoted, pieces cannot be "unpromoted"
             <br />
@@ -236,22 +255,32 @@ const PromotionModal = ({
         </Box>
       </DialogContent>
 
-      <DialogActions sx={{ p: 3, justifyContent: "center", gap: 2 }}>
+      <DialogActions
+        sx={{
+          p: 3,
+          justifyContent: "center",
+          gap: 2,
+          backgroundColor: "rgba(26, 26, 26, 0.98)",
+        }}
+      >
         {!mandatory && (
           <Button
             onClick={handleDecline}
             variant="outlined"
             sx={{
-              color: "rgba(255,255,255,0.8)",
-              borderColor: "rgba(255,255,255,0.3)",
+              color: "#ffffff",
+              borderColor: "rgba(255,255,255,0.5)",
+              borderWidth: 2,
               px: 4,
               py: 1.5,
               fontSize: "1rem",
               fontWeight: "bold",
+              backgroundColor: "rgba(255, 255, 255, 0.05)",
               "&:hover": {
                 borderColor: "#ff6b6b",
                 color: "#ff6b6b",
-                backgroundColor: "rgba(255, 107, 107, 0.1)",
+                backgroundColor: "rgba(255, 107, 107, 0.15)",
+                borderWidth: 2,
               },
             }}
           >

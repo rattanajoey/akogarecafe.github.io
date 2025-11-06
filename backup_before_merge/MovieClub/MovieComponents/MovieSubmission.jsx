@@ -120,19 +120,14 @@ const MovieSubmission = () => {
         onChange={(e) => setMovies({ ...movies, thriller: e.target.value })}
       />
 
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-        <Button
-          variant="contained"
-          sx={{
-            backgroundColor: "#4d695d",
-            minWidth: { xs: "100%", sm: "auto" },
-            px: { xs: 2, sm: 4 },
-          }}
-          onClick={handleSubmit}
-        >
-          Submit
-        </Button>
-      </Box>
+      <Button
+        fullWidth
+        variant="contained"
+        sx={{ backgroundColor: "#4d695d", mt: 2 }}
+        onClick={handleSubmit}
+      >
+        Submit
+      </Button>
     </Box>
   );
 };

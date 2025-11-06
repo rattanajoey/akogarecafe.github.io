@@ -42,58 +42,76 @@ const HeaderComponent = () => {
   return (
     <Box
       className="App-header"
-      style={{
+      sx={{
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        padding: "1rem 2rem",
+        padding: { xs: "0.75rem 1rem", sm: "1rem 1.5rem", md: "1rem 2rem" },
         backgroundColor: "rgba(0, 0, 0, 0.9)",
         backdropFilter: "blur(10px)",
         borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
+        gap: { xs: 1, sm: 2 },
       }}
     >
-      <SocialMediaContainer>
+      <SocialMediaContainer
+        sx={{
+          gap: { xs: 0.5, sm: 1 },
+          "& .MuiIconButton-root": {
+            padding: { xs: "6px", sm: "8px" },
+          },
+        }}
+      >
         <IconButton
           href="https://www.youtube.com/c/akogarecafe"
           target="_blank"
           aria-label="YouTube"
+          size="small"
         >
-          <YouTubeIcon />
+          <YouTubeIcon sx={{ fontSize: { xs: "1.2rem", sm: "1.5rem" } }} />
         </IconButton>
         <IconButton
           href="https://www.instagram.com/akogarecafe"
           target="_blank"
           aria-label="Instagram"
+          size="small"
         >
-          <InstagramIcon />
+          <InstagramIcon sx={{ fontSize: { xs: "1.2rem", sm: "1.5rem" } }} />
         </IconButton>
         <IconButton
           href="https://x.com/AkogareCafe_JR"
           target="_blank"
           aria-label="Twitter"
+          size="small"
         >
-          <TwitterIcon />
+          <TwitterIcon sx={{ fontSize: { xs: "1.2rem", sm: "1.5rem" } }} />
         </IconButton>
         <IconButton
           href="https://www.twitch.tv/akogarecafe"
           target="_blank"
           aria-label="Twitch"
+          size="small"
         >
-          <GamesIcon />
+          <GamesIcon sx={{ fontSize: { xs: "1.2rem", sm: "1.5rem" } }} />
         </IconButton>
         <IconButton
           href="https://github.com/rattanajoey"
           target="_blank"
           aria-label="GitHub"
+          size="small"
         >
-          <GitHubIcon />
+          <GitHubIcon sx={{ fontSize: { xs: "1.2rem", sm: "1.5rem" } }} />
         </IconButton>
       </SocialMediaContainer>
 
       <Title
         variant="h4"
         onClick={() => navigate("/")}
-        sx={{ cursor: "pointer", "&:hover": { opacity: 0.8 } }}
+        sx={{
+          cursor: "pointer",
+          "&:hover": { opacity: 0.8 },
+          fontSize: { xs: "1rem", sm: "1.25rem", md: "1.5rem" },
+          whiteSpace: "nowrap",
+        }}
       >
         Akogare Cafe
       </Title>
@@ -129,9 +147,13 @@ const HeaderComponent = () => {
         <IconButton
           onClick={handleClick}
           aria-label="Navigation Menu"
-          sx={{ color: "white" }}
+          sx={{
+            color: "white",
+            padding: { xs: "6px", sm: "8px" },
+          }}
+          size="small"
         >
-          <MenuIcon />
+          <MenuIcon sx={{ fontSize: { xs: "1.5rem", sm: "1.75rem" } }} />
         </IconButton>
 
         <Menu

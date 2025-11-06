@@ -22,9 +22,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
 } from "@mui/material";
 import {
   collection,
@@ -45,7 +42,6 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import ClearIcon from "@mui/icons-material/Clear";
 import EditIcon from "@mui/icons-material/Edit";
 import DoneIcon from "@mui/icons-material/Done";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 const genres = ["action", "drama", "comedy", "thriller"];
 const SAVE_PASSWORD = "thunderbolts"; // Same as submission password
@@ -619,8 +615,8 @@ const MovieClubAdmin = () => {
       <Grid2 container spacing={4}>
         {/* Oscar Voting Admin Section */}
         <Grid2 size={12}>
-          <Paper sx={{ p: 2, mb: 4 }}>
-            <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+          <Paper sx={{ p: 3, mb: 4 }}>
+            <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
               <EmojiEventsIcon sx={{ fontSize: 40, color: "#FFD700", mr: 2 }} />
               <Typography variant="h5" fontWeight="bold">
                 🏆 Oscar Voting Admin
@@ -628,7 +624,7 @@ const MovieClubAdmin = () => {
             </Box>
 
             {/* Add New Category */}
-            <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+            <Box sx={{ display: "flex", gap: 2, mb: 4 }}>
               <TextField
                 label="New Category Name"
                 value={newCategoryName}
@@ -648,175 +644,143 @@ const MovieClubAdmin = () => {
             </Box>
 
             {/* Categories Management */}
-            <Box>
+            <Grid2 container spacing={3}>
               {oscarCategories.map((category) => (
-                <Accordion
-                  key={category.id}
-                  sx={{ mb: 1, border: "1px solid #FFD700" }}
-                >
-                  <AccordionSummary
-                    expandIcon={<ExpandMoreIcon />}
-                    sx={{ backgroundColor: "rgba(255, 215, 0, 0.05)" }}
-                  >
+                <Grid2 size={{ xs: 12, md: 6 }} key={category.id}>
+                  <Paper sx={{ p: 2, border: "1px solid #FFD700" }}>
                     <Box
                       sx={{
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "center",
-                        width: "100%",
-                        pr: 2,
+                        mb: 2,
                       }}
                     >
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 2 }}
+                      <Typography
+                        variant="h6"
+                        fontWeight="bold"
+                        color="#FFD700"
                       >
-                        <Typography
-                          variant="h6"
-                          fontWeight="bold"
-                          color="#FFD700"
-                        >
-                          {category.name}
-                        </Typography>
-                        <Chip
-                          label={`${category.movies.length} movies`}
-                          size="small"
-                          sx={{ backgroundColor: "#FFD700", color: "#000" }}
-                        />
-                      </Box>
+                        {category.name}
+                      </Typography>
                       <Button
                         size="small"
                         color="error"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteOscarCategory(category.id);
-                        }}
+                        onClick={() => deleteOscarCategory(category.id)}
                         startIcon={<DeleteIcon />}
                       >
                         Delete
                       </Button>
                     </Box>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    <Box>
-                      {/* Movie Selection */}
-                      <Box sx={{ mb: 2 }}>
-                        <Typography variant="subtitle2" gutterBottom>
-                          Select Movies ({category.movies.length} currently):
-                        </Typography>
 
-                        <Box sx={{ display: "flex", gap: 1, mb: 1.5 }}>
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            onClick={() => handleSelectAllMovies(category.id)}
-                          >
-                            Select All
-                          </Button>
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            onClick={() => handleDeselectAllMovies(category.id)}
-                          >
-                            Deselect All
-                          </Button>
-                          <Button
-                            size="small"
-                            variant="contained"
-                            onClick={() => saveCategoryMovies(category.id)}
-                            disabled={
-                              !selectedMovies[category.id] ||
-                              selectedMovies[category.id].length === 0
-                            }
-                          >
-                            Save Movies
-                          </Button>
-                        </Box>
+                    {/* Movie Selection */}
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="subtitle2" gutterBottom>
+                        Select Movies ({category.movies.length} selected):
+                      </Typography>
 
-                        <Box
-                          sx={{
-                            maxHeight: 200,
-                            overflowY: "auto",
-                            border: "1px solid #ccc",
-                            p: 1,
-                            borderRadius: 1,
-                          }}
+                      <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          onClick={() => handleSelectAllMovies(category.id)}
                         >
-                          {allMovies.map((movie) => {
-                            const isSelected = (
-                              selectedMovies[category.id] || []
-                            ).includes(movie);
-                            const isCurrentlyInCategory =
-                              category.movies.includes(movie);
-
-                            return (
-                              <Box
-                                key={movie}
-                                sx={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  p: 0.5,
-                                  cursor: "pointer",
-                                  backgroundColor: isSelected
-                                    ? "#FFD700"
-                                    : isCurrentlyInCategory
-                                    ? "#4CAF50"
-                                    : "transparent",
-                                  color:
-                                    isSelected || isCurrentlyInCategory
-                                      ? "#000"
-                                      : "inherit",
-                                  borderRadius: 0.5,
-                                  mb: 0.5,
-                                  "&:hover": {
-                                    backgroundColor: isSelected
-                                      ? "#FFD700"
-                                      : isCurrentlyInCategory
-                                      ? "#4CAF50"
-                                      : "rgba(0,0,0,0.05)",
-                                  },
-                                }}
-                                onClick={() =>
-                                  handleMovieToggle(category.id, movie)
-                                }
-                              >
-                                <Typography variant="body2">
-                                  {movie}
-                                  {isCurrentlyInCategory && !isSelected && " ✓"}
-                                </Typography>
-                              </Box>
-                            );
-                          })}
-                        </Box>
+                          Select All
+                        </Button>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          onClick={() => handleDeselectAllMovies(category.id)}
+                        >
+                          Deselect All
+                        </Button>
+                        <Button
+                          size="small"
+                          variant="contained"
+                          onClick={() => saveCategoryMovies(category.id)}
+                          disabled={
+                            !selectedMovies[category.id] ||
+                            selectedMovies[category.id].length === 0
+                          }
+                        >
+                          Save Movies
+                        </Button>
                       </Box>
 
-                      {/* Current Movies */}
-                      {category.movies.length > 0 && (
-                        <Box>
-                          <Typography variant="subtitle2" gutterBottom>
-                            Current Movies in Category:
-                          </Typography>
-                          <Box
-                            sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}
-                          >
-                            {category.movies.map((movie) => (
-                              <Chip
-                                key={movie}
-                                label={movie}
-                                size="small"
-                                sx={{
-                                  backgroundColor: "#4CAF50",
-                                  color: "#000",
-                                }}
-                              />
-                            ))}
-                          </Box>
-                        </Box>
-                      )}
+                      <Box
+                        sx={{
+                          maxHeight: 200,
+                          overflowY: "auto",
+                          border: "1px solid #ccc",
+                          p: 1,
+                          borderRadius: 1,
+                        }}
+                      >
+                        {allMovies.map((movie) => {
+                          const isSelected = (
+                            selectedMovies[category.id] || []
+                          ).includes(movie);
+                          const isCurrentlyInCategory =
+                            category.movies.includes(movie);
+
+                          return (
+                            <Box
+                              key={movie}
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                p: 0.5,
+                                cursor: "pointer",
+                                backgroundColor: isSelected
+                                  ? "#FFD700"
+                                  : isCurrentlyInCategory
+                                  ? "#4CAF50"
+                                  : "transparent",
+                                color:
+                                  isSelected || isCurrentlyInCategory
+                                    ? "#000"
+                                    : "inherit",
+                                borderRadius: 0.5,
+                                mb: 0.5,
+                              }}
+                              onClick={() =>
+                                handleMovieToggle(category.id, movie)
+                              }
+                            >
+                              <Typography variant="body2">
+                                {movie}
+                                {isCurrentlyInCategory && !isSelected && " ✓"}
+                              </Typography>
+                            </Box>
+                          );
+                        })}
+                      </Box>
                     </Box>
-                  </AccordionDetails>
-                </Accordion>
+
+                    {/* Current Movies */}
+                    {category.movies.length > 0 && (
+                      <Box>
+                        <Typography variant="subtitle2" gutterBottom>
+                          Current Movies in Category:
+                        </Typography>
+                        <Box
+                          sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}
+                        >
+                          {category.movies.map((movie) => (
+                            <Chip
+                              key={movie}
+                              label={movie}
+                              size="small"
+                              sx={{ backgroundColor: "#4CAF50", color: "#000" }}
+                            />
+                          ))}
+                        </Box>
+                      </Box>
+                    )}
+                  </Paper>
+                </Grid2>
               ))}
-            </Box>
+            </Grid2>
 
             {/* Vote Results */}
             {oscarVotes.length > 0 && (

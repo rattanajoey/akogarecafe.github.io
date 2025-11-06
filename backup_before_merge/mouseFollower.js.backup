@@ -20,9 +20,7 @@ window.onload = () => {
     // Only add event listeners if follower element exists
     if (!follower) return;
 
-    const cssElements = rootElement.querySelectorAll(
-      'a, button, [role="button"], [tabindex]:not([tabindex="-1"]), div[style*="cursor: pointer"], .shogi-piece'
-    );
+    const cssElements = rootElement.querySelectorAll('[class^="css-"]');
 
     cssElements.forEach((element) => {
       element.addEventListener("mouseenter", () => {
@@ -37,5 +35,5 @@ window.onload = () => {
         }
       });
     });
-  }, 2000);
+  }, 2000); // Wait 2 seconds for React to finish rendering
 };

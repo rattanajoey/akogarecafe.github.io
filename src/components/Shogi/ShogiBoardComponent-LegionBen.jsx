@@ -365,38 +365,46 @@ const ShogiBoardComponent = () => {
                   })
                 )}
               </ShogiBoard>
-              {highlightedSquare &&
-                !promotionModal.open &&
-                (() => {
-                  const pieceAtSquare = pieces.find(
-                    (p) => p.position === highlightedSquare
-                  );
-                  const pieceData = pieceAtSquare
-                    ? pieceInfo[pieceAtSquare.name]
-                    : null;
-
-                  if (!pieceData) return null;
-
-                  return (
-                    <CustomTooltip
-                      open={true}
-                      title={
-                        <MomoComponent
-                          text={`${
-                            pieceData.englishName || pieceData.name || "Unknown"
-                          } (${pieceData.name || "Unknown"}):`}
-                          secondLine={
-                            pieceData.description || "No description available."
-                          }
-                          player={pieceAtSquare?.playerTwo ? "P2" : "P1"}
-                        />
+              {highlightedSquare && (
+                <CustomTooltip
+                  open={true}
+                  title={
+                    <MomoComponent
+                      text={`${
+                        pieceInfo[
+                          pieces.find((p) => p.position === highlightedSquare)
+                            ?.name
+                        ]?.englishName
+                      } (${
+                        pieceInfo[
+                          pieces.find((p) => p.position === highlightedSquare)
+                            ?.name
+                        ]?.name || "Unknown"
+                      }):`}
+                      secondLine={
+                        pieceInfo[
+                          pieces.find((p) => p.position === highlightedSquare)
+                            ?.name
+                        ]?.description || "No description available."
                       }
-                      player={pieceAtSquare?.playerTwo ? "P2" : "P1"}
-                    >
-                      <div style={{ width: 0, height: 0 }} />
-                    </CustomTooltip>
-                  );
-                })()}
+                      player={
+                        pieces.find((p) => p.position === highlightedSquare)
+                          ?.playerTwo
+                          ? "P2"
+                          : "P1"
+                      }
+                    />
+                  }
+                  player={
+                    pieces.find((p) => p.position === highlightedSquare)
+                      ?.playerTwo
+                      ? "P2"
+                      : "P1"
+                  }
+                >
+                  <div style={{ width: 0, height: 0 }} />
+                </CustomTooltip>
+              )}
             </ShogiBoardWrapper>
 
             {/* Game Controls */}

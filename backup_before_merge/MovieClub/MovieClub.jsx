@@ -9,9 +9,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { getCurrentMonth } from "../utils";
 import GenrePool from "./MovieComponents/GenrePool";
-import HoldingPool from "./MovieComponents/HoldingPool";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 
 const MovieClub = () => {
   const [submissionsOpen] = useState(false);
@@ -105,50 +103,6 @@ const MovieClub = () => {
         </Link>
       </Box>
 
-      {/* Scroll Notice */}
-      <Box
-        sx={{
-          mt: 2,
-          mb: 2,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <Typography
-          variant="h6"
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 1,
-            color: "#bc252d",
-            fontWeight: "bold",
-            animation: "bounce 2s infinite",
-            "@keyframes bounce": {
-              "0%, 100%": {
-                transform: "translateY(0)",
-              },
-              "50%": {
-                transform: "translateY(-10px)",
-              },
-            },
-          }}
-        >
-          📝 Submissions Open - Scroll Down
-          <KeyboardArrowDownIcon
-            sx={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              verticalAlign: "middle",
-              fontSize: "inherit",
-              lineHeight: 1,
-            }}
-          />
-        </Typography>
-      </Box>
-
       {submissionsOpen ? (
         <Grid2
           container
@@ -177,27 +131,13 @@ const MovieClub = () => {
           />
           <GenrePool pools={pools} />
 
-          <HoldingPool />
-
-          {/* Submission Form */}
-          <Box
-            sx={{
-              mb: 4,
-              display: "flex",
-              justifyContent: "center",
-              width: "100%",
-            }}
-          >
-            <MovieSubmission />
-          </Box>
-
           {/* Oscar Voting Button */}
           <Box sx={{ textAlign: "center", mt: 4, mb: 4 }}>
             <Button
               variant="contained"
               size="large"
               startIcon={<EmojiEventsIcon />}
-              disabled
+              onClick={() => setOscarModalOpen(true)}
               sx={{
                 backgroundColor: "#FFD700",
                 color: "#000",
@@ -207,15 +147,24 @@ const MovieClub = () => {
                 py: 2,
                 borderRadius: 3,
                 boxShadow: "0 4px 8px rgba(0,0,0,0.3)",
-                opacity: 0.7,
-                cursor: "not-allowed",
+                "&:hover": {
+                  backgroundColor: "#FFC107",
+                  transform: "translateY(-2px)",
+                  boxShadow: "0 6px 12px rgba(0,0,0,0.4)",
+                },
+                transition: "all 0.3s ease",
               }}
             >
               🏆 Oscar Voting
             </Button>
             <Typography variant="body2" color="text.secondary" mt={1}>
-              Coming Soon
+              Vote for your favorite movies in various categories
             </Typography>
+          </Box>
+
+          {/* Submission Form */}
+          <Box sx={{ width: "90%", mb: 4 }}>
+            <MovieSubmission />
           </Box>
         </Box>
       )}
