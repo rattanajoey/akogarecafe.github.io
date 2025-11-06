@@ -37,3 +37,4 @@ echo "2. The icon should already be in place!"
 echo "3. Build and run to see your new app icon 🎉"
 echo ""
 
+

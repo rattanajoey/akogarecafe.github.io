@@ -89,3 +89,4 @@ The `logo.svg` file can be edited with:
 
 Enjoy your new app icon! 🎉
 
+
