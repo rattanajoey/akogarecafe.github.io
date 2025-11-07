@@ -60,6 +60,41 @@ service cloud.firestore {
       allow create: if isSignedIn() && request.auth.uid == userId;
       allow update: if isSignedIn() && (request.auth.uid == userId || isAdmin());
       allow delete: if isAdmin();
+      
+      // User Notifications subcollection
+      match /Notifications/{notificationId} {
+        allow read: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn();
+        allow update: if isSignedIn() && request.auth.uid == userId &&
+                        request.resource.data.keys().hasOnly(['isRead']);
+        allow delete: if request.auth.uid == userId || isAdmin();
+      }
+    }
+    
+    // Chat Rooms - authenticated users can create and read
+    match /ChatRooms/{chatRoomId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && 
+                      (resource.data.createdBy == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
+      
+      // Messages within chat rooms
+      match /Messages/{messageId} {
+        allow read: if isSignedIn();
+        allow create: if isSignedIn() && 
+                        request.resource.data.senderId == request.auth.uid;
+        allow update: if isSignedIn() && 
+                        (resource.data.senderId == request.auth.uid || 
+                         request.resource.data.keys().hasOnly(['isRead']));
+        allow delete: if resource.data.senderId == request.auth.uid || isAdmin();
+      }
+    }
+    
+    // Admin Notifications - only admins can create, used for broadcasting
+    match /AdminNotifications/{notificationId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
     }
   }
 }

@@ -20,6 +20,7 @@ struct MovieClubView: View {
     @State private var showSyncAlert = false
     @State private var showInfoModal = false
     @State private var showOscarVoting = false
+    @State private var showingShareSheet = false
     @EnvironmentObject var authService: AuthenticationService
     
     var body: some View {
@@ -41,6 +42,15 @@ struct MovieClubView: View {
                         }
                         
                         Spacer()
+                        
+                        // Share Button
+                        Button(action: {
+                            showingShareSheet = true
+                        }) {
+                            Image(systemName: "square.and.arrow.up")
+                                .font(.title2)
+                                .foregroundColor(AppTheme.accentColor)
+                        }
                         
                         // Info Button
                         Button(action: {
@@ -149,6 +159,12 @@ struct MovieClubView: View {
             }
         }
         .background(AppTheme.backgroundGradient)
+        .sheet(isPresented: $showingShareSheet) {
+            ShareSheet(items: [
+                ShareHelper.shareMessage,
+                URL(string: ShareHelper.websiteURL)!
+            ])
+        }
         .sheet(isPresented: $showInfoModal) {
             MovieClubInfoView()
         }

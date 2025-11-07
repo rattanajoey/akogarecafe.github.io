@@ -13,11 +13,22 @@ struct AppConfig {
     
     // MARK: - Admin Configuration
     
+    /// Email addresses that are automatically granted admin privileges
+    static let adminEmails: Set<String> = [
+        "rattanajoey@gmail.com"
+    ]
+    
     /// Password required to access the admin panel
     static let adminPanelPassword = "adminpass"
     
     /// Password required to publish monthly selections
     static let publishSelectionsPassword = "thunderbolts"
+    
+    /// Check if an email should have admin privileges
+    static func isAdminEmail(_ email: String?) -> Bool {
+        guard let email = email?.lowercased() else { return false }
+        return adminEmails.contains(email)
+    }
     
     // MARK: - Oscar Voting Configuration
     

@@ -12,8 +12,11 @@ import GenrePool from "./MovieComponents/GenrePool";
 import HoldingPool from "./MovieComponents/HoldingPool";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import SearchIcon from "@mui/icons-material/Search";
+import { useNavigate } from "react-router-dom";
 
 const MovieClub = () => {
+  const navigate = useNavigate();
   const [submissionsOpen] = useState(false);
   const [selections, setSelections] = useState({});
   const [pools, setPools] = useState({
@@ -65,44 +68,63 @@ const MovieClub = () => {
       <Box
         sx={{
           display: "flex",
-          alignItems: "baseline",
+          alignItems: "center",
+          justifyContent: "center",
           gap: 2,
           flexDirection: { xs: "column", sm: "row" },
           mb: { xs: 2, sm: 0 },
         }}
       >
-        <Typography
-          variant="h2"
-          sx={{
-            fontWeight: "bold",
-            fontFamily: "'Merriweather', serif",
-            textShadow: "2px 2px 6px rgba(0,0,0,0.5)",
-          }}
-        >
-          Movie Club
-        </Typography>
-        <Link
-          href="https://www.themoviedb.org/"
-          target="_blank"
-          rel="noopener noreferrer"
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            textDecoration: "none",
-            "&:hover": {
-              opacity: 0.8,
-            },
-          }}
-        >
-          <img
-            src="/logos/tmdb.svg"
-            alt="TMDB"
-            style={{
-              height: "22px",
-              width: "auto",
+        <Box sx={{ display: "flex", alignItems: "baseline", gap: 2 }}>
+          <Typography
+            variant="h2"
+            sx={{
+              fontWeight: "bold",
+              fontFamily: "'Merriweather', serif",
+              textShadow: "2px 2px 6px rgba(0,0,0,0.5)",
             }}
-          />
-        </Link>
+          >
+            Movie Club
+          </Typography>
+          <Link
+            href="https://www.themoviedb.org/"
+            target="_blank"
+            rel="noopener noreferrer"
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              textDecoration: "none",
+              "&:hover": {
+                opacity: 0.8,
+              },
+            }}
+          >
+            <img
+              src="/logos/tmdb.svg"
+              alt="TMDB"
+              style={{
+                height: "22px",
+                width: "auto",
+              }}
+            />
+          </Link>
+        </Box>
+        <Button
+          variant="contained"
+          startIcon={<SearchIcon />}
+          onClick={() => navigate("/MovieDiscovery")}
+          sx={{
+            backgroundColor: "#bc252d",
+            color: "#fff",
+            fontWeight: "bold",
+            "&:hover": {
+              backgroundColor: "#9a1f25",
+            },
+            boxShadow: "0 4px 8px rgba(0,0,0,0.3)",
+          }}
+        >
+          Discover Movies
+        </Button>
       </Box>
 
       {/* Scroll Notice */}

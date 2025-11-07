@@ -43,7 +43,7 @@ struct MovieSubmissionView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Nickname (Case Sensitive)")
                             .font(.caption)
-                            .foregroundColor(AppTheme.textSecondary)
+                            .foregroundColor(.white)
                         TextField("", text: $nickname)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                     }
@@ -52,7 +52,7 @@ struct MovieSubmissionView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Password (Check your partiful invite)")
                             .font(.caption)
-                            .foregroundColor(AppTheme.textSecondary)
+                            .foregroundColor(.white)
                         SecureField("", text: $accessCode)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                     }
@@ -64,7 +64,7 @@ struct MovieSubmissionView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Action/Sci-Fi/Fantasy")
                             .font(.caption)
-                            .foregroundColor(AppTheme.textSecondary)
+                            .foregroundColor(.white)
                         TextField("", text: $actionMovie)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                     }
@@ -72,7 +72,7 @@ struct MovieSubmissionView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Drama/Documentary")
                             .font(.caption)
-                            .foregroundColor(AppTheme.textSecondary)
+                            .foregroundColor(.white)
                         TextField("", text: $dramaMovie)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                     }
@@ -80,7 +80,7 @@ struct MovieSubmissionView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Comedy/Musical")
                             .font(.caption)
-                            .foregroundColor(AppTheme.textSecondary)
+                            .foregroundColor(.white)
                         TextField("", text: $comedyMovie)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                     }
@@ -88,7 +88,7 @@ struct MovieSubmissionView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Thriller/Horror")
                             .font(.caption)
-                            .foregroundColor(AppTheme.textSecondary)
+                            .foregroundColor(.white)
                         TextField("", text: $thrillerMovie)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                     }

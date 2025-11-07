@@ -62,10 +62,26 @@ class AuthenticationService: ObservableObject {
             let userDoc = try await db.collection("users").document(firebaseUser.uid).getDocument()
             
             if userDoc.exists, let userData = try? userDoc.data(as: AppUser.self) {
-                currentUser = userData
+                // Check if user should be admin and update if needed
+                if AppConfig.isAdminEmail(userData.email) && userData.role != "admin" {
+                    var updatedUser = userData
+                    updatedUser.role = "admin"
+                    try await updateUserRole(userId: updatedUser.id, role: "admin")
+                    currentUser = updatedUser
+                    print("✅ Auto-granted admin privileges to: \(userData.email ?? "unknown")")
+                } else {
+                    currentUser = userData
+                }
             } else {
                 // Create new user document if it doesn't exist
-                let newUser = AppUser(from: firebaseUser)
+                var newUser = AppUser(from: firebaseUser)
+                
+                // Check if user should be admin
+                if AppConfig.isAdminEmail(newUser.email) {
+                    newUser.role = "admin"
+                    print("✅ Creating admin user: \(newUser.email ?? "unknown")")
+                }
+                
                 try await createUserDocument(user: newUser)
                 currentUser = newUser
             }
@@ -80,6 +96,12 @@ class AuthenticationService: ObservableObject {
     
     private func createUserDocument(user: AppUser) async throws {
         try db.collection("users").document(user.id).setData(from: user)
+    }
+    
+    private func updateUserRole(userId: String, role: String) async throws {
+        try await db.collection("users").document(userId).updateData([
+            "role": role
+        ])
     }
     
     // MARK: - Email/Password Authentication
@@ -101,6 +123,13 @@ class AuthenticationService: ObservableObject {
             // Create user document
             var newUser = AppUser(from: result.user)
             newUser.displayName = displayName
+            
+            // Check if user should be admin
+            if AppConfig.isAdminEmail(newUser.email) {
+                newUser.role = "admin"
+                print("✅ Creating admin user: \(newUser.email ?? "unknown")")
+            }
+            
             try await createUserDocument(user: newUser)
             
         } catch let error as NSError {

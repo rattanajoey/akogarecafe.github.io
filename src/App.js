@@ -15,6 +15,7 @@ import MusicSection from "./components/Music/MusicSection";
 import PortfolioSection from "./components/Portfolio/Portfolio";
 import MovieClub from "./components/MovieClub/MovieClub";
 import MovieClubAdmin from "./components/MovieClub/MovieComponents/MovieClubAdmin";
+import MovieDiscovery from "./components/MovieClub/MovieComponents/MovieDiscovery";
 import HomeComponent from "./components/Home/Home";
 import AboutPage from "./components/About/AboutPage";
 import PrivacyPolicy from "./components/Legal/PrivacyPolicy";
@@ -56,6 +57,7 @@ const AppContent = () => {
           <Route path="/music" element={<MusicSection />} />
           <Route path="/portfolio" element={<PortfolioSection />} />
           <Route path="/MovieClub" element={<MovieClub />} />
+          <Route path="/MovieDiscovery" element={<MovieDiscovery />} />
           <Route path="/Admin" element={<MovieClubAdmin />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />

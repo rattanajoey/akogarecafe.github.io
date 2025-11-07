@@ -10,6 +10,7 @@ import SwiftUI
 struct ProfileView: View {
     @EnvironmentObject var authService: AuthenticationService
     @State private var showingSignOut = false
+    @State private var showingShareSheet = false
     @State private var errorMessage: String?
     @State private var showError = false
     
@@ -73,6 +74,13 @@ struct ProfileView: View {
                 
                 // Actions
                 Section {
+                    Button(action: {
+                        showingShareSheet = true
+                    }) {
+                        Label("Share App", systemImage: "square.and.arrow.up")
+                            .foregroundStyle(.blue)
+                    }
+                    
                     Button(role: .destructive, action: {
                         showingSignOut = true
                     }) {
@@ -81,6 +89,12 @@ struct ProfileView: View {
                 }
             }
             .navigationTitle("Profile")
+            .sheet(isPresented: $showingShareSheet) {
+                ShareSheet(items: [
+                    ShareHelper.shareMessage,
+                    URL(string: ShareHelper.websiteURL)!
+                ])
+            }
             .confirmationDialog("Sign Out", isPresented: $showingSignOut) {
                 Button("Sign Out", role: .destructive) {
                     signOut()

@@ -70,12 +70,39 @@ struct GenrePools: Codable {
 }
 
 struct MovieSubmissionData: Codable {
-    let accesscode: String
+    let nickname: String
     let action: String
     let drama: String
     let comedy: String
     let thriller: String
-    let submittedAt: Date
+    
+    init(nickname: String, action: String, drama: String, comedy: String, thriller: String) {
+        self.nickname = nickname
+        self.action = action
+        self.drama = drama
+        self.comedy = comedy
+        self.thriller = thriller
+    }
+}
+
+struct OscarCategory: Codable, Identifiable {
+    let id: String
+    var name: String
+    var movies: [String]
+}
+
+struct OscarVote: Codable {
+    let voteId: String
+    let voterName: String
+    let votes: [String: String] // categoryId: movieTitle
+    let timestamp: Date?
+    
+    enum CodingKeys: String, CodingKey {
+        case voteId
+        case voterName
+        case votes
+        case timestamp
+    }
 }
 
 enum Genre: String, CaseIterable {
