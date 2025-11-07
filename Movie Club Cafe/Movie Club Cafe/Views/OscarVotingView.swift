@@ -383,12 +383,6 @@ enum VotingStep {
     case success
 }
 
-struct OscarCategory: Identifiable, Codable {
-    let id: String
-    let name: String
-    let movies: [String]
-}
-
 #Preview {
     OscarVotingView()
         .environmentObject(AuthenticationService())

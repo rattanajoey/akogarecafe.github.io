@@ -178,6 +178,17 @@ class NotificationService: NSObject, ObservableObject {
         try db.collection("AdminNotifications").addDocument(from: notification)
     }
     
+    func notifyMovieWatched(userName: String, movieTitle: String, genre: String) async throws {
+        let notification = AppNotification(
+            title: "🎬 Movie Club Update",
+            body: "\(userName) just watched \(movieTitle)!",
+            type: .movieUpdate,
+            metadata: ["movieTitle": movieTitle, "genre": genre, "userName": userName, "action": "watched"]
+        )
+        
+        try db.collection("AdminNotifications").addDocument(from: notification)
+    }
+    
     // MARK: - Store FCM Token
     
     func storeFCMToken() {

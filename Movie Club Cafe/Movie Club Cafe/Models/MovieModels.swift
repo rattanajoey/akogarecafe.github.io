@@ -45,6 +45,28 @@ struct Movie: Codable, Identifiable, Equatable {
     }
 }
 
+struct MovieWatcher: Codable, Identifiable, Equatable {
+    let id: String // userId
+    let userName: String
+    let photoURL: String?
+    let watchedAt: Date
+    
+    enum CodingKeys: String, CodingKey {
+        case id, userName, photoURL, watchedAt
+    }
+    
+    init(id: String, userName: String, photoURL: String? = nil, watchedAt: Date = Date()) {
+        self.id = id
+        self.userName = userName
+        self.photoURL = photoURL
+        self.watchedAt = watchedAt
+    }
+    
+    static func == (lhs: MovieWatcher, rhs: MovieWatcher) -> Bool {
+        lhs.id == rhs.id
+    }
+}
+
 struct StreamingProvider: Codable, Identifiable, Equatable {
     let id: Int
     let name: String
@@ -63,10 +85,10 @@ struct MonthlySelections: Codable, Equatable {
 }
 
 struct GenrePools: Codable {
-    let action: [Movie]
-    let drama: [Movie]
-    let comedy: [Movie]
-    let thriller: [Movie]
+    var action: [Movie]
+    var drama: [Movie]
+    var comedy: [Movie]
+    var thriller: [Movie]
 }
 
 struct MovieSubmissionData: Codable {

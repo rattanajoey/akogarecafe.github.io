@@ -1,0 +1,68 @@
+// Firebase Security Rules for Watchlist Feature
+// Add these rules to your Firebase Firestore Security Rules
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Allow authenticated users to read/write their own user document
+    match /Users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+      
+      // Allow users to update their watchedMovies array
+      allow update: if request.auth != null && 
+                      request.auth.uid == userId &&
+                      request.resource.data.keys().hasOnly(['watchedMovies', 'fcmToken', 'lastTokenUpdate']);
+    }
+    
+    // MovieWatchers collection - track who watched each movie
+    match /MovieWatchers/{watchersDocId} {
+      // Anyone can read who watched a movie
+      allow read: if request.auth != null;
+      
+      // Users can add/remove themselves from watchers list
+      allow create, update: if request.auth != null;
+      
+      // Allow deletion if watchers list becomes empty
+      allow delete: if request.auth != null;
+    }
+    
+    // NotificationQueue - for sending push notifications
+    match /NotificationQueue/{notificationId} {
+      // Only authenticated users can create notifications
+      allow create: if request.auth != null;
+      
+      // Only backend/Cloud Functions should read/delete
+      allow read, delete: if false; // Cloud Function has admin privileges
+    }
+    
+    // Existing rules for MonthlySelections (read-only for users)
+    match /MonthlySelections/{monthId} {
+      allow read: if true;
+      allow write: if request.auth != null && 
+                     get(/databases/$(database)/documents/Users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Existing rules for GenrePools
+    match /GenrePools/{poolId} {
+      allow read: if true;
+      allow write: if request.auth != null && 
+                     get(/databases/$(database)/documents/Users/$(request.auth.uid)).data.role == 'admin';
+    }
+  }
+}
+
+// NOTES:
+// 1. These rules assume users must be authenticated to use the app
+// 2. Admin-only writes for MonthlySelections and GenrePools
+// 3. Users can only modify their own watchedMovies
+// 4. Anyone (authenticated) can see who watched movies (social feature)
+// 5. NotificationQueue is write-only for users, read-only for Cloud Functions
+
+// TO APPLY THESE RULES:
+// 1. Go to Firebase Console > Firestore Database > Rules
+// 2. Merge these rules with your existing rules
+// 3. Test the rules before publishing
+// 4. Publish when ready
+

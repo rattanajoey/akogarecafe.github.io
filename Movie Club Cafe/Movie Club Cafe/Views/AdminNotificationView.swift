@@ -79,7 +79,7 @@ struct AdminNotificationView: View {
             Section(header: Text("Preview")) {
                 NotificationPreview(
                     title: notificationTitle.isEmpty ? "Notification Title" : notificationTitle,
-                    body: notificationBody.isEmpty ? "Notification body text..." : notificationBody,
+                    bodyText: notificationBody.isEmpty ? "Notification body text..." : notificationBody,
                     type: selectedType
                 )
             }
@@ -175,7 +175,7 @@ struct AdminNotificationView: View {
 
 struct NotificationPreview: View {
     let title: String
-    let body: String
+    let bodyText: String
     let type: AppNotification.NotificationType
     
     var body: some View {
@@ -188,7 +188,7 @@ struct NotificationPreview: View {
                     .font(.headline)
             }
             
-            Text(body)
+            Text(bodyText)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
             

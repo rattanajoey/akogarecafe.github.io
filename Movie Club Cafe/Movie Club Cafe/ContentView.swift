@@ -21,22 +21,28 @@ struct ContentView: View {
                             Label("Movie Club", systemImage: "film.stack")
                         }
                     
-                    ChatListView()
+                    MainChatView()
                         .tabItem {
                             Label("Chat", systemImage: "bubble.left.and.bubble.right")
                         }
-                        .badge(chatService.unreadCount > 0 ? chatService.unreadCount : nil as Int?)
+                        .badge(chatService.unreadCount)
                     
                     NotificationCenterView()
                         .environmentObject(notificationService)
                         .tabItem {
                             Label("Notifications", systemImage: "bell")
                         }
-                        .badge(notificationService.unreadCount > 0 ? notificationService.unreadCount : nil as Int?)
+                        .badge(notificationService.unreadCount)
                     
                     ProfileView()
                         .tabItem {
                             Label("Profile", systemImage: "person.circle")
+                        }
+                    
+                    // Debug tab for troubleshooting
+                    ChatDebugView()
+                        .tabItem {
+                            Label("Debug", systemImage: "ladybug")
                         }
                     
                     // Admin tab (only visible for admin users)

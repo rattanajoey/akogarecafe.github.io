@@ -89,6 +89,13 @@ service cloud.firestore {
                          request.resource.data.keys().hasOnly(['isRead']));
         allow delete: if resource.data.senderId == request.auth.uid || isAdmin();
       }
+      
+      // Online Users tracking
+      match /OnlineUsers/{userId} {
+        allow read: if isSignedIn();
+        allow write: if isSignedIn() && request.auth.uid == userId;
+        allow delete: if isSignedIn() && request.auth.uid == userId;
+      }
     }
     
     // Admin Notifications - only admins can create, used for broadcasting

@@ -1,8 +1,16 @@
 # Share Feature - Quick Start Guide
 
-## 🎉 Feature Added!
+## 🎉 Feature Added - Now Enhanced! ✨
 
-The invite/share feature has been successfully implemented for both web and iOS apps!
+The invite/share feature has been successfully implemented for both web and iOS apps with **rich metadata and app icon support**!
+
+### 🆕 Latest Enhancement
+- ✅ **App icon** displayed in iOS share sheet
+- ✅ **Open Graph metadata** for rich social media previews
+- ✅ **Twitter Card** support with large image previews
+- ✅ **Professional appearance** across all platforms
+
+📖 **See full details:** [Enhanced Share Feature Documentation](./ENHANCED_SHARE_FEATURE.md)
 
 ---
 

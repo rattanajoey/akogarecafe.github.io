@@ -6,12 +6,16 @@
 //
 
 import SwiftUI
+import FirebaseAuth
 
 struct ChatListView: View {
     @StateObject private var chatService = ChatService()
     @State private var showingNewChatRoom = false
     @State private var newRoomName = ""
     @State private var newRoomDescription = ""
+    @State private var isCreating = false
+    @State private var showError = false
+    @State private var errorMessage = ""
     
     var body: some View {
         NavigationView {
@@ -48,9 +52,29 @@ struct ChatListView: View {
             .sheet(isPresented: $showingNewChatRoom) {
                 newChatRoomSheet
             }
+            .alert("Error", isPresented: $showError) {
+                Button("OK") { }
+            } message: {
+                Text(errorMessage)
+            }
             .onAppear {
+                print("🎬 ChatListView: Appeared, starting listeners")
+                
+                // Debug: Check authentication
+                if let user = Auth.auth().currentUser {
+                    print("✅ User authenticated: \(user.uid)")
+                    print("   Email: \(user.email ?? "none")")
+                    print("   Display Name: \(user.displayName ?? "none")")
+                } else {
+                    print("❌ User NOT authenticated!")
+                }
+                
                 chatService.listenToChatRooms()
                 chatService.listenToUnreadCount()
+            }
+            .onDisappear {
+                print("👋 ChatListView: Disappeared, stopping listeners")
+                chatService.stopListening()
             }
         }
     }
@@ -107,7 +131,24 @@ struct ChatListView: View {
             Form {
                 Section(header: Text("Chat Room Details")) {
                     TextField("Room Name", text: $newRoomName)
+                        .autocapitalization(.words)
                     TextField("Description (optional)", text: $newRoomDescription)
+                        .autocapitalization(.sentences)
+                }
+                
+                if isCreating {
+                    Section {
+                        HStack {
+                            Spacer()
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle())
+                            Text("Creating room...")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                                .padding(.leading, 8)
+                            Spacer()
+                        }
+                    }
                 }
             }
             .navigationTitle("New Chat Room")
@@ -118,13 +159,14 @@ struct ChatListView: View {
                         showingNewChatRoom = false
                         resetForm()
                     }
+                    .disabled(isCreating)
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Create") {
                         createChatRoom()
                     }
-                    .disabled(newRoomName.isEmpty)
+                    .disabled(newRoomName.isEmpty || isCreating)
                 }
             }
         }
@@ -133,16 +175,29 @@ struct ChatListView: View {
     // MARK: - Actions
     
     private func createChatRoom() {
+        isCreating = true
+        
         Task {
             do {
-                _ = try await chatService.createChatRoom(
+                print("🚀 ChatListView: Creating chat room '\(newRoomName)'")
+                let roomId = try await chatService.createChatRoom(
                     name: newRoomName,
                     description: newRoomDescription.isEmpty ? nil : newRoomDescription
                 )
-                showingNewChatRoom = false
-                resetForm()
+                
+                await MainActor.run {
+                    print("✅ ChatListView: Chat room created successfully with ID: \(roomId)")
+                    isCreating = false
+                    showingNewChatRoom = false
+                    resetForm()
+                }
             } catch {
-                print("Error creating chat room: \(error)")
+                await MainActor.run {
+                    print("❌ ChatListView: Error creating chat room: \(error.localizedDescription)")
+                    isCreating = false
+                    errorMessage = "Failed to create chat room: \(error.localizedDescription)"
+                    showError = true
+                }
             }
         }
     }

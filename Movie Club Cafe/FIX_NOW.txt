@@ -1,0 +1,35 @@
+🚨 URGENT: FIX CHAT PERMISSIONS ERROR
+
+Your chat feature is getting "Missing or insufficient permissions" because
+Firebase Security Rules haven't been deployed yet.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚡ QUICK FIX (2 minutes):
+
+1. Open Firebase Console: https://console.firebase.google.com/
+2. Select your project
+3. Click "Firestore Database" → "Rules" tab
+4. Copy ALL content from: FIREBASE_SECURITY_RULES.txt
+5. Paste into rules editor (replace everything)
+6. Click "Publish"
+7. Wait 30 seconds
+8. Relaunch app ✅
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📖 For detailed instructions, see:
+   • DEPLOY_FIREBASE_RULES.md
+   • CHAT_PERMISSIONS_FIX.md
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Code improvements already made:
+   • Better error messages in app
+   • Permission detection and helpful hints
+   • Improved debugging logs
+
+The app now tells you exactly what to do when this error occurs!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+

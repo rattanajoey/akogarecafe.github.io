@@ -16,33 +16,77 @@ class ChatService: ObservableObject {
     @Published var unreadCount: Int = 0
     @Published var isLoading = false
     @Published var error: String?
+    @Published var onlineUsers: [UserStatus] = []
     
     private let db = Firestore.firestore()
     private var roomsListener: ListenerRegistration?
     private var messagesListener: ListenerRegistration?
+    private var onlineUsersListener: ListenerRegistration?
     private var currentChatRoomId: String?
+    
+    // Single chat room ID for all users
+    static let mainChatRoomId = "main-chat-room"
     
     // MARK: - Chat Room Management
     
+    /// Ensure the main chat room exists
+    func ensureMainChatRoomExists() async throws {
+        let chatRoomRef = db.collection("ChatRooms").document(ChatService.mainChatRoomId)
+        
+        do {
+            let snapshot = try await chatRoomRef.getDocument()
+            
+            if !snapshot.exists {
+                print("📝 ChatService: Creating main chat room")
+                
+                // Create the main chat room
+                let chatRoomData: [String: Any] = [
+                    "name": "Movie Club Chat",
+                    "description": "Chat with all Movie Club members!",
+                    "createdAt": Timestamp(date: Date()),
+                    "createdBy": "system",
+                    "lastMessage": NSNull(),
+                    "lastMessageTimestamp": NSNull(),
+                    "memberIds": [],
+                    "isPublic": true
+                ]
+                
+                try await chatRoomRef.setData(chatRoomData)
+                print("✅ ChatService: Main chat room created")
+            } else {
+                print("✅ ChatService: Main chat room already exists")
+            }
+        } catch {
+            print("❌ ChatService: Error ensuring main chat room: \(error.localizedDescription)")
+            throw error
+        }
+    }
+    
     /// Create a new chat room
-    func createChatRoom(name: String, description: String? = nil, isPublic: Bool = true) async throws -> String {
-        guard let userId = Auth.auth().currentUser?.uid,
-              let displayName = Auth.auth().currentUser?.displayName else {
+    func createChatRoom(name: String, description: String? = nil) async throws -> String {
+        guard let userId = Auth.auth().currentUser?.uid else {
             throw NSError(domain: "ChatService", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
         }
         
-        let chatRoom = ChatRoom(
-            name: name,
-            description: description,
-            createdBy: userId,
-            memberIds: [userId],
-            isPublic: isPublic
-        )
+        print("📝 ChatService: Creating chat room '\(name)'")
+        
+        let chatRoomData: [String: Any] = [
+            "name": name,
+            "description": description ?? "",
+            "createdAt": Timestamp(date: Date()),
+            "createdBy": userId,
+            "lastMessage": NSNull(),
+            "lastMessageTimestamp": NSNull(),
+            "memberIds": [userId],
+            "isPublic": true
+        ]
         
         do {
-            let docRef = try db.collection("ChatRooms").addDocument(from: chatRoom)
+            let docRef = try await db.collection("ChatRooms").addDocument(data: chatRoomData)
+            print("✅ ChatService: Chat room created with ID: \(docRef.documentID)")
             return docRef.documentID
         } catch {
+            print("❌ ChatService: Error creating chat room: \(error.localizedDescription)")
             throw error
         }
     }
@@ -51,21 +95,40 @@ class ChatService: ObservableObject {
     func listenToChatRooms() {
         roomsListener?.remove()
         
+        print("👂 ChatService: Starting to listen to chat rooms")
+        
+        // Order by createdAt instead of lastMessageTimestamp to show newly created rooms
         roomsListener = db.collection("ChatRooms")
-            .order(by: "lastMessageTimestamp", descending: true)
+            .order(by: "createdAt", descending: true)
             .addSnapshotListener { [weak self] snapshot, error in
                 guard let self = self else { return }
                 
                 if let error = error {
+                    print("❌ ChatService: Error listening to chat rooms: \(error.localizedDescription)")
                     self.error = error.localizedDescription
                     return
                 }
                 
-                guard let documents = snapshot?.documents else { return }
+                guard let documents = snapshot?.documents else {
+                    print("⚠️ ChatService: No documents found")
+                    return
+                }
+                
+                print("📥 ChatService: Received \(documents.count) chat rooms")
                 
                 self.chatRooms = documents.compactMap { document in
-                    try? document.data(as: ChatRoom.self)
+                    do {
+                        let room = try document.data(as: ChatRoom.self)
+                        print("✅ ChatService: Decoded room: \(room.name)")
+                        return room
+                    } catch {
+                        print("❌ ChatService: Error decoding room: \(error.localizedDescription)")
+                        print("Document data: \(document.data())")
+                        return nil
+                    }
                 }
+                
+                print("✅ ChatService: Successfully loaded \(self.chatRooms.count) chat rooms")
             }
     }
     
@@ -86,7 +149,15 @@ class ChatService: ObservableObject {
                 self.isLoading = false
                 
                 if let error = error {
-                    self.error = error.localizedDescription
+                    print("❌ ChatService: Error listening to messages: \(error.localizedDescription)")
+                    
+                    // Provide helpful error message for permissions
+                    if error.localizedDescription.contains("permission") || 
+                       error.localizedDescription.contains("PERMISSION_DENIED") {
+                        self.error = "Missing or insufficient permissions. Please ensure Firebase Security Rules are deployed."
+                    } else {
+                        self.error = error.localizedDescription
+                    }
                     return
                 }
                 
@@ -177,11 +248,90 @@ class ChatService: ObservableObject {
             }
     }
     
+    // MARK: - Online Users Management
+    
+    /// Mark user as online in chat
+    func markUserOnline() async throws {
+        guard let userId = Auth.auth().currentUser?.uid else { return }
+        
+        let displayName = Auth.auth().currentUser?.displayName ?? "Anonymous"
+        let photoURL = Auth.auth().currentUser?.photoURL?.absoluteString
+        
+        let userStatus = UserStatus(
+            userId: userId,
+            displayName: displayName,
+            photoURL: photoURL,
+            isOnline: true
+        )
+        
+        do {
+            try db.collection("ChatRooms")
+                .document(ChatService.mainChatRoomId)
+                .collection("OnlineUsers")
+                .document(userId)
+                .setData(from: userStatus)
+            
+            print("✅ ChatService: Marked user \(displayName) as online")
+        } catch {
+            print("❌ ChatService: Error marking user online: \(error.localizedDescription)")
+            throw error
+        }
+    }
+    
+    /// Mark user as offline in chat
+    func markUserOffline() async {
+        guard let userId = Auth.auth().currentUser?.uid else { return }
+        
+        do {
+            try await db.collection("ChatRooms")
+                .document(ChatService.mainChatRoomId)
+                .collection("OnlineUsers")
+                .document(userId)
+                .delete()
+            
+            print("✅ ChatService: Marked user as offline")
+        } catch {
+            print("❌ ChatService: Error marking user offline: \(error.localizedDescription)")
+        }
+    }
+    
+    /// Listen to online users in the chat
+    func listenToOnlineUsers() {
+        onlineUsersListener?.remove()
+        
+        print("👥 ChatService: Starting to listen to online users")
+        
+        onlineUsersListener = db.collection("ChatRooms")
+            .document(ChatService.mainChatRoomId)
+            .collection("OnlineUsers")
+            .addSnapshotListener { [weak self] snapshot, error in
+                guard let self = self else { return }
+                
+                if let error = error {
+                    print("❌ ChatService: Error listening to online users: \(error.localizedDescription)")
+                    return
+                }
+                
+                guard let documents = snapshot?.documents else {
+                    print("⚠️ ChatService: No online users found")
+                    self.onlineUsers = []
+                    return
+                }
+                
+                self.onlineUsers = documents.compactMap { document in
+                    try? document.data(as: UserStatus.self)
+                }
+                
+                print("👥 ChatService: \(self.onlineUsers.count) users online")
+            }
+    }
+    
     // MARK: - Cleanup
     
     func stopListening() {
         roomsListener?.remove()
         messagesListener?.remove()
+        onlineUsersListener?.remove()
     }
     
     deinit {
