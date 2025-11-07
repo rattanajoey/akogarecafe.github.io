@@ -317,11 +317,3 @@ extension FirestoreCacheService {
         )
     }
 }
-
-// Helper function (already exists elsewhere, but included for completeness)
-private func getCurrentMonth() -> String {
-    let formatter = DateFormatter()
-    formatter.dateFormat = "yyyy-MM"
-    return formatter.string(from: Date())
-}
-

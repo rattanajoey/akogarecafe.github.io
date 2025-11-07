@@ -218,16 +218,17 @@ class RemoteConfigService {
     
     func getMaintenanceMessage() -> String? {
         let message = remoteConfig[ConfigKeys.maintenanceMessage].stringValue
-        return message?.isEmpty == false ? message : nil
+        return message.isEmpty ? nil : message
     }
     
     func getAnnouncementMessage() -> String? {
         let message = remoteConfig[ConfigKeys.announcementMessage].stringValue
-        return message?.isEmpty == false ? message : nil
+        return message.isEmpty ? nil : message
     }
     
     func getWelcomeMessage() -> String {
-        return remoteConfig[ConfigKeys.welcomeMessage].stringValue ?? "Welcome to Movie Club Cafe! 🎬"
+        let message = remoteConfig[ConfigKeys.welcomeMessage].stringValue
+        return message.isEmpty ? "Welcome to Movie Club Cafe! 🎬" : message
     }
     
     // MARK: - Helper Methods
@@ -238,9 +239,14 @@ class RemoteConfigService {
         for key in remoteConfig.allKeys(from: .remote) {
             let configValue = remoteConfig[key]
             
-            if let stringValue = configValue.stringValue {
+            // Remote Config values are always non-optional
+            let stringValue = configValue.stringValue
+            let numberValue = configValue.numberValue
+            
+            // Prefer string if not empty, otherwise use number
+            if !stringValue.isEmpty {
                 values[key] = stringValue
-            } else if let numberValue = configValue.numberValue {
+            } else {
                 values[key] = numberValue
             }
         }

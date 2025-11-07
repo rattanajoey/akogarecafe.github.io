@@ -162,7 +162,7 @@ class DeepLinkService: ObservableObject {
         return false
     }
     
-    /// Create a share sheet with movie details
+    /// Create a share sheet with movie details (using universal links)
     func createShareSheet(movieTitle: String, monthId: String, genre: String, tmdbId: Int? = nil, message: String? = nil) -> UIActivityViewController? {
         guard let url = generateMovieShareURL(movieTitle: movieTitle, monthId: monthId, genre: genre, tmdbId: tmdbId) else {
             return nil

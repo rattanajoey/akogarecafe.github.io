@@ -17,7 +17,6 @@
 		BEA9034A2E92010700592193 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = BEA903492E92010700592193 /* FirebaseCrashlytics */; };
 		BEA9034C2E92010700592193 /* FirebaseRemoteConfig in Frameworks */ = {isa = PBXBuildFile; productRef = BEA9034B2E92010700592193 /* FirebaseRemoteConfig */; };
 		BEA9034E2E92010700592193 /* FirebasePerformance in Frameworks */ = {isa = PBXBuildFile; productRef = BEA9034D2E92010700592193 /* FirebasePerformance */; };
-		BEA903502E92010700592193 /* FirebaseDynamicLinks in Frameworks */ = {isa = PBXBuildFile; productRef = BEA9034F2E92010700592193 /* FirebaseDynamicLinks */; };
 		BEA903522E92010700592193 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = BEA903512E92010700592193 /* FirebaseStorage */; };
 		BEA903542E92010700592193 /* FirebaseInAppMessaging-Beta in Frameworks */ = {isa = PBXBuildFile; productRef = BEA903532E92010700592193 /* FirebaseInAppMessaging-Beta */; };
 		BEA903562E92010700592193 /* FirebaseAppCheck in Frameworks */ = {isa = PBXBuildFile; productRef = BEA903552E92010700592193 /* FirebaseAppCheck */; };
@@ -48,7 +47,6 @@
 				BEA9034A2E92010700592193 /* FirebaseCrashlytics in Frameworks */,
 				BEA9034C2E92010700592193 /* FirebaseRemoteConfig in Frameworks */,
 				BEA9034E2E92010700592193 /* FirebasePerformance in Frameworks */,
-				BEA903502E92010700592193 /* FirebaseDynamicLinks in Frameworks */,
 				BEA903522E92010700592193 /* FirebaseStorage in Frameworks */,
 				BEA903542E92010700592193 /* FirebaseInAppMessaging-Beta in Frameworks */,
 				BEA903562E92010700592193 /* FirebaseAppCheck in Frameworks */,
@@ -105,7 +103,6 @@
 				BEA903492E92010700592193 /* FirebaseCrashlytics */,
 				BEA9034B2E92010700592193 /* FirebaseRemoteConfig */,
 				BEA9034D2E92010700592193 /* FirebasePerformance */,
-				BEA9034F2E92010700592193 /* FirebaseDynamicLinks */,
 				BEA903512E92010700592193 /* FirebaseStorage */,
 				BEA903532E92010700592193 /* FirebaseInAppMessaging-Beta */,
 				BEA903552E92010700592193 /* FirebaseAppCheck */,
@@ -126,7 +123,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 2600;
-				LastUpgradeCheck = 2600;
+				LastUpgradeCheck = 2610;
 				TargetAttributes = {
 					BEA9030F2E91737100592193 = {
 						CreatedOnToolsVersion = 26.0.1;
@@ -212,6 +209,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = E2L636Z97D;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -235,6 +233,7 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -274,6 +273,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = E2L636Z97D;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -290,6 +290,7 @@
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 			};
 			name = Release;
@@ -302,6 +303,7 @@
 				CODE_SIGN_ENTITLEMENTS = "Movie Club Cafe/Movie Club Cafe.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = E2L636Z97D;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -309,6 +311,7 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Movie-Club-Cafe-Info.plist";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -348,6 +351,7 @@
 				CODE_SIGN_ENTITLEMENTS = "Movie Club Cafe/Movie Club Cafe.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = E2L636Z97D;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -355,6 +359,7 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Movie-Club-Cafe-Info.plist";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -486,11 +491,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = BEA903402E92010700592193 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebasePerformance;
-		};
-		BEA9034F2E92010700592193 /* FirebaseDynamicLinks */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = BEA903402E92010700592193 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseDynamicLinks;
 		};
 		BEA903512E92010700592193 /* FirebaseStorage */ = {
 			isa = XCSwiftPackageProductDependency;

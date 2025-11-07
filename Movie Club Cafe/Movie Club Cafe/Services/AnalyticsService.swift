@@ -24,7 +24,7 @@ class AnalyticsService {
     
     // MARK: - Movie Events
     
-    func logMovieViewed(movieId: Int, movieTitle: String, genre: String, source: String) {
+    func logMovieViewed(movieId: String, movieTitle: String, genre: String, source: String) {
         Analytics.logEvent("movie_viewed", parameters: [
             "movie_id": movieId,
             "movie_title": movieTitle,

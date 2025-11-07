@@ -10,6 +10,7 @@ import FirebaseCore
 import FirebaseCrashlytics
 import FirebasePerformance
 import FirebaseAnalytics
+import FirebaseMessaging
 import GoogleSignIn
 import UserNotifications
 

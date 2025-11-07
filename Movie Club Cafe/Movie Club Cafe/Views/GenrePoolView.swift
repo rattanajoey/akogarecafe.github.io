@@ -49,7 +49,7 @@ struct GenrePoolView: View {
                                 
                                 // Analytics: Track movie viewed in genre pool
                                 AnalyticsService.shared.logMovieViewed(
-                                    movieId: movie.tmdbId,
+                                    movieId: movie.id.uuidString,
                                     movieTitle: movie.title,
                                     genre: genre.rawValue,
                                     source: "genre_pool"
