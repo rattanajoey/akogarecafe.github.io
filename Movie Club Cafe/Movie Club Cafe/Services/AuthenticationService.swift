@@ -25,6 +25,11 @@ class AuthenticationService: ObservableObject {
     // For Apple Sign In
     private var currentNonce: String?
     
+    // Admin role checking
+    var isAdmin: Bool {
+        currentUser?.role == "admin"
+    }
+    
     init() {
         setupAuthStateListener()
     }

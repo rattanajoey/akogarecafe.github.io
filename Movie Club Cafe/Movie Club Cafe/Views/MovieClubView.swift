@@ -18,6 +18,9 @@ struct MovieClubView: View {
     @State private var isSyncing = false
     @State private var syncMessage: String?
     @State private var showSyncAlert = false
+    @State private var showInfoModal = false
+    @State private var showOscarVoting = false
+    @EnvironmentObject var authService: AuthenticationService
     
     var body: some View {
         ScrollView {
@@ -39,6 +42,15 @@ struct MovieClubView: View {
                         
                         Spacer()
                         
+                        // Info Button
+                        Button(action: {
+                            showInfoModal = true
+                        }) {
+                            Image(systemName: "info.circle")
+                                .font(.title2)
+                                .foregroundColor(AppTheme.accentColor)
+                        }
+                        
                         // Calendar Sync Button
                         Button(action: {
                             syncWithCalendar()
@@ -51,7 +63,7 @@ struct MovieClubView: View {
                                 } else {
                                     Image(systemName: "calendar.badge.clock")
                                 }
-                                Text(isSyncing ? "Syncing..." : "Sync Calendar")
+                                Text(isSyncing ? "Syncing..." : "Sync")
                                     .font(.caption)
                             }
                             .padding(.horizontal, 10)
@@ -87,6 +99,7 @@ struct MovieClubView: View {
                 } else {
                     // Display mode
                     VStack(spacing: 20) {
+                        // 1. Selected Movies Display
                         SelectedMoviesView(
                             selections: $selections,
                             selectedMonth: $selectedMonth,
@@ -95,12 +108,53 @@ struct MovieClubView: View {
                             }
                         )
                         
+                        // 2. Genre Pool
                         GenrePoolView(pools: pools)
+                        
+                        // 3. Holding Pool
+                        HoldingPoolView()
+                        
+                        // 4. Submission Form
+                        MovieSubmissionView()
+                            .padding()
+                        
+                        // 5. Submission List
+                        SubmissionListView()
+                            .padding(.horizontal)
+                        
+                        // 6. Oscar Voting Button
+                        if AppConfig.oscarVotingEnabled {
+                            Button(action: {
+                                showOscarVoting = true
+                            }) {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "trophy.fill")
+                                        .font(.title3)
+                                    Text("🏆 Oscar Voting")
+                                        .font(.title3)
+                                        .fontWeight(.bold)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.yellow.opacity(0.7))
+                                .foregroundColor(.black)
+                                .cornerRadius(12)
+                                .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 4)
+                            }
+                            .padding(.horizontal)
+                            .padding(.bottom, 40)
+                        }
                     }
                 }
             }
         }
         .background(AppTheme.backgroundGradient)
+        .sheet(isPresented: $showInfoModal) {
+            MovieClubInfoView()
+        }
+        .sheet(isPresented: $showOscarVoting) {
+            OscarVotingView()
+        }
         .onAppear {
             loadData()
         }

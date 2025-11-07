@@ -23,6 +23,14 @@ struct ContentView: View {
                         .tabItem {
                             Label("Profile", systemImage: "person.circle")
                         }
+                    
+                    // Admin tab (only visible for admin users)
+                    if authService.isAdmin {
+                        MovieClubAdminView()
+                            .tabItem {
+                                Label("Admin", systemImage: "gear")
+                            }
+                    }
                 }
             } else {
                 SignInView()

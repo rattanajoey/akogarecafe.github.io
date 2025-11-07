@@ -1,0 +1,66 @@
+// Copy these rules to Firebase Console → Firestore Database → Rules tab
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Helper function to check if user is authenticated
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    // MonthlySelections - Read by all, write by admins only
+    match /MonthlySelections/{monthId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // GenrePools - Read by all, write by admins only
+    match /GenrePools/{poolId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // Submissions - Read by admins, write by authenticated users
+    match /Submissions/{monthId}/users/{userId} {
+      allow read: if isAdmin();
+      allow write: if isSignedIn();
+    }
+    
+    // HoldingPool - Read by all, write by authenticated users
+    match /HoldingPool/{userId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+    
+    // OscarCategories - Read by all, write by admins only
+    match /OscarCategories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // OscarVotes - Read by admins, write by authenticated users
+    match /OscarVotes/{voteId} {
+      allow read: if isAdmin();
+      allow write: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+    
+    // Users collection - Read by authenticated, write by self or admin
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow delete: if isAdmin();
+    }
+  }
+}
+

@@ -19,27 +19,24 @@ struct ForgotPasswordView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                // Background
-                LinearGradient(
-                    colors: [Color.purple.opacity(0.2), Color.blue.opacity(0.2)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
+                // Background gradient - matching web version
+                AppTheme.backgroundGradient
+                    .ignoresSafeArea()
                 
                 VStack(spacing: 30) {
                     // Icon and Title
                     VStack(spacing: 15) {
                         Image(systemName: "lock.rotation")
                             .font(.system(size: 70))
-                            .foregroundStyle(.purple)
+                            .foregroundStyle(AppTheme.accentColor)
                         
                         Text("Reset Password")
                             .font(.title.bold())
+                            .foregroundColor(AppTheme.textPrimary)
                         
                         Text("Enter your email address and we'll send you instructions to reset your password")
                             .font(.body)
-                            .foregroundStyle(.secondary)
+                            .foregroundColor(AppTheme.textSecondary)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal)
                     }
@@ -70,13 +67,7 @@ struct ForgotPasswordView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(
-                            LinearGradient(
-                                colors: [.purple, .blue],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
+                        .background(AppTheme.accentColor)
                         .foregroundColor(.white)
                         .cornerRadius(10)
                         .disabled(authService.isLoading || email.isEmpty)
@@ -93,6 +84,7 @@ struct ForgotPasswordView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .foregroundColor(AppTheme.accentColor)
                 }
             }
             .alert("Success", isPresented: $showSuccess) {

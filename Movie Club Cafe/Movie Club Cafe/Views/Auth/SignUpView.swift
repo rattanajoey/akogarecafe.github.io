@@ -21,13 +21,9 @@ struct SignUpView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                // Background gradient
-                LinearGradient(
-                    colors: [Color.blue.opacity(0.3), Color.purple.opacity(0.3)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
+                // Background gradient - matching web version
+                AppTheme.backgroundGradient
+                    .ignoresSafeArea()
                 
                 ScrollView {
                     VStack(spacing: 25) {
@@ -35,14 +31,15 @@ struct SignUpView: View {
                         VStack(spacing: 10) {
                             Image(systemName: "person.crop.circle.badge.plus")
                                 .font(.system(size: 80))
-                                .foregroundStyle(.blue)
+                                .foregroundStyle(AppTheme.accentColor)
                             
                             Text("Create Account")
                                 .font(.largeTitle.bold())
+                                .foregroundColor(AppTheme.textPrimary)
                             
                             Text("Join the Movie Club Cafe")
                                 .font(.title3)
-                                .foregroundStyle(.secondary)
+                                .foregroundColor(AppTheme.textSecondary)
                         }
                         .padding(.top, 50)
                         .padding(.bottom, 30)
@@ -72,6 +69,7 @@ struct SignUpView: View {
                                 )
                             
                             SecureField("Password", text: $password)
+                                .textContentType(.newPassword)
                                 .padding()
                                 .background(Color(.systemBackground))
                                 .cornerRadius(10)
@@ -81,12 +79,13 @@ struct SignUpView: View {
                                 )
                             
                             SecureField("Confirm Password", text: $confirmPassword)
+                                .textContentType(.newPassword)
                                 .padding()
                                 .background(Color(.systemBackground))
                                 .cornerRadius(10)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 10)
-                                        .stroke(passwordsMatch ? Color.green.opacity(0.5) : Color.gray.opacity(0.3), lineWidth: 1)
+                                        .stroke(passwordsMatch ? AppTheme.accentColor.opacity(0.5) : Color.gray.opacity(0.3), lineWidth: 1)
                                 )
                             
                             // Password Requirements
@@ -111,13 +110,7 @@ struct SignUpView: View {
                             }
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(
-                                LinearGradient(
-                                    colors: [.blue, .purple],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
+                            .background(AppTheme.accentColor)
                             .foregroundColor(.white)
                             .cornerRadius(10)
                             .disabled(authService.isLoading || !isFormValid)
@@ -142,6 +135,7 @@ struct SignUpView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .foregroundColor(AppTheme.accentColor)
                 }
             }
             .alert("Error", isPresented: $showError) {

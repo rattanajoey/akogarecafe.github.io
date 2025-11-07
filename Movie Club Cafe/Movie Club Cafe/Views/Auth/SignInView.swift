@@ -20,13 +20,9 @@ struct SignInView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                // Background gradient
-                LinearGradient(
-                    colors: [Color.purple.opacity(0.3), Color.blue.opacity(0.3)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
+                // Background gradient - matching web version
+                AppTheme.backgroundGradient
+                    .ignoresSafeArea()
                 
                 ScrollView {
                     VStack(spacing: 25) {
@@ -34,14 +30,15 @@ struct SignInView: View {
                         VStack(spacing: 10) {
                             Image(systemName: "film.stack")
                                 .font(.system(size: 80))
-                                .foregroundStyle(.purple)
+                                .foregroundStyle(AppTheme.accentColor)
                             
                             Text("Movie Club Cafe")
                                 .font(.largeTitle.bold())
+                                .foregroundColor(AppTheme.textPrimary)
                             
                             Text("Welcome back!")
                                 .font(.title3)
-                                .foregroundStyle(.secondary)
+                                .foregroundColor(AppTheme.textSecondary)
                         }
                         .padding(.top, 50)
                         .padding(.bottom, 30)
@@ -61,6 +58,7 @@ struct SignInView: View {
                                 )
                             
                             SecureField("Password", text: $password)
+                                .textContentType(.password)
                                 .padding()
                                 .background(Color(.systemBackground))
                                 .cornerRadius(10)
@@ -74,7 +72,7 @@ struct SignInView: View {
                             }) {
                                 Text("Forgot Password?")
                                     .font(.subheadline)
-                                    .foregroundColor(.purple)
+                                    .foregroundColor(AppTheme.accentColor)
                             }
                             .frame(maxWidth: .infinity, alignment: .trailing)
                             
@@ -89,13 +87,7 @@ struct SignInView: View {
                             }
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(
-                                LinearGradient(
-                                    colors: [.purple, .blue],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
+                            .background(AppTheme.accentColor)
                             .foregroundColor(.white)
                             .cornerRadius(10)
                             .disabled(authService.isLoading || email.isEmpty || password.isEmpty)
@@ -164,7 +156,7 @@ struct SignInView: View {
                             }) {
                                 Text("Sign Up")
                                     .fontWeight(.semibold)
-                                    .foregroundColor(.purple)
+                                    .foregroundColor(AppTheme.accentColor)
                             }
                         }
                         .padding(.top, 20)

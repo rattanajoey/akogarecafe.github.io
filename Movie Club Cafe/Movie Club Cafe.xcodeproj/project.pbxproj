@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BE18518A2EBD268F00ACF563 /* PostHog in Frameworks */ = {isa = PBXBuildFile; productRef = BE1851892EBD268F00ACF563 /* PostHog */; };
 		BEA903422E92010700592193 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = BEA903412E92010700592193 /* FirebaseCore */; };
 		BEA903442E92010700592193 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = BEA903432E92010700592193 /* FirebaseFirestore */; };
 		BEA903462E92010700592193 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = BEA903452E92010700592193 /* FirebaseAuth */; };
@@ -25,16 +26,17 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-	BEA9030D2E91737100592193 /* Frameworks */ = {
-		isa = PBXFrameworksBuildPhase;
-		buildActionMask = 2147483647;
-		files = (
-			BEA903422E92010700592193 /* FirebaseCore in Frameworks */,
-			BEA903442E92010700592193 /* FirebaseFirestore in Frameworks */,
-			BEA903462E92010700592193 /* FirebaseAuth in Frameworks */,
-		);
-		runOnlyForDeploymentPostprocessing = 0;
-	};
+		BEA9030D2E91737100592193 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BEA903422E92010700592193 /* FirebaseCore in Frameworks */,
+				BEA903442E92010700592193 /* FirebaseFirestore in Frameworks */,
+				BEA903462E92010700592193 /* FirebaseAuth in Frameworks */,
+				BE18518A2EBD268F00ACF563 /* PostHog in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -72,13 +74,14 @@
 			fileSystemSynchronizedGroups = (
 				BEA903122E91737100592193 /* Movie Club Cafe */,
 			);
-		name = "Movie Club Cafe";
-		packageProductDependencies = (
-			BEA903412E92010700592193 /* FirebaseCore */,
-			BEA903432E92010700592193 /* FirebaseFirestore */,
-			BEA903452E92010700592193 /* FirebaseAuth */,
-		);
-		productName = "Movie Club Cafe";
+			name = "Movie Club Cafe";
+			packageProductDependencies = (
+				BEA903412E92010700592193 /* FirebaseCore */,
+				BEA903432E92010700592193 /* FirebaseFirestore */,
+				BEA903452E92010700592193 /* FirebaseAuth */,
+				BE1851892EBD268F00ACF563 /* PostHog */,
+			);
+			productName = "Movie Club Cafe";
 			productReference = BEA903102E91737100592193 /* Movie Club Cafe.app */;
 			productType = "com.apple.product-type.application";
 		};
@@ -108,6 +111,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				BEA903402E92010700592193 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				BE1851882EBD268F00ACF563 /* XCRemoteSwiftPackageReference "posthog-ios" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = BEA903112E91737100592193 /* Products */;
@@ -368,6 +372,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		BE1851882EBD268F00ACF563 /* XCRemoteSwiftPackageReference "posthog-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/PostHog/posthog-ios.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.34.0;
+			};
+		};
 		BEA903402E92010700592193 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
@@ -379,21 +391,26 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-	BEA903412E92010700592193 /* FirebaseCore */ = {
-		isa = XCSwiftPackageProductDependency;
-		package = BEA903402E92010700592193 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-		productName = FirebaseCore;
-	};
-	BEA903432E92010700592193 /* FirebaseFirestore */ = {
-		isa = XCSwiftPackageProductDependency;
-		package = BEA903402E92010700592193 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-		productName = FirebaseFirestore;
-	};
-	BEA903452E92010700592193 /* FirebaseAuth */ = {
-		isa = XCSwiftPackageProductDependency;
-		package = BEA903402E92010700592193 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-		productName = FirebaseAuth;
-	};
+		BE1851892EBD268F00ACF563 /* PostHog */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BE1851882EBD268F00ACF563 /* XCRemoteSwiftPackageReference "posthog-ios" */;
+			productName = PostHog;
+		};
+		BEA903412E92010700592193 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BEA903402E92010700592193 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		BEA903432E92010700592193 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BEA903402E92010700592193 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+		BEA903452E92010700592193 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BEA903402E92010700592193 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
 /* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = BEA903082E91737100592193 /* Project object */;

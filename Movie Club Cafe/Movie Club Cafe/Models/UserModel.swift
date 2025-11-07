@@ -16,18 +16,20 @@ struct AppUser: Identifiable, Codable {
     var phoneNumber: String?
     var createdAt: Date
     var lastLoginAt: Date
+    var role: String? // "admin" or "user"
     
     // User preferences
     var favoriteGenres: [String]
     var watchedMovies: [String]
     var submittedMovies: [String]
     
-    init(id: String, email: String? = nil, displayName: String? = nil, photoURL: String? = nil, phoneNumber: String? = nil) {
+    init(id: String, email: String? = nil, displayName: String? = nil, photoURL: String? = nil, phoneNumber: String? = nil, role: String? = nil) {
         self.id = id
         self.email = email
         self.displayName = displayName
         self.photoURL = photoURL
         self.phoneNumber = phoneNumber
+        self.role = role
         self.createdAt = Date()
         self.lastLoginAt = Date()
         self.favoriteGenres = []
@@ -41,6 +43,7 @@ struct AppUser: Identifiable, Codable {
         self.displayName = firebaseUser.displayName
         self.photoURL = firebaseUser.photoURL?.absoluteString
         self.phoneNumber = firebaseUser.phoneNumber
+        self.role = nil
         self.createdAt = firebaseUser.metadata.creationDate ?? Date()
         self.lastLoginAt = firebaseUser.metadata.lastSignInDate ?? Date()
         self.favoriteGenres = []
