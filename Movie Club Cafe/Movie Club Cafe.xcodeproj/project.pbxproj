@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		BE18518A2EBD268F00ACF563 /* PostHog in Frameworks */ = {isa = PBXBuildFile; productRef = BE1851892EBD268F00ACF563 /* PostHog */; };
+		BE185ABC2EBD369F00ACF563 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = BE185ABB2EBD369F00ACF563 /* GoogleSignIn */; };
+		BE185ABE2EBD369F00ACF563 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = BE185ABD2EBD369F00ACF563 /* GoogleSignInSwift */; };
 		BEA903422E92010700592193 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = BEA903412E92010700592193 /* FirebaseCore */; };
 		BEA903442E92010700592193 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = BEA903432E92010700592193 /* FirebaseFirestore */; };
 		BEA903462E92010700592193 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = BEA903452E92010700592193 /* FirebaseAuth */; };
@@ -17,9 +19,22 @@
 		BEA903102E91737100592193 /* Movie Club Cafe.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Movie Club Cafe.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		BE1852A52EBD8E4700ACF563 /* Exceptions for "Movie Club Cafe" folder in "Movie Club Cafe" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"Movie-Club-Cafe-Info.plist",
+			);
+			target = BEA9030F2E91737100592193 /* Movie Club Cafe */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		BEA903122E91737100592193 /* Movie Club Cafe */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				BE1852A52EBD8E4700ACF563 /* Exceptions for "Movie Club Cafe" folder in "Movie Club Cafe" target */,
+			);
 			path = "Movie Club Cafe";
 			sourceTree = "<group>";
 		};
@@ -34,6 +49,8 @@
 				BEA903442E92010700592193 /* FirebaseFirestore in Frameworks */,
 				BEA903462E92010700592193 /* FirebaseAuth in Frameworks */,
 				BE18518A2EBD268F00ACF563 /* PostHog in Frameworks */,
+				BE185ABC2EBD369F00ACF563 /* GoogleSignIn in Frameworks */,
+				BE185ABE2EBD369F00ACF563 /* GoogleSignInSwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +129,7 @@
 			packageReferences = (
 				BEA903402E92010700592193 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				BE1851882EBD268F00ACF563 /* XCRemoteSwiftPackageReference "posthog-ios" */,
+				BE185ABA2EBD369F00ACF563 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = BEA903112E91737100592193 /* Products */;
@@ -265,6 +283,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Movie Club Cafe/Movie Club Cafe.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = E2L636Z97D;
@@ -273,6 +292,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Movie-Club-Cafe-Info.plist";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -309,6 +329,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Movie Club Cafe/Movie Club Cafe.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = E2L636Z97D;
@@ -317,6 +338,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Movie-Club-Cafe-Info.plist";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -380,6 +402,14 @@
 				minimumVersion = 3.34.0;
 			};
 		};
+		BE185ABA2EBD369F00ACF563 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.0.0;
+			};
+		};
 		BEA903402E92010700592193 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
@@ -395,6 +425,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = BE1851882EBD268F00ACF563 /* XCRemoteSwiftPackageReference "posthog-ios" */;
 			productName = PostHog;
+		};
+		BE185ABB2EBD369F00ACF563 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BE185ABA2EBD369F00ACF563 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		BE185ABD2EBD369F00ACF563 /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BE185ABA2EBD369F00ACF563 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
 		};
 		BEA903412E92010700592193 /* FirebaseCore */ = {
 			isa = XCSwiftPackageProductDependency;

@@ -11,6 +11,7 @@ import FirebaseFirestore
 import Combine
 import AuthenticationServices
 import CryptoKit
+import GoogleSignIn
 
 @MainActor
 class AuthenticationService: ObservableObject {
@@ -119,17 +120,66 @@ class AuthenticationService: ObservableObject {
     
     // MARK: - Google Sign In
     
-    // Note: You'll need to add GoogleSignIn SDK for full implementation
-    // This is a placeholder for the structure
+    @MainActor
     func signInWithGoogle() async throws {
-        // TODO: Implement Google Sign In
-        // 1. Add GoogleSignIn package
-        // 2. Configure Google Sign In
-        // 3. Present sign in flow
-        // 4. Get ID token and access token
-        // 5. Create Firebase credential
-        // 6. Sign in with credential
-        throw AuthenticationError.unknown("Google Sign In not yet implemented")
+        isLoading = true
+        defer { isLoading = false }
+        
+        // Get the client ID from GoogleService-Info.plist
+        guard let clientID = FirebaseApp.app()?.options.clientID else {
+            throw AuthenticationError.unknown("Missing Google Client ID")
+        }
+        
+        // Configure Google Sign In
+        let config = GIDConfiguration(clientID: clientID)
+        GIDSignIn.sharedInstance.configuration = config
+        
+        // Get the root view controller
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let rootViewController = windowScene.windows.first?.rootViewController else {
+            throw AuthenticationError.unknown("No root view controller found")
+        }
+        
+        do {
+            // Present Google Sign In
+            let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController)
+            
+            guard let idToken = result.user.idToken?.tokenString else {
+                throw AuthenticationError.unknown("Missing ID token")
+            }
+            
+            let accessToken = result.user.accessToken.tokenString
+            
+            // Create Firebase credential
+            let credential = GoogleAuthProvider.credential(withIDToken: idToken, accessToken: accessToken)
+            
+            // Sign in to Firebase
+            try await auth.signIn(with: credential)
+            
+        } catch let error as NSError {
+            // Handle Google Sign In specific errors
+            if error.domain == "com.google.GIDSignIn" {
+                if error.code == -5 { // User cancelled
+                    throw AuthenticationError.cancelled
+                }
+                throw AuthenticationError.unknown("Google Sign In failed: \(error.localizedDescription)")
+            }
+            throw mapAuthError(error)
+        }
+    }
+    
+    // Restore Google Sign In on app launch
+    func restoreGoogleSignIn() {
+        GIDSignIn.sharedInstance.restorePreviousSignIn { user, error in
+            if let error = error {
+                print("Error restoring Google Sign In: \(error.localizedDescription)")
+                return
+            }
+            
+            if user != nil {
+                print("Google Sign In restored successfully")
+            }
+        }
     }
     
     // MARK: - Apple Sign In
@@ -275,5 +325,39 @@ class AuthenticationService: ObservableObject {
         }.joined()
         
         return hashString
+    }
+}
+
+// MARK: - Authentication Error
+
+enum AuthenticationError: LocalizedError {
+    case emailAlreadyInUse
+    case invalidEmail
+    case weakPassword
+    case wrongPassword
+    case userNotFound
+    case networkError
+    case cancelled
+    case unknown(String)
+    
+    var errorDescription: String? {
+        switch self {
+        case .emailAlreadyInUse:
+            return "This email is already registered. Please sign in instead."
+        case .invalidEmail:
+            return "Please enter a valid email address."
+        case .weakPassword:
+            return "Password should be at least 6 characters long."
+        case .wrongPassword:
+            return "Incorrect password. Please try again."
+        case .userNotFound:
+            return "No account found with this email."
+        case .networkError:
+            return "Network error. Please check your connection."
+        case .cancelled:
+            return "Sign in was cancelled."
+        case .unknown(let message):
+            return message
+        }
     }
 }

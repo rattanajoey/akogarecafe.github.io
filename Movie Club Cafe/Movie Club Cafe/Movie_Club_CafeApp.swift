@@ -7,6 +7,7 @@
 
 import SwiftUI
 import FirebaseCore
+import GoogleSignIn
 
 @main
 struct Movie_Club_CafeApp: App {
@@ -21,6 +22,14 @@ struct Movie_Club_CafeApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(authService)
+                .onAppear {
+                    // Restore Google Sign In on app launch
+                    authService.restoreGoogleSignIn()
+                }
+                .onOpenURL { url in
+                    // Handle Google Sign In URL callback
+                    GIDSignIn.sharedInstance.handle(url)
+                }
         }
     }
 }
