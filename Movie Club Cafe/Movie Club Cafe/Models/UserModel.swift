@@ -59,6 +59,7 @@ enum AuthenticationError: LocalizedError {
     case userNotFound
     case wrongPassword
     case networkError
+    case cancelled
     case unknown(String)
     
     var errorDescription: String? {
@@ -75,6 +76,8 @@ enum AuthenticationError: LocalizedError {
             return "Incorrect password. Please try again."
         case .networkError:
             return "Network error. Please check your connection."
+        case .cancelled:
+            return "Sign in was cancelled."
         case .unknown(let message):
             return message
         }

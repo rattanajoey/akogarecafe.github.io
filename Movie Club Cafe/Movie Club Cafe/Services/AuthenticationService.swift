@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import FirebaseCore
 import FirebaseAuth
 import FirebaseFirestore
 import Combine
@@ -325,39 +326,5 @@ class AuthenticationService: ObservableObject {
         }.joined()
         
         return hashString
-    }
-}
-
-// MARK: - Authentication Error
-
-enum AuthenticationError: LocalizedError {
-    case emailAlreadyInUse
-    case invalidEmail
-    case weakPassword
-    case wrongPassword
-    case userNotFound
-    case networkError
-    case cancelled
-    case unknown(String)
-    
-    var errorDescription: String? {
-        switch self {
-        case .emailAlreadyInUse:
-            return "This email is already registered. Please sign in instead."
-        case .invalidEmail:
-            return "Please enter a valid email address."
-        case .weakPassword:
-            return "Password should be at least 6 characters long."
-        case .wrongPassword:
-            return "Incorrect password. Please try again."
-        case .userNotFound:
-            return "No account found with this email."
-        case .networkError:
-            return "Network error. Please check your connection."
-        case .cancelled:
-            return "Sign in was cancelled."
-        case .unknown(let message):
-            return message
-        }
     }
 }
