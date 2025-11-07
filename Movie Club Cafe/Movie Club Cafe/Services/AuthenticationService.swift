@@ -9,10 +9,12 @@ import Foundation
 import FirebaseCore
 import FirebaseAuth
 import FirebaseFirestore
+import FirebaseStorage
 import Combine
 import AuthenticationServices
 import CryptoKit
 import GoogleSignIn
+import UIKit
 
 @MainActor
 class AuthenticationService: ObservableObject {
@@ -301,6 +303,108 @@ class AuthenticationService: ObservableObject {
         try auth.signOut()
         currentUser = nil
         isAuthenticated = false
+    }
+    
+    // MARK: - Profile Updates
+    
+    func updateDisplayName(_ displayName: String) async throws {
+        guard let user = auth.currentUser else {
+            throw AuthenticationError.unknown("No user signed in")
+        }
+        
+        // Update Firebase Auth profile
+        let changeRequest = user.createProfileChangeRequest()
+        changeRequest.displayName = displayName
+        try await changeRequest.commitChanges()
+        
+        // Update Firestore
+        try await db.collection("users").document(user.uid).updateData([
+            "displayName": displayName
+        ])
+        
+        // Update local user
+        await MainActor.run {
+            currentUser?.displayName = displayName
+        }
+    }
+    
+    func uploadProfileImage(_ image: UIImage) async throws {
+        guard let user = auth.currentUser else {
+            throw AuthenticationError.unknown("No user signed in")
+        }
+        
+        // Convert image to JPEG data
+        guard let imageData = image.jpegData(compressionQuality: 0.7) else {
+            throw AuthenticationError.unknown("Failed to convert image to data")
+        }
+        
+        // Create storage reference
+        let storage = Storage.storage()
+        let storageRef = storage.reference()
+        let profileImageRef = storageRef.child("profile_images/\(user.uid).jpg")
+        
+        // Upload image
+        let metadata = StorageMetadata()
+        metadata.contentType = "image/jpeg"
+        
+        _ = try await profileImageRef.putDataAsync(imageData, metadata: metadata)
+        
+        // Get download URL
+        let downloadURL = try await profileImageRef.downloadURL()
+        let urlString = downloadURL.absoluteString
+        
+        // Update Firebase Auth profile
+        let changeRequest = user.createProfileChangeRequest()
+        changeRequest.photoURL = downloadURL
+        try await changeRequest.commitChanges()
+        
+        // Update Firestore
+        try await db.collection("users").document(user.uid).updateData([
+            "photoURL": urlString
+        ])
+        
+        // Update local user
+        await MainActor.run {
+            currentUser?.photoURL = urlString
+        }
+    }
+    
+    func updateProfile(displayName: String?, photoURL: String?) async throws {
+        guard let user = auth.currentUser else {
+            throw AuthenticationError.unknown("No user signed in")
+        }
+        
+        var updates: [String: Any] = [:]
+        
+        // Update Firebase Auth profile
+        let changeRequest = user.createProfileChangeRequest()
+        
+        if let displayName = displayName {
+            changeRequest.displayName = displayName
+            updates["displayName"] = displayName
+        }
+        
+        if let photoURL = photoURL, let url = URL(string: photoURL) {
+            changeRequest.photoURL = url
+            updates["photoURL"] = photoURL
+        }
+        
+        try await changeRequest.commitChanges()
+        
+        // Update Firestore
+        if !updates.isEmpty {
+            try await db.collection("users").document(user.uid).updateData(updates)
+        }
+        
+        // Update local user
+        await MainActor.run {
+            if let displayName = displayName {
+                currentUser?.displayName = displayName
+            }
+            if let photoURL = photoURL {
+                currentUser?.photoURL = photoURL
+            }
+        }
     }
     
     // MARK: - Helper Methods

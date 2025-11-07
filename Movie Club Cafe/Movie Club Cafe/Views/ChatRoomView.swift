@@ -13,6 +13,8 @@ struct ChatRoomView: View {
     @StateObject private var chatService = ChatService()
     @State private var messageText = ""
     @State private var scrollToBottom = false
+    @State private var showError = false
+    @State private var errorMessage = ""
     @FocusState private var isInputFocused: Bool
     
     var body: some View {
@@ -63,6 +65,11 @@ struct ChatRoomView: View {
         .onDisappear {
             chatService.stopListening()
         }
+        .alert("Error", isPresented: $showError) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(errorMessage)
+        }
     }
     
     // MARK: - Message Input Bar
@@ -102,6 +109,17 @@ struct ChatRoomView: View {
                 try await chatService.sendMessage(chatRoomId: roomId, text: text)
             } catch {
                 print("Error sending message: \(error)")
+                
+                // Show error to user
+                await MainActor.run {
+                    if error.localizedDescription.contains("permission") || 
+                       error.localizedDescription.contains("PERMISSION_DENIED") {
+                        errorMessage = "Failed to send message: Missing or insufficient permissions."
+                    } else {
+                        errorMessage = "Failed to send message: \(error.localizedDescription)"
+                    }
+                    showError = true
+                }
             }
         }
     }

@@ -192,7 +192,7 @@ class ChatService: ObservableObject {
         )
         
         // Add message to chat room
-        try db.collection("ChatRooms")
+        try await db.collection("ChatRooms")
             .document(chatRoomId)
             .collection("Messages")
             .addDocument(from: message)

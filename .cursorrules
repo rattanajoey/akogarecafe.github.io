@@ -67,16 +67,32 @@ This is a personal website (akogarecafe.com) featuring anime, manga, music recom
 - Use SwiftUI for all UI components
 - Follow Apple's Swift API Design Guidelines
 - Use async/await for async operations
-- Maintain color/design consistency with web version
+- **Minimalist Apple UI Design**: Clean, spacious layouts with frosted glass effects
+- Use SF Symbols for all icons
+- SF Rounded and system fonts for typography
 - Share Firebase backend with web app
 
 ### Styling
+
+#### iOS Design System (Minimalist Apple UI)
+- **Typography**: SF Rounded (.rounded design), system fonts
+- **Spacing**: Consistent 12-24pt spacing between elements
+- **Corners**: Rounded corners (12-16pt radius)
+- **Materials**: .ultraThinMaterial for frosted glass effects
+- **Borders**: Subtle borders (gray opacity 0.2, 1-1.5pt)
+- **Shadows**: Minimal shadows for depth (opacity 0.1-0.3, radius 4-8pt)
+- **Interactive Elements**: 44pt minimum tap targets
+- **Color Palette**:
+  - Background gradient: `#d2d2cb` → `#4d695d`
+  - Accent color: `#bc252d` (red)
+  - Text primary: .primary (adaptive)
+  - Text secondary: .secondary (adaptive)
+  
+#### Web Styling
 - Custom themes defined in `/src/theme/`
 - Use Emotion for CSS-in-JS in React
 - Maintain the anime/Japanese aesthetic
 - Responsive design for all screen sizes
-- Gradient backgrounds: `#d2d2cb` → `#4d695d`
-- Accent color: `#bc252d` (red)
 
 ## Firebase Integration
 - **Firestore Collections**:
@@ -96,12 +112,14 @@ This is a personal website (akogarecafe.com) featuring anime, manga, music recom
 
 ### Movie Club (Primary Feature)
 - Monthly movie selections (4 genres: Action, Drama, Comedy, Thriller)
-- Movie submission form (password-protected)
-- Genre pools viewer
-- TMDB integration for posters/details
+- Movie submission form (password-protected) with **TMDB search integration**
+- Interactive movie search with posters, ratings, and descriptions
+- Genre pools viewer with clean card layouts
+- TMDB integration for posters/details/search
 - Month selector with historical data
 - YouTube trailer links
 - Synced between web and iOS
+- Minimalist Apple UI design throughout
 
 ### Interactive Elements
 - Custom mouse follower
@@ -178,11 +196,34 @@ const docRef = doc(db, "MonthlySelections", monthId);
 const docSnap = await getDoc(docRef);
 ```
 
-### TMDB Search
+### TMDB Search (Swift)
+```swift
+let urlString = "https://api.themoviedb.org/3/search/movie?api_key=\(apiKey)&query=\(encodedQuery)"
+let (data, _) = try await URLSession.shared.data(from: url)
+let response = try JSONDecoder().decode(TMDBSearchResponse.self, from: data)
+```
+
+### TMDB Search (JavaScript)
 ```javascript
 const response = await axios.get(
   `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${title}`
 );
+```
+
+### SwiftUI Minimalist Card
+```swift
+VStack(alignment: .leading, spacing: 12) {
+    // Card content
+}
+.padding(16)
+.background(
+    RoundedRectangle(cornerRadius: 16)
+        .fill(.ultraThinMaterial)
+)
+.overlay(
+    RoundedRectangle(cornerRadius: 16)
+        .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+)
 ```
 
 ### Material-UI Styling
@@ -195,10 +236,11 @@ const StyledButton = styled(Button)(({ theme }) => ({
 
 ## Priority Guidelines
 1. **Maintain existing functionality** - Don't break what works
-2. **Design consistency** - Match the anime/Japanese aesthetic
-3. **Cross-platform sync** - Keep web and iOS in harmony
-4. **User experience** - Smooth animations, clear feedback
+2. **Design consistency** - iOS uses minimalist Apple UI; web uses anime/Japanese aesthetic
+3. **Cross-platform sync** - Keep web and iOS in harmony for data/features
+4. **User experience** - Smooth animations, clear feedback, intuitive interactions
 5. **Performance** - Optimize images, lazy load when appropriate
+6. **Accessibility** - 44pt tap targets, proper contrast, VoiceOver support
 
 ## Resources
 - [Firebase Docs](https://firebase.google.com/docs)
@@ -214,7 +256,15 @@ const StyledButton = styled(Button)(({ theme }) => ({
 - Shogi piece mechanics in `src/components/PieceMechanics/`
 - All documentation moved to `/docs` folder
 
+## Recent Updates (Nov 2025)
+- **iOS App Redesign**: Complete minimalist Apple UI redesign
+- **TMDB Search Integration**: Movie submission form now has interactive TMDB search
+- **Carousel Dots**: Genre emojis with frosted glass indicator
+- **Consistent Cards**: All views use frosted glass cards with rounded corners
+- **Clean Typography**: SF Rounded fonts throughout iOS app
+- **Interactive Buttons**: Circular frosted glass buttons for actions
+
 ---
 
-When in doubt, prioritize user experience and design consistency with the existing aesthetic.
+When in doubt, prioritize user experience and design consistency with the platform aesthetic (minimalist Apple UI for iOS, anime/Japanese for web).
 

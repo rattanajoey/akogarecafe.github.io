@@ -13,28 +13,24 @@
 		BEA903422E92010700592193 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = BEA903412E92010700592193 /* FirebaseCore */; };
 		BEA903442E92010700592193 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = BEA903432E92010700592193 /* FirebaseFirestore */; };
 		BEA903462E92010700592193 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = BEA903452E92010700592193 /* FirebaseAuth */; };
+		BEA903482E92010700592193 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = BEA903472E92010700592193 /* FirebaseAnalytics */; };
+		BEA9034A2E92010700592193 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = BEA903492E92010700592193 /* FirebaseCrashlytics */; };
+		BEA9034C2E92010700592193 /* FirebaseRemoteConfig in Frameworks */ = {isa = PBXBuildFile; productRef = BEA9034B2E92010700592193 /* FirebaseRemoteConfig */; };
+		BEA9034E2E92010700592193 /* FirebasePerformance in Frameworks */ = {isa = PBXBuildFile; productRef = BEA9034D2E92010700592193 /* FirebasePerformance */; };
+		BEA903502E92010700592193 /* FirebaseDynamicLinks in Frameworks */ = {isa = PBXBuildFile; productRef = BEA9034F2E92010700592193 /* FirebaseDynamicLinks */; };
+		BEA903522E92010700592193 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = BEA903512E92010700592193 /* FirebaseStorage */; };
+		BEA903542E92010700592193 /* FirebaseInAppMessaging-Beta in Frameworks */ = {isa = PBXBuildFile; productRef = BEA903532E92010700592193 /* FirebaseInAppMessaging-Beta */; };
+		BEA903562E92010700592193 /* FirebaseAppCheck in Frameworks */ = {isa = PBXBuildFile; productRef = BEA903552E92010700592193 /* FirebaseAppCheck */; };
+		BEA903582E92010700592193 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = BEA903572E92010700592193 /* FirebaseMessaging */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		BEA903102E91737100592193 /* Movie Club Cafe.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Movie Club Cafe.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		BE1852A52EBD8E4700ACF563 /* Exceptions for "Movie Club Cafe" folder in "Movie Club Cafe" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				"Movie-Club-Cafe-Info.plist",
-			);
-			target = BEA9030F2E91737100592193 /* Movie Club Cafe */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		BEA903122E91737100592193 /* Movie Club Cafe */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				BE1852A52EBD8E4700ACF563 /* Exceptions for "Movie Club Cafe" folder in "Movie Club Cafe" target */,
-			);
 			path = "Movie Club Cafe";
 			sourceTree = "<group>";
 		};
@@ -48,6 +44,15 @@
 				BEA903422E92010700592193 /* FirebaseCore in Frameworks */,
 				BEA903442E92010700592193 /* FirebaseFirestore in Frameworks */,
 				BEA903462E92010700592193 /* FirebaseAuth in Frameworks */,
+				BEA903482E92010700592193 /* FirebaseAnalytics in Frameworks */,
+				BEA9034A2E92010700592193 /* FirebaseCrashlytics in Frameworks */,
+				BEA9034C2E92010700592193 /* FirebaseRemoteConfig in Frameworks */,
+				BEA9034E2E92010700592193 /* FirebasePerformance in Frameworks */,
+				BEA903502E92010700592193 /* FirebaseDynamicLinks in Frameworks */,
+				BEA903522E92010700592193 /* FirebaseStorage in Frameworks */,
+				BEA903542E92010700592193 /* FirebaseInAppMessaging-Beta in Frameworks */,
+				BEA903562E92010700592193 /* FirebaseAppCheck in Frameworks */,
+				BEA903582E92010700592193 /* FirebaseMessaging in Frameworks */,
 				BE18518A2EBD268F00ACF563 /* PostHog in Frameworks */,
 				BE185ABC2EBD369F00ACF563 /* GoogleSignIn in Frameworks */,
 				BE185ABE2EBD369F00ACF563 /* GoogleSignInSwift in Frameworks */,
@@ -96,7 +101,18 @@
 				BEA903412E92010700592193 /* FirebaseCore */,
 				BEA903432E92010700592193 /* FirebaseFirestore */,
 				BEA903452E92010700592193 /* FirebaseAuth */,
+				BEA903472E92010700592193 /* FirebaseAnalytics */,
+				BEA903492E92010700592193 /* FirebaseCrashlytics */,
+				BEA9034B2E92010700592193 /* FirebaseRemoteConfig */,
+				BEA9034D2E92010700592193 /* FirebasePerformance */,
+				BEA9034F2E92010700592193 /* FirebaseDynamicLinks */,
+				BEA903512E92010700592193 /* FirebaseStorage */,
+				BEA903532E92010700592193 /* FirebaseInAppMessaging-Beta */,
+				BEA903552E92010700592193 /* FirebaseAppCheck */,
+				BEA903572E92010700592193 /* FirebaseMessaging */,
 				BE1851892EBD268F00ACF563 /* PostHog */,
+				BE185ABB2EBD369F00ACF563 /* GoogleSignIn */,
+				BE185ABD2EBD369F00ACF563 /* GoogleSignInSwift */,
 			);
 			productName = "Movie Club Cafe";
 			productReference = BEA903102E91737100592193 /* Movie Club Cafe.app */;
@@ -450,6 +466,51 @@
 			isa = XCSwiftPackageProductDependency;
 			package = BEA903402E92010700592193 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseAuth;
+		};
+		BEA903472E92010700592193 /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BEA903402E92010700592193 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		BEA903492E92010700592193 /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BEA903402E92010700592193 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
+		};
+		BEA9034B2E92010700592193 /* FirebaseRemoteConfig */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BEA903402E92010700592193 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseRemoteConfig;
+		};
+		BEA9034D2E92010700592193 /* FirebasePerformance */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BEA903402E92010700592193 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebasePerformance;
+		};
+		BEA9034F2E92010700592193 /* FirebaseDynamicLinks */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BEA903402E92010700592193 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseDynamicLinks;
+		};
+		BEA903512E92010700592193 /* FirebaseStorage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BEA903402E92010700592193 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseStorage;
+		};
+		BEA903532E92010700592193 /* FirebaseInAppMessaging-Beta */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BEA903402E92010700592193 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = "FirebaseInAppMessaging-Beta";
+		};
+		BEA903552E92010700592193 /* FirebaseAppCheck */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BEA903402E92010700592193 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAppCheck;
+		};
+		BEA903572E92010700592193 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BEA903402E92010700592193 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

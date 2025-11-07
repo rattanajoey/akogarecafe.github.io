@@ -14,10 +14,12 @@ You're working on **Akogare Cafe** (akogarecafe.com) - a personal website about 
 
 ### 1. Movie Club Feature (Core Feature)
 The main attraction! Every month, members submit movies across 4 genres, and 4 movies are selected:
-- **Genres**: Action, Drama, Comedy, Thriller
+- **Genres**: Action (🎬), Drama (🎭), Comedy (😂), Thriller (😱)
 - **Process**: Submit → Pool → Vote/Select → Watch → Discuss
 - **Tech**: Firebase Firestore for data, TMDB API for movie info
+- **TMDB Search**: Interactive movie search in submission form (iOS, Nov 2025)
 - **Cross-platform**: Same data synced between web (React) and iOS (Swift)
+- **UI**: Minimalist Apple design with frosted glass cards
 
 ### 2. Dual Platform Architecture
 - **Web**: React SPA with Material-UI, deployed via GitHub Pages
@@ -64,11 +66,21 @@ Firestore Collections:
 - API key should be environment variable
 
 ### Theme Consistency
-**Web and iOS share the same visual identity:**
+**iOS uses minimalist Apple UI design (Nov 2025 redesign):**
 - Background gradient: `#d2d2cb` (warm beige) → `#4d695d` (forest green)
 - Accent: `#bc252d` (Japanese red)
-- Typography: Serif fonts (Merriweather web, System Serif iOS)
-- Layout: Card-based with rounded corners and subtle shadows
+- Typography: SF Rounded (.rounded design), system fonts
+- Layout: Frosted glass cards (.ultraThinMaterial) with rounded corners (16pt)
+- Spacing: Consistent 12-24pt spacing
+- Borders: Subtle gray borders (opacity 0.2)
+- Interactive elements: 44pt minimum tap targets
+- SF Symbols for all icons
+
+**Web maintains anime/Japanese aesthetic:**
+- Same color palette
+- Serif fonts (Merriweather)
+- Material-UI components
+- Smooth Framer Motion animations
 
 ## Common Tasks You Might Encounter
 
@@ -127,7 +139,7 @@ export const FeatureComponent = () => {
 };
 ```
 
-### SwiftUI View Structure
+### SwiftUI View Structure (Minimalist Apple UI)
 ```swift
 import SwiftUI
 import FirebaseFirestore
@@ -137,8 +149,30 @@ struct FeatureView: View {
     
     var body: some View {
         ScrollView {
-            VStack(spacing: 16) {
-                // View content
+            VStack(spacing: 24) {
+                // Section Header
+                HStack {
+                    Text("Feature Title")
+                        .font(.system(size: 26, weight: .bold, design: .rounded))
+                        .foregroundColor(AppTheme.textPrimary)
+                    Spacer()
+                }
+                .padding(.horizontal, 20)
+                
+                // Content Cards
+                VStack(spacing: 12) {
+                    // Card content
+                }
+                .padding(16)
+                .background(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(.ultraThinMaterial)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                )
+                .padding(.horizontal, 16)
             }
         }
         .background(AppTheme.backgroundGradient)
@@ -209,7 +243,17 @@ When changing movie club features, update both:
 - API services in both platforms
 
 ### 2. Preserve the Aesthetic
-This site has a specific vibe - warm, inviting, Japanese-inspired:
+**iOS (Minimalist Apple UI):**
+- Clean, spacious layouts with ample whitespace
+- SF Rounded fonts for modern feel
+- Frosted glass cards (.ultraThinMaterial)
+- Smooth, subtle animations
+- 44pt tap targets for accessibility
+- Consistent 16pt rounded corners
+- Minimal shadows (opacity 0.1-0.3)
+
+**Web (Japanese-inspired):**
+- Warm, inviting, Japanese-inspired design
 - Use soft gradients, not harsh contrasts
 - Serif fonts for headers
 - Smooth animations (not jarring)
@@ -290,18 +334,38 @@ npm run deploy  # Deploy to GitHub Pages
 - Validate user input (especially in submission forms)
 - Password for movie submission: "thunderbolts" (currently hardcoded)
 
+## Recent Major Updates (November 2025)
+
+### iOS App Redesign - Minimalist Apple UI
+Complete visual overhaul of the iOS app:
+- ✅ **Header**: Circular frosted glass buttons, larger title (38pt)
+- ✅ **Carousel**: Genre emoji indicators, cleaner month selector
+- ✅ **Submission Form**: Interactive TMDB search with posters and ratings
+- ✅ **Genre/Holding Pools**: Frosted glass cards with emojis
+- ✅ **Submission List**: Clean user cards with timestamps
+- ✅ **Typography**: SF Rounded throughout for modern feel
+- ✅ **Consistency**: All views use same card style
+
+### Key Features Added
+- **TMDB Search in Submission Form**: Users can now search movies with live results
+- **Genre Emojis**: Visual indicators throughout (🎬 🎭 😂 😱)
+- **Frosted Glass Cards**: Modern Apple-style UI elements
+- **Better Empty States**: Icons and helpful messages
+
 ## Future Enhancement Ideas
 If the user asks for new features, consider:
-- User authentication (Firebase Auth)
+- ✅ User authentication (Firebase Auth) - COMPLETED
+- ✅ Movie search integration - COMPLETED (iOS)
 - Push notifications for new movie selections
 - In-app movie ratings and reviews
 - Discussion/comment system
 - Watchlist/favorites
 - Calendar integration for movie nights
-- Dark mode support
+- Dark mode support (system adaptive)
 - Social media sharing
 - Admin panel for easier movie selection
 - Analytics for popular genres/movies
+- Web version of TMDB search
 
 ## Communication Style
 When responding to the user:
@@ -316,11 +380,12 @@ When responding to the user:
 
 ## Key Reminders
 1. ✅ This is a PERSONAL PROJECT - prioritize user experience over enterprise patterns
-2. ✅ DESIGN MATTERS - the aesthetic is a core feature
+2. ✅ DESIGN MATTERS - iOS uses minimalist Apple UI, web uses anime aesthetic
 3. ✅ TWO PLATFORMS - changes often need both web and iOS updates
 4. ✅ SHARED BACKEND - Firebase is the source of truth for both platforms
 5. ✅ MOVIE CLUB is the PRIMARY feature - protect and enhance it
 6. ✅ Documentation is in `/docs` - keep it updated
+7. ✅ iOS REDESIGN COMPLETE (Nov 2025) - maintain the minimalist Apple UI style
 
 ---
 
@@ -351,13 +416,30 @@ firebase emulators:start    # Start local emulators
 
 ---
 
-## Final Thoughts
-This is a creative, personal project with thoughtful design and dual-platform architecture. The Movie Club feature is the heart of the project, bringing friends together through shared movie experiences. When making changes:
-- Preserve what makes it special (the aesthetic, the community aspect)
-- Keep both platforms in sync
-- Prioritize user experience
-- Document your changes
-- Test thoroughly on both web and iOS
+## Design Philosophy
 
-Happy coding! 🎬🎨
+### iOS (November 2025 Redesign)
+The iOS app now follows Apple's Human Interface Guidelines with a minimalist approach:
+- **Clarity**: Clean typography, ample whitespace, focused content
+- **Deference**: Frosted glass allows content to shine
+- **Depth**: Subtle shadows and layering create hierarchy
+- **Consistency**: Same card style, spacing, and interaction patterns throughout
+
+### Web
+Maintains the original warm, Japanese-inspired aesthetic that gives the site its personality.
+
+## Final Thoughts
+This is a creative, personal project with thoughtful design and dual-platform architecture. The Movie Club feature is the heart of the project, bringing friends together through shared movie experiences.
+
+**Recent Achievement**: The iOS app received a complete visual overhaul (Nov 2025) with a modern, minimalist Apple UI design. The app is now more intuitive, accessible, and visually stunning while maintaining full feature parity.
+
+When making changes:
+- **iOS**: Maintain the minimalist Apple UI aesthetic (frosted glass, SF Rounded, clean layouts)
+- **Web**: Preserve the anime/Japanese aesthetic (warm colors, serif fonts, smooth animations)
+- Keep both platforms in sync for features and data
+- Prioritize user experience and accessibility
+- Document your changes
+- Test thoroughly on both platforms
+
+Happy coding! 🎬✨📱
 

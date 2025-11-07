@@ -34,15 +34,14 @@ struct ContentView: View {
                         }
                         .badge(notificationService.unreadCount)
                     
+                    AnalyticsView()
+                        .tabItem {
+                            Label("Analytics", systemImage: "chart.bar.fill")
+                        }
+                    
                     ProfileView()
                         .tabItem {
                             Label("Profile", systemImage: "person.circle")
-                        }
-                    
-                    // Debug tab for troubleshooting
-                    ChatDebugView()
-                        .tabItem {
-                            Label("Debug", systemImage: "ladybug")
                         }
                     
                     // Admin tab (only visible for admin users)

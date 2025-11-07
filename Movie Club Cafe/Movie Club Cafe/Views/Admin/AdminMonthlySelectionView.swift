@@ -94,7 +94,14 @@ struct AdminMonthlySelectionView: View {
                     .frame(maxWidth: .infinity)
             } else {
                 ForEach(Genre.allCases, id: \.self) { genre in
-                    GenrePoolCard(genre: genre, movies: pools[genre] ?? [])
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("\(genre.title): \((pools[genre] ?? []).count) movies")
+                            .font(.headline)
+                    }
+                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.gray.opacity(0.1))
+                    .cornerRadius(8)
                 }
             }
         }

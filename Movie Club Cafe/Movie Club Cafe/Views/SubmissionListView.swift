@@ -14,35 +14,50 @@ struct SubmissionListView: View {
     @State private var submissions: [UserSubmission] = []
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Submissions for \(getCurrentMonthDisplay())")
-                .font(.title2)
-                .fontWeight(.bold)
-                .foregroundColor(AppTheme.accentColor)
-                .padding(.horizontal)
+        VStack(alignment: .leading, spacing: 20) {
+            // Section Header
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Recent Submissions")
+                        .font(.system(size: 26, weight: .bold, design: .rounded))
+                        .foregroundColor(AppTheme.textPrimary)
+                    Text(getCurrentMonthDisplay())
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.secondary)
+                }
+                Spacer()
+            }
+            .padding(.horizontal, 20)
             
+            // Submissions Content
             if submissions.isEmpty {
-                Text("No submissions yet.")
-                    .font(.body)
-                    .foregroundColor(AppTheme.textSecondary)
-                    .padding()
-                    .frame(maxWidth: .infinity, alignment: .center)
+                VStack(spacing: 12) {
+                    Image(systemName: "tray")
+                        .font(.system(size: 40))
+                        .foregroundColor(.gray.opacity(0.5))
+                    Text("No submissions yet")
+                        .font(.system(size: 15))
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 40)
+                .background(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(.ultraThinMaterial)
+                )
+                .padding(.horizontal, 16)
             } else {
-                ScrollView(.horizontal, showsIndicators: true) {
-                    HStack(spacing: 16) {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 12) {
                         ForEach(submissions) { submission in
                             SubmissionCard(submission: submission)
                         }
                     }
-                    .padding(.horizontal)
+                    .padding(.horizontal, 16)
                 }
             }
         }
-        .padding(.vertical)
-        .background(
-            RoundedRectangle(cornerRadius: 10)
-                .fill(Color(red: 131/255, green: 167/255, blue: 157/255).opacity(0.8))
-        )
+        .padding(.vertical, 20)
         .onAppear {
             loadSubmissions()
         }
@@ -86,40 +101,81 @@ struct SubmissionCard: View {
     let submission: UserSubmission
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(submission.id)
-                .font(.headline)
-                .fontWeight(.bold)
-                .foregroundColor(.white)
-                .lineLimit(1)
-            
-            VStack(alignment: .leading, spacing: 4) {
-                SubmissionRow(emoji: "🎬", movie: submission.action ?? "No Action")
-                SubmissionRow(emoji: "🎭", movie: submission.drama ?? "No Drama")
-                SubmissionRow(emoji: "😂", movie: submission.comedy ?? "No Comedy")
-                SubmissionRow(emoji: "😱", movie: submission.thriller ?? "No Thriller")
+        VStack(alignment: .leading, spacing: 14) {
+            // User Name Header
+            HStack {
+                Image(systemName: "person.circle.fill")
+                    .font(.system(size: 20))
+                    .foregroundColor(AppTheme.accentColor)
+                Text(submission.id)
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(.primary)
+                    .lineLimit(1)
             }
+            
+            Divider()
+            
+            // Movie Picks
+            VStack(alignment: .leading, spacing: 10) {
+                SubmissionRow(emoji: "🎬", label: "Action", movie: submission.action)
+                SubmissionRow(emoji: "🎭", label: "Drama", movie: submission.drama)
+                SubmissionRow(emoji: "😂", label: "Comedy", movie: submission.comedy)
+                SubmissionRow(emoji: "😱", label: "Thriller", movie: submission.thriller)
+            }
+            
+            // Timestamp
+            HStack {
+                Image(systemName: "clock")
+                    .font(.caption2)
+                Text(formatDate(submission.submittedAt))
+                    .font(.system(size: 11))
+            }
+            .foregroundColor(.secondary)
         }
-        .padding()
-        .frame(minWidth: 250, maxWidth: 280)
-        .background(Color(red: 77/255, green: 105/255, blue: 93/255))
-        .cornerRadius(10)
-        .shadow(color: .black.opacity(0.3), radius: 5, x: 0, y: 4)
+        .padding(16)
+        .frame(width: 260)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(.ultraThinMaterial)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+        )
+    }
+    
+    private func formatDate(_ date: Date) -> String {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .abbreviated
+        return formatter.localizedString(for: date, relativeTo: Date())
     }
 }
 
 struct SubmissionRow: View {
     let emoji: String
-    let movie: String
+    let label: String
+    let movie: String?
     
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 8) {
             Text(emoji)
-                .font(.body)
-            Text(movie)
-                .font(.caption)
-                .foregroundColor(.white)
-                .lineLimit(1)
+                .font(.system(size: 16))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(label)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(.secondary)
+                if let movie = movie, !movie.isEmpty {
+                    Text(movie)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.primary)
+                        .lineLimit(1)
+                } else {
+                    Text("Not selected")
+                        .font(.system(size: 13))
+                        .foregroundColor(.secondary)
+                        .italic()
+                }
+            }
         }
     }
 }

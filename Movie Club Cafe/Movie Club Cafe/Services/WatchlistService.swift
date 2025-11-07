@@ -91,6 +91,9 @@ class WatchlistService {
             ] as [String: Any]])
         ], merge: true)
         
+        // Invalidate user cache to force fresh fetch on next read
+        FirestoreCacheService.shared.invalidateCollection("Users")
+        
         // Send notification to all users
         try await sendWatchNotification(userName: watcher.userName, movieTitle: movie.title, genre: genre.rawValue, currentUserId: user.uid)
     }
@@ -138,11 +141,28 @@ class WatchlistService {
                 ], merge: true)
             }
         }
+        
+        // Invalidate user cache to force fresh fetch on next read
+        FirestoreCacheService.shared.invalidateCollection("Users")
     }
     
     // MARK: - Check Watch Status
     
     func checkIfWatched(movieTitle: String, monthId: String, genre: String, userId: String) async throws -> Bool {
+        // Use cached user data with 5-minute freshness
+        if let userData = try? await FirestoreCacheService.shared.getUserData(userId: userId),
+           let watchedMovies = userData.watchedMovies as? [[String: Any]] {
+            return watchedMovies.contains { movie in
+                guard let title = movie["movieTitle"] as? String,
+                      let month = movie["monthId"] as? String,
+                      let genreVal = movie["genre"] as? String else {
+                    return false
+                }
+                return title == movieTitle && month == monthId && genreVal == genre
+            }
+        }
+        
+        // Fallback to direct fetch if cache fails
         let userRef = db.collection("Users").document(userId)
         let doc = try await userRef.getDocument()
         
