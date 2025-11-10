@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Box,
   Typography,
@@ -25,6 +25,7 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  CircularProgress,
 } from "@mui/material";
 import {
   collection,
@@ -34,7 +35,14 @@ import {
   getDoc,
   deleteDoc,
 } from "firebase/firestore";
-import { db } from "../../../config/firebase";
+import {
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut,
+  GoogleAuthProvider,
+  signInWithPopup,
+} from "firebase/auth";
+import { db, auth } from "../../../config/firebase";
 import { getCurrentMonth } from "../../utils";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import LocalMoviesIcon from "@mui/icons-material/LocalMovies";
@@ -52,7 +60,11 @@ const SAVE_PASSWORD = "thunderbolts"; // Same as submission password
 
 const MovieClubAdmin = () => {
   const [access, setAccess] = useState(false);
-  const [password, setPassword] = useState("");
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [authLoading, setAuthLoading] = useState(true);
+  const [authError, setAuthError] = useState("");
+  const [currentUser, setCurrentUser] = useState(null);
   const [pools, setPools] = useState({
     action: [],
     drama: [],
@@ -66,6 +78,14 @@ const MovieClubAdmin = () => {
   const [monthlyHistory, setMonthlyHistory] = useState([]);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [savePassword, setSavePassword] = useState("");
+  const googleProvider = useMemo(() => {
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({
+      prompt: "select_account",
+    });
+    return provider;
+  }, []);
+
 
   // Oscar voting states
   const [oscarCategories, setOscarCategories] = useState([]);
@@ -85,6 +105,112 @@ const MovieClubAdmin = () => {
     comedy: "",
     thriller: "",
   });
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setCurrentUser(user);
+        setAuthLoading(true);
+        try {
+          const userDocRef = doc(db, "users", user.uid);
+          const userDocSnap = await getDoc(userDocRef);
+          const isAdminUser =
+            userDocSnap.exists() && userDocSnap.data().role === "admin";
+          setAccess(isAdminUser);
+          if (isAdminUser) {
+            setAuthError("");
+          } else {
+            setAuthError("This account does not have admin privileges.");
+          }
+          if (user.email) {
+            setLoginEmail(user.email);
+          }
+        } catch (error) {
+          console.error("Error verifying admin role:", error);
+          setAccess(false);
+          setAuthError("Unable to verify admin status. Please try again.");
+        } finally {
+          setAuthLoading(false);
+        }
+      } else {
+        setCurrentUser(null);
+        setAccess(false);
+        setAuthLoading(false);
+        setAuthError("");
+        setLoginEmail("");
+        setLoginPassword("");
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const handleSignIn = async (event) => {
+    if (event?.preventDefault) {
+      event.preventDefault();
+    }
+    setAuthError("");
+
+    const trimmedEmail = loginEmail.trim();
+    if (!trimmedEmail || !loginPassword) {
+      setAuthError("Email and password are required.");
+      return;
+    }
+
+    setAuthLoading(true);
+
+    try {
+      await signInWithEmailAndPassword(auth, trimmedEmail, loginPassword);
+    } catch (error) {
+      console.error("Error signing in:", error);
+      let message = "Failed to sign in. Please try again.";
+      if (error.code === "auth/invalid-credential") {
+        message = "Invalid email or password.";
+      } else if (error.code === "auth/user-disabled") {
+        message = "This account has been disabled.";
+      } else if (error.code === "auth/too-many-requests") {
+        message = "Too many attempts. Please try again later.";
+      }
+      setAuthError(message);
+      setAuthLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setAuthError("");
+    setAuthLoading(true);
+
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (error) {
+      console.error("Error with Google sign in:", error);
+      let message = "Google sign-in failed. Please try again.";
+      if (error.code === "auth/popup-blocked") {
+        message = "Your browser blocked the sign-in popup. Allow popups and retry.";
+      } else if (error.code === "auth/cancelled-popup-request") {
+        message = "Sign-in was cancelled. Please try again.";
+      } else if (error.code === "auth/popup-closed-by-user") {
+        message = "Popup closed before finishing. Please try again.";
+      }
+      setAuthError(message);
+      setAuthLoading(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    setAuthError("");
+    setAuthLoading(true);
+
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Error signing out:", error);
+      setAuthError("Failed to sign out. Please try again.");
+      setAuthLoading(false);
+    } finally {
+      setLoginPassword("");
+    }
+  };
 
   const currentMonth = getCurrentMonth();
 
@@ -110,11 +236,6 @@ const MovieClubAdmin = () => {
       }
     }
     return options;
-  };
-
-  const handleLogin = () => {
-    if (password === "adminpass") setAccess(true);
-    else alert("Wrong password.");
   };
 
   const fetchPools = useCallback(async () => {
@@ -590,31 +711,122 @@ const MovieClubAdmin = () => {
     }
   };
 
-  if (!access) {
+  if (authLoading) {
     return (
       <Box textAlign="center" mt={8}>
-        <Typography variant="h5" mb={2}>
-          🔐 Enter Admin Password
+        <CircularProgress />
+        <Typography variant="body1" mt={2}>
+          Checking admin access...
         </Typography>
-        <TextField
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          sx={{ mb: 2 }}
-        />
-        <br />
-        <Button variant="contained" onClick={handleLogin}>
-          Access Admin Panel
+      </Box>
+    );
+  }
+
+  if (!access) {
+    return (
+      <Box textAlign="center" mt={8} px={2}>
+        <Typography variant="h5" mb={1}>
+          🔐 Admin Sign In
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Use your Movie Club admin credentials to continue.
+        </Typography>
+        {authError && (
+          <Typography color="error" mt={2}>
+            {authError}
+          </Typography>
+        )}
+        <Box
+          component="form"
+          onSubmit={handleSignIn}
+          sx={{
+            maxWidth: 360,
+            mx: "auto",
+            mt: 3,
+            display: "flex",
+            flexDirection: "column",
+            gap: 2,
+          }}
+        >
+          <TextField
+            label="Email"
+            type="email"
+            value={loginEmail}
+            onChange={(e) => setLoginEmail(e.target.value)}
+            autoComplete="email"
+          />
+          <TextField
+            label="Password"
+            type="password"
+            value={loginPassword}
+            onChange={(e) => setLoginPassword(e.target.value)}
+            autoComplete="current-password"
+          />
+          <Button
+            type="submit"
+            variant="contained"
+            disabled={authLoading}
+            sx={{ mt: 1 }}
+          >
+            Access Admin Panel
+          </Button>
+        </Box>
+        <Typography variant="body2" color="text.secondary" mt={3}>
+          or
+        </Typography>
+        <Button
+          variant="outlined"
+          onClick={handleGoogleSignIn}
+          disabled={authLoading}
+          sx={{ mt: 1 }}
+        >
+          Continue with Google
         </Button>
+        {currentUser && (
+          <Box mt={3}>
+            <Typography variant="body2" color="text.secondary">
+              Signed in as {currentUser.email}
+            </Typography>
+            <Button size="small" onClick={handleSignOut} sx={{ mt: 1 }}>
+              Sign out
+            </Button>
+          </Box>
+        )}
       </Box>
     );
   }
 
   return (
     <Box p={4} mb={20}>
-      <Typography variant="h4" fontWeight="bold" mb={3}>
-        🎬 Movie Club Admin
-      </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: { xs: "flex-start", sm: "center" },
+          flexDirection: { xs: "column", sm: "row" },
+          gap: 2,
+          mb: 3,
+        }}
+      >
+        <Typography variant="h4" fontWeight="bold">
+          🎬 Movie Club Admin
+        </Typography>
+        <Box sx={{ textAlign: { xs: "left", sm: "right" } }}>
+          {currentUser && (
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+              Signed in as {currentUser.email}
+            </Typography>
+          )}
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={handleSignOut}
+            disabled={authLoading}
+          >
+            Sign out
+          </Button>
+        </Box>
+      </Box>
 
       <Grid2 container spacing={4}>
         {/* Oscar Voting Admin Section */}
@@ -683,20 +895,25 @@ const MovieClubAdmin = () => {
                           sx={{ backgroundColor: "#FFD700", color: "#000" }}
                         />
                       </Box>
-                      <Button
-                        size="small"
-                        color="error"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteOscarCategory(category.id);
-                        }}
-                        startIcon={<DeleteIcon />}
-                      >
-                        Delete
-                      </Button>
                     </Box>
                   </AccordionSummary>
                   <AccordionDetails>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      mb: 2,
+                    }}
+                  >
+                    <Button
+                      size="small"
+                      color="error"
+                      onClick={() => deleteOscarCategory(category.id)}
+                      startIcon={<DeleteIcon />}
+                    >
+                      Delete Category
+                    </Button>
+                  </Box>
                     <Box>
                       {/* Movie Selection */}
                       <Box sx={{ mb: 2 }}>
