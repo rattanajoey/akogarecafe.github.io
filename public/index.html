@@ -1,3 +1,11 @@
+    <script>
+      (function () {
+        var path = window.location.pathname;
+        if (!window.location.hash) {
+          window.location.replace("/#" + path);
+        }
+      })();
+    </script>
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -11,52 +19,6 @@
     <meta name="keywords" content="portfolio, software engineer, shogi game, music collection, movie club, Japanese culture, web development, Joey Rattana" />
     <meta name="author" content="Joey Rattana" />
     <title>Akogare Cafe - Interactive Portfolio & Gaming Hub</title>
-    <script>
-      (function () {
-        var path = window.location.pathname || "";
-        var search = window.location.search || "";
-        var hash = window.location.hash || "";
-        var movieclubPathPattern = /^\/movieclub(\/|$)/i;
-
-        if (movieclubPathPattern.test(path)) {
-          var remainderFromPath = path.replace(/^\/movieclub\/?/i, "");
-          if (remainderFromPath.charAt(0) === "/") {
-            remainderFromPath = remainderFromPath.slice(1);
-          }
-          var hashPathFromPath = remainderFromPath
-            ? "/" + remainderFromPath
-            : "/";
-          var destinationFromPath =
-            "https://movieclub.akogarecafe.com/" +
-            ("#" + hashPathFromPath + (search || "") + (hash || "")).replace(
-              /^#+/,
-              "#"
-            );
-          window.location.replace(destinationFromPath);
-          return;
-        }
-
-        if (hash && hash.toLowerCase().startsWith("#/movieclub")) {
-          var remainder = hash.slice(2); // strip leading "#/"
-          var suffixFromHash = remainder.replace(/^movieclub\/?/i, "");
-          if (suffixFromHash.charAt(0) === "/") {
-            suffixFromHash = suffixFromHash.slice(1);
-          }
-          var hashPathFromHash = suffixFromHash
-            ? "/" + suffixFromHash
-            : "/";
-          var destinationFromHash =
-            "https://movieclub.akogarecafe.com/" +
-            ("#" + hashPathFromHash + search).replace(/^#+/, "#");
-          window.location.replace(destinationFromHash);
-          return;
-        }
-
-        if (!hash) {
-          window.location.replace("/#" + path + search);
-        }
-      })();
-    </script>
     <script
       async
       src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7265689861928158"

@@ -17,20 +17,17 @@
         var path = window.location.pathname || "";
         var search = window.location.search || "";
         var hash = window.location.hash || "";
-        var movieClubPattern = /^\/movieclub(\/|$)/i;
-        if (movieClubPattern.test(path)) {
-          var remainder = path.replace(/^\/movieclub\/?/i, "");
-          if (remainder.charAt(0) === "/") {
-            remainder = remainder.slice(1);
+        if (
+          path === "/movieclub" ||
+          path === "/movieclub/" ||
+          path.startsWith("/movieclub/")
+        ) {
+          var suffix = path.replace(/^\/movieclub\/?/, "/");
+          if (suffix === "/") {
+            suffix = "";
           }
-          var hashPath = remainder ? "/" + remainder : "/";
-          var destinationHash =
-            "#" + hashPath + (search || "") + (hash || "");
           var destination =
-            "https://movieclub.akogarecafe.com/" + destinationHash.replace(
-              /^#+/,
-              "#"
-            );
+            "https://movieclub.akogarecafe.com" + suffix + search + hash;
           window.location.replace(destination);
           return;
         }
