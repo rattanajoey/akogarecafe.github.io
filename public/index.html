@@ -19,12 +19,19 @@
         var movieclubPathPattern = /^\/movieclub(\/|$)/i;
 
         if (movieclubPathPattern.test(path)) {
-          var suffixFromPath = path.replace(/^\/movieclub\/?/i, "/");
-          if (suffixFromPath === "/") {
-            suffixFromPath = "";
+          var remainderFromPath = path.replace(/^\/movieclub\/?/i, "");
+          if (remainderFromPath.charAt(0) === "/") {
+            remainderFromPath = remainderFromPath.slice(1);
           }
+          var hashPathFromPath = remainderFromPath
+            ? "/" + remainderFromPath
+            : "/";
           var destinationFromPath =
-            "https://movieclub.akogarecafe.com" + suffixFromPath + search + hash;
+            "https://movieclub.akogarecafe.com/" +
+            ("#" + hashPathFromPath + (search || "") + (hash || "")).replace(
+              /^#+/,
+              "#"
+            );
           window.location.replace(destinationFromPath);
           return;
         }
@@ -32,19 +39,15 @@
         if (hash && hash.toLowerCase().startsWith("#/movieclub")) {
           var remainder = hash.slice(2); // strip leading "#/"
           var suffixFromHash = remainder.replace(/^movieclub\/?/i, "");
-          if (
-            suffixFromHash &&
-            suffixFromHash.charAt(0) !== "/" &&
-            suffixFromHash.charAt(0) !== "?" &&
-            suffixFromHash.charAt(0) !== "#"
-          ) {
-            suffixFromHash = "/" + suffixFromHash;
+          if (suffixFromHash.charAt(0) === "/") {
+            suffixFromHash = suffixFromHash.slice(1);
           }
-          if (suffixFromHash === "/") {
-            suffixFromHash = "";
-          }
+          var hashPathFromHash = suffixFromHash
+            ? "/" + suffixFromHash
+            : "/";
           var destinationFromHash =
-            "https://movieclub.akogarecafe.com" + suffixFromHash + search;
+            "https://movieclub.akogarecafe.com/" +
+            ("#" + hashPathFromHash + search).replace(/^#+/, "#");
           window.location.replace(destinationFromHash);
           return;
         }
