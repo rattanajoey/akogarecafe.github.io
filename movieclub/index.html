@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="refresh" content="0; url=https://movieclub.akogarecafe.com" />
+    <meta name="robots" content="noindex" />
+    <title>Akogare Cafe Movie Club Redirect</title>
+  </head>
+  <body>
+    <p>
+      Redirecting to
+      <a href="https://movieclub.akogarecafe.com">movieclub.akogarecafe.com</a>...
+    </p>
+    <script>
+      (function () {
+        var path = window.location.pathname || "";
+        var search = window.location.search || "";
+        var hash = window.location.hash || "";
+        var suffix = path.replace(/^\/movieclub\/?/, "/");
+        if (suffix === "/") {
+          suffix = "";
+        }
+        var destination =
+          "https://movieclub.akogarecafe.com" + suffix + search + hash;
+        window.location.replace(destination);
+      })();
+    </script>
+  </body>
+</html>
+
