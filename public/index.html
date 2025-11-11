@@ -13,9 +13,44 @@
     <title>Akogare Cafe - Interactive Portfolio & Gaming Hub</title>
     <script>
       (function () {
-        var path = window.location.pathname;
-        if (!window.location.hash) {
-          window.location.replace("/#" + path);
+        var path = window.location.pathname || "";
+        var search = window.location.search || "";
+        var hash = window.location.hash || "";
+        var movieclubPathPattern = /^\/movieclub(\/|$)/i;
+
+        if (movieclubPathPattern.test(path)) {
+          var suffixFromPath = path.replace(/^\/movieclub\/?/i, "/");
+          if (suffixFromPath === "/") {
+            suffixFromPath = "";
+          }
+          var destinationFromPath =
+            "https://movieclub.akogarecafe.com" + suffixFromPath + search + hash;
+          window.location.replace(destinationFromPath);
+          return;
+        }
+
+        if (hash && hash.toLowerCase().startsWith("#/movieclub")) {
+          var remainder = hash.slice(2); // strip leading "#/"
+          var suffixFromHash = remainder.replace(/^movieclub\/?/i, "");
+          if (
+            suffixFromHash &&
+            suffixFromHash.charAt(0) !== "/" &&
+            suffixFromHash.charAt(0) !== "?" &&
+            suffixFromHash.charAt(0) !== "#"
+          ) {
+            suffixFromHash = "/" + suffixFromHash;
+          }
+          if (suffixFromHash === "/") {
+            suffixFromHash = "";
+          }
+          var destinationFromHash =
+            "https://movieclub.akogarecafe.com" + suffixFromHash + search;
+          window.location.replace(destinationFromHash);
+          return;
+        }
+
+        if (!hash) {
+          window.location.replace("/#" + path + search);
         }
       })();
     </script>
