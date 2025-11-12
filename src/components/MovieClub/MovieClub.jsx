@@ -26,6 +26,18 @@ const MovieClub = () => {
   const [oscarModalOpen, setOscarModalOpen] = useState(false);
 
   useEffect(() => {
+    const { hash, search } = window.location;
+    const redirectMatch = hash.match(/^#\/MovieClub(\/.*)?$/i);
+    if (redirectMatch) {
+      const suffix = redirectMatch[1] ? redirectMatch[1].replace(/^\/$/, "") : "";
+      const destination =
+        "https://movieclub.akogarecafe.com" +
+        (suffix ? `/${suffix.replace(/^\/+/, "")}` : "");
+      window.location.replace(`${destination}${search ?? ""}`);
+    }
+  }, []);
+
+  useEffect(() => {
     const fetchData = async () => {
       // Fetch selected movies for the selected month
       const selectionsRef = doc(db, "MonthlySelections", selectedMonth);
