@@ -6,8 +6,10 @@ import InstagramIcon from "@mui/icons-material/Instagram";
 import TwitterIcon from "@mui/icons-material/Twitter";
 import GamesIcon from "@mui/icons-material/Games";
 import GitHubIcon from "@mui/icons-material/GitHub";
+import ShareIcon from "@mui/icons-material/Share";
 import MenuIcon from "@mui/icons-material/Menu";
 import { SocialMediaContainer, Title } from "./style";
+import InviteShare from "../InviteShare/InviteShare";
 
 const HeaderComponent = () => {
   const navigate = useNavigate();
@@ -101,6 +103,14 @@ const HeaderComponent = () => {
         >
           <GitHubIcon sx={{ fontSize: { xs: "1.2rem", sm: "1.5rem" } }} />
         </IconButton>
+        <Box
+          sx={{
+            borderLeft: "1px solid rgba(255, 255, 255, 0.2)",
+            height: "24px",
+            mx: 0.5,
+          }}
+        />
+        <InviteShare variant="icon" />
       </SocialMediaContainer>
 
       <Title

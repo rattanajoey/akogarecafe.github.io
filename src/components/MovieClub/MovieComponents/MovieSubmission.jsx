@@ -2,6 +2,7 @@ import { useState } from "react";
 import { db } from "../../../config/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { Box, TextField, Button, Typography } from "@mui/material";
+import MovieSearchAutocomplete from "./MovieSearchAutocomplete";
 
 const VALID_ACCESS_CODE = "thunderbolts";
 
@@ -91,33 +92,29 @@ const MovieSubmission = () => {
         value={accessCode}
         onChange={(e) => setAccessCode(e.target.value)}
       />
-      <TextField
+      <MovieSearchAutocomplete
         label="Action/Sci-Fi/Fantasy"
-        fullWidth
-        sx={{ mb: 2 }}
         value={movies.action}
-        onChange={(e) => setMovies({ ...movies, action: e.target.value })}
+        onChange={(value) => setMovies({ ...movies, action: value })}
+        genre="action"
       />
-      <TextField
+      <MovieSearchAutocomplete
         label="Drama/Documentary"
-        fullWidth
-        sx={{ mb: 2 }}
         value={movies.drama}
-        onChange={(e) => setMovies({ ...movies, drama: e.target.value })}
+        onChange={(value) => setMovies({ ...movies, drama: value })}
+        genre="drama"
       />
-      <TextField
+      <MovieSearchAutocomplete
         label="Comedy/Musical"
-        fullWidth
-        sx={{ mb: 2 }}
         value={movies.comedy}
-        onChange={(e) => setMovies({ ...movies, comedy: e.target.value })}
+        onChange={(value) => setMovies({ ...movies, comedy: value })}
+        genre="comedy"
       />
-      <TextField
+      <MovieSearchAutocomplete
         label="Thriller/Horror"
-        fullWidth
-        sx={{ mb: 2 }}
         value={movies.thriller}
-        onChange={(e) => setMovies({ ...movies, thriller: e.target.value })}
+        onChange={(value) => setMovies({ ...movies, thriller: value })}
+        genre="thriller"
       />
 
       <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>

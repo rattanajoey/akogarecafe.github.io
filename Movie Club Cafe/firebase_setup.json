@@ -1,0 +1,64 @@
+{
+  "OscarCategories": [
+    {
+      "id": "best-action-scifi-fantasy",
+      "name": "Best Action/Sci-Fi/Fantasy",
+      "movies": []
+    },
+    {
+      "id": "best-drama-documentary",
+      "name": "Best Drama/Documentary",
+      "movies": []
+    },
+    {
+      "id": "best-comedy-musical",
+      "name": "Best Comedy/Musical",
+      "movies": []
+    },
+    {
+      "id": "best-thriller-horror",
+      "name": "Best Thriller/Horror",
+      "movies": []
+    },
+    {
+      "id": "movie-of-the-year",
+      "name": "Movie of the Year",
+      "movies": []
+    },
+    {
+      "id": "hidden-gem",
+      "name": "Hidden Gem",
+      "movies": []
+    }
+  ],
+  "HoldingPool": {
+    "info": "This collection stores submissions that are being reviewed before adding to the main pool",
+    "example": {
+      "id": "example-user",
+      "action": "Example Action Movie",
+      "drama": "Example Drama Movie",
+      "comedy": "Example Comedy Movie",
+      "thriller": "Example Thriller Movie",
+      "submittedAt": "2025-01-15T10:30:00Z"
+    }
+  },
+  "users": {
+    "info": "Add 'role' field to user documents to make them admins",
+    "example": {
+      "id": "user-id-here",
+      "email": "admin@example.com",
+      "displayName": "Admin User",
+      "role": "admin",
+      "favoriteGenres": [],
+      "watchedMovies": [],
+      "submittedMovies": [],
+      "createdAt": "2025-01-01T00:00:00Z",
+      "lastLoginAt": "2025-01-15T10:00:00Z"
+    }
+  },
+  "security_rules": {
+    "info": "Copy these rules to your Firestore Rules tab",
+    "rules": "See FIREBASE_SECURITY_RULES.txt"
+  }
+}
+

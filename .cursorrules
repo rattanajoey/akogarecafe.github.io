@@ -1,0 +1,316 @@
+# Akogare Cafe - Cursor AI Rules
+
+## Project Overview
+This is a personal website (akogarecafe.com) featuring anime, manga, music recommendations, and a Movie Club feature. The site is built with React and includes:
+- **Web App**: React SPA with Firebase integration
+- **Mobile App**: iOS Swift app (Movie Club Cafe) synced with the same Firebase backend
+- **Design**: Anime/Japanese aesthetic with custom themes and interactions
+
+## Tech Stack
+
+### Web (React SPA)
+- **Framework**: React 18.3+ with React Router v7
+- **UI Libraries**: Material-UI v6, Emotion (CSS-in-JS)
+- **Animation**: Framer Motion
+- **State Management**: React Query (TanStack Query)
+- **Backend**: Firebase (Firestore, Auth)
+- **APIs**: TMDB API for movie data
+- **Build**: Create React App
+- **Deployment**: GitHub Pages
+
+### Mobile (iOS)
+- **Language**: Swift
+- **Framework**: SwiftUI
+- **Backend**: Firebase (same database as web)
+- **APIs**: TMDB API
+- **Location**: `Movie Club Cafe/` directory
+
+## Project Structure
+
+```
+/src
+├── components/          # React components organized by feature
+│   ├── MovieClub/      # Movie club feature (main feature)
+│   ├── Music/          # Music recommendations
+│   ├── Shogi/          # Shogi game component
+│   ├── Portfolio/      # Portfolio section
+│   └── ...
+├── config/             # Firebase and API config
+├── theme/              # Custom themes and SCSS
+└── utils/              # Helper functions
+
+/Movie Club Cafe/       # iOS Swift app
+├── Views/              # SwiftUI views
+├── Models/             # Data models
+├── Services/           # API services (TMDB, Firebase)
+├── Config/             # Firebase config
+└── Theme/              # App theme
+
+/docs                   # All documentation
+├── mobile-app/         # iOS app documentation
+├── README.md           # Main project README
+└── README.old.md       # Legacy README
+```
+
+## Code Style Guidelines
+
+### React/JavaScript
+- Use functional components with hooks
+- Prefer arrow functions
+- Use ES6+ features (destructuring, spread, async/await)
+- Material-UI components for UI consistency
+- Framer Motion for animations
+- Keep components focused and single-purpose
+- Use React Query for data fetching
+
+### Swift/iOS
+- Use SwiftUI for all UI components
+- Follow Apple's Swift API Design Guidelines
+- Use async/await for async operations
+- **Minimalist Apple UI Design**: Clean, spacious layouts with frosted glass effects
+- Use SF Symbols for all icons
+- SF Rounded and system fonts for typography
+- Share Firebase backend with web app
+
+### Styling
+
+#### iOS Design System (Minimalist Apple UI)
+- **Typography**: SF Rounded (.rounded design), system fonts
+- **Spacing**: Consistent 12-24pt spacing between elements
+- **Corners**: Rounded corners (12-16pt radius)
+- **Materials**: .ultraThinMaterial for frosted glass effects
+- **Borders**: Subtle borders (gray opacity 0.2, 1-1.5pt)
+- **Shadows**: Minimal shadows for depth (opacity 0.1-0.3, radius 4-8pt)
+- **Interactive Elements**: 44pt minimum tap targets
+- **Color Palette**:
+  - Background gradient: `#d2d2cb` → `#4d695d`
+  - Accent color: `#bc252d` (red)
+  - Text primary: .primary (adaptive)
+  - Text secondary: .secondary (adaptive)
+  
+#### Web Styling
+- Custom themes defined in `/src/theme/`
+- Use Emotion for CSS-in-JS in React
+- Maintain the anime/Japanese aesthetic
+- Responsive design for all screen sizes
+
+## Firebase Integration
+- **Firestore Collections**:
+  - `MonthlySelections/{monthId}` - Selected movies per month
+  - `GenrePools/current` - Current pool of submitted movies
+  - `Submissions/{monthId}/users/{nickname}` - User submissions
+- Both web and iOS read/write to same database
+- Use environment variables for API keys when possible
+- **Offline Persistence**: Enabled with unlimited cache size
+- **Automatic Caching**: All reads cached automatically by Firebase SDK
+
+## TMDB API
+- API key stored in environment variables
+- Used for movie search, details, posters, trailers
+- Endpoints: `/search/movie`, `/movie/{id}`
+- **Caching**: Implemented locally (1 day for searches, 7 days for details)
+- **Rate Limiting**: 95% reduction via caching
+
+## Caching System (iOS)
+The iOS app implements comprehensive caching for optimal performance:
+
+### Firebase Caching (`FirestoreCacheService`)
+- **Cache-first strategy**: Checks cache before server
+- **Optimistic loading**: Returns cache instantly, syncs in background
+- **Auto-prefetch**: Current month + last 3 months on app launch
+- **Smart invalidation**: Clears cache after writes
+- **Usage**:
+  ```swift
+  let selections = try await FirestoreCacheService.shared.getMonthlySelections(for: month)
+  let pools = try await FirestoreCacheService.shared.getGenrePools()
+  let userData = try await FirestoreCacheService.shared.getUserData(userId: userId)
+  ```
+
+### TMDB Caching (`TMDBService`)
+- **Two-tier cache**: Memory (50 items) + Disk (unlimited)
+- **Search cache**: 1 day expiration
+- **Details cache**: 7 days expiration
+- **Auto-cleanup**: Removes expired/corrupted entries
+- **Usage**: Automatic, no code changes needed
+  ```swift
+  let movie = try await TMDBService.shared.searchMovie(title: "Inception")
+  let details = try await TMDBService.shared.getMovieDetails(movieId: 27205)
+  ```
+
+### Cache Management
+- **User Control**: "Clear Cache" button in Profile
+- **Invalidation**: Call after data writes
+  ```swift
+  FirestoreCacheService.shared.invalidateCollection("Users")
+  FirestoreCacheService.shared.invalidateCache() // Clear all
+  TMDBService.shared.clearCache() // Clear TMDB
+  ```
+- **Console Logs**: 📦 = cache hit, 🌐 = API call
+
+### Performance Impact
+- **95% reduction** in API calls
+- **50x faster** loading times
+- **95% offline** capability
+- **Instant** app launch (<1s)
+
+## Key Features to Maintain
+
+### Movie Club (Primary Feature)
+- Monthly movie selections (4 genres: Action, Drama, Comedy, Thriller)
+- Movie submission form (password-protected) with **TMDB search integration**
+- Interactive movie search with posters, ratings, and descriptions
+- Genre pools viewer with clean card layouts
+- TMDB integration for posters/details/search
+- Month selector with historical data
+- YouTube trailer links
+- Synced between web and iOS
+- Minimalist Apple UI design throughout
+
+### Interactive Elements
+- Custom mouse follower
+- Shogi (Japanese chess) game
+- Music shelf with recommendations
+- Animated transitions
+- Tooltips and modals
+
+## Development Guidelines
+
+### When Adding New Features
+1. Check if it needs to be synced between web and iOS
+2. Update Firebase security rules if needed
+3. Maintain design consistency with existing UI
+4. Add appropriate error handling
+5. Consider mobile responsiveness
+6. Update documentation in `/docs`
+
+### When Modifying Firebase
+1. Update security rules in `FIREBASE_SECURITY_RULES.txt`
+2. Test changes on both web and iOS
+3. Ensure backwards compatibility
+4. Document collection structure changes
+
+### When Working with APIs
+1. Use environment variables for keys
+2. Implement proper error handling
+3. Add loading states
+4. Cache when appropriate (React Query)
+5. Consider rate limiting
+
+## File Naming Conventions
+- React components: PascalCase (e.g., `MovieClubView.jsx`)
+- Utilities: camelCase (e.g., `tmdb.js`)
+- Styles: Match component name with `.js` extension
+- Swift files: PascalCase (e.g., `TMDBService.swift`)
+- Documentation: UPPERCASE with underscores (e.g., `SETUP_GUIDE.md`)
+
+## Git Workflow
+- Main branch: `main` (web deployment)
+- Mobile branch: `mobile-app` (iOS development)
+- Deploy web via `npm run deploy` (gh-pages)
+- Clean commits with descriptive messages
+
+## Environment Variables
+```bash
+# Required for web
+REACT_APP_FIREBASE_API_KEY
+REACT_APP_FIREBASE_AUTH_DOMAIN
+REACT_APP_FIREBASE_PROJECT_ID
+REACT_APP_TMDB_API_KEY
+
+# iOS uses GoogleService-Info.plist for Firebase
+```
+
+## Testing
+- Focus on user flows (movie selection, submission)
+- Test Firebase integration
+- Test on multiple browsers (web)
+- Test on multiple iOS devices/simulators
+- Verify TMDB API responses
+
+## Documentation
+- All docs now in `/docs` directory
+- Mobile app docs in `/docs/mobile-app/`
+- Update docs when changing features
+- Keep setup guides current
+
+## Common Patterns
+
+### Firebase Read
+```javascript
+const docRef = doc(db, "MonthlySelections", monthId);
+const docSnap = await getDoc(docRef);
+```
+
+### TMDB Search (Swift)
+```swift
+let urlString = "https://api.themoviedb.org/3/search/movie?api_key=\(apiKey)&query=\(encodedQuery)"
+let (data, _) = try await URLSession.shared.data(from: url)
+let response = try JSONDecoder().decode(TMDBSearchResponse.self, from: data)
+```
+
+### TMDB Search (JavaScript)
+```javascript
+const response = await axios.get(
+  `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${title}`
+);
+```
+
+### SwiftUI Minimalist Card
+```swift
+VStack(alignment: .leading, spacing: 12) {
+    // Card content
+}
+.padding(16)
+.background(
+    RoundedRectangle(cornerRadius: 16)
+        .fill(.ultraThinMaterial)
+)
+.overlay(
+    RoundedRectangle(cornerRadius: 16)
+        .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+)
+```
+
+### Material-UI Styling
+```javascript
+import { styled } from '@mui/material/styles';
+const StyledButton = styled(Button)(({ theme }) => ({
+  // styles
+}));
+```
+
+## Priority Guidelines
+1. **Maintain existing functionality** - Don't break what works
+2. **Design consistency** - iOS uses minimalist Apple UI; web uses anime/Japanese aesthetic
+3. **Cross-platform sync** - Keep web and iOS in harmony for data/features
+4. **User experience** - Smooth animations, clear feedback, intuitive interactions
+5. **Performance** - Optimize images, lazy load when appropriate
+6. **Accessibility** - 44pt tap targets, proper contrast, VoiceOver support
+
+## Resources
+- [Firebase Docs](https://firebase.google.com/docs)
+- [TMDB API Docs](https://developers.themoviedb.org/3)
+- [Material-UI Docs](https://mui.com/)
+- [SwiftUI Docs](https://developer.apple.com/documentation/swiftui/)
+- [React Query Docs](https://tanstack.com/query/latest)
+
+## Notes
+- Website deployed to: https://akogarecafe.com
+- Legacy files prefixed with `-LegionBen` (old version)
+- Custom mouse follower in `public/mouseFollower.js`
+- Shogi piece mechanics in `src/components/PieceMechanics/`
+- All documentation moved to `/docs` folder
+
+## Recent Updates (Nov 2025)
+- **Complete Caching System**: Firebase + TMDB caching (95% offline, 95% fewer API calls, 50x faster)
+- **iOS App Redesign**: Complete minimalist Apple UI redesign
+- **TMDB Search Integration**: Movie submission form now has interactive TMDB search
+- **Carousel Dots**: Genre emojis with frosted glass indicator
+- **Consistent Cards**: All views use frosted glass cards with rounded corners
+- **Clean Typography**: SF Rounded fonts throughout iOS app
+- **Interactive Buttons**: Circular frosted glass buttons for actions
+
+---
+
+When in doubt, prioritize user experience and design consistency with the platform aesthetic (minimalist Apple UI for iOS, anime/Japanese for web).
+

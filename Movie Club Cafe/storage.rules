@@ -1,0 +1,78 @@
+rules_version = '2';
+
+// Firebase Storage Security Rules for Movie Club Cafe
+// Protects user-uploaded content (profile pictures, chat images, etc.)
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isValidImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    function isBelowSizeLimit(sizeMB) {
+      return request.resource.size < sizeMB * 1024 * 1024;
+    }
+    
+    // Profile Pictures
+    // Users can upload/update their own profile pictures
+    // Anyone can read profile pictures
+    match /profile_pictures/{userId}/{fileName} {
+      allow read: if true; // Public read access
+      allow write: if isOwner(userId) 
+                   && isValidImage() 
+                   && isBelowSizeLimit(5); // 5MB limit
+      allow delete: if isOwner(userId);
+    }
+    
+    // Chat Images
+    // Authenticated users can upload images to chat rooms
+    // Anyone can read chat images
+    match /chat_images/{roomId}/{fileName} {
+      allow read: if true; // Public read access
+      allow write: if isAuthenticated() 
+                   && isValidImage() 
+                   && isBelowSizeLimit(10); // 10MB limit
+      allow delete: if isAuthenticated(); // Any authenticated user can delete
+    }
+    
+    // Movie Posters Cache
+    // System-managed cache for TMDB movie posters
+    // Read-only for all users
+    match /movie_posters/{movieId} {
+      allow read: if true;
+      allow write: if false; // Only backend/admin should write
+    }
+    
+    // Temporary uploads
+    // Authenticated users can upload temporary files
+    // Auto-cleaned by Cloud Functions
+    match /temp/{userId}/{fileName} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId) 
+                   && isBelowSizeLimit(20); // 20MB limit
+      allow delete: if isOwner(userId);
+    }
+    
+    // Admin uploads
+    // Only admins can manage these files
+    match /admin/{allPaths=**} {
+      allow read: if true; // Public read
+      allow write: if false; // Only backend/admin should write
+    }
+    
+    // Deny all other paths by default
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

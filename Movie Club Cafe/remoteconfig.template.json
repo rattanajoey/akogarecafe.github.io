@@ -1,0 +1,146 @@
+{
+  "conditions": [],
+  "parameters": {
+    "submission_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "description": "Enable/disable movie submissions"
+    },
+    "chat_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "description": "Enable/disable chat feature"
+    },
+    "watchlist_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "description": "Enable/disable watchlist feature"
+    },
+    "calendar_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "description": "Enable/disable calendar integration"
+    },
+    "share_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "description": "Enable/disable movie sharing"
+    },
+    "analytics_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "description": "Enable/disable analytics tracking"
+    },
+    "submission_deadline": {
+      "defaultValue": {
+        "value": ""
+      },
+      "description": "Submission deadline date (ISO format), empty means no deadline"
+    },
+    "max_submissions_per_user": {
+      "defaultValue": {
+        "value": "1"
+      },
+      "description": "Maximum number of submissions per user"
+    },
+    "min_movie_year": {
+      "defaultValue": {
+        "value": "1900"
+      },
+      "description": "Minimum movie release year"
+    },
+    "max_movie_year": {
+      "defaultValue": {
+        "value": "2025"
+      },
+      "description": "Maximum movie release year"
+    },
+    "chat_message_max_length": {
+      "defaultValue": {
+        "value": "500"
+      },
+      "description": "Maximum length of chat messages"
+    },
+    "max_watchlist_items": {
+      "defaultValue": {
+        "value": "50"
+      },
+      "description": "Maximum number of watchlist items per user"
+    },
+    "primary_color": {
+      "defaultValue": {
+        "value": "#bc252d"
+      },
+      "description": "Primary app color (hex)"
+    },
+    "accent_color": {
+      "defaultValue": {
+        "value": "#4d695d"
+      },
+      "description": "Accent color (hex)"
+    },
+    "show_movie_ratings": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "description": "Show TMDB ratings on movies"
+    },
+    "show_movie_descriptions": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "description": "Show movie descriptions"
+    },
+    "enable_animations": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "description": "Enable UI animations"
+    },
+    "tmdb_api_timeout": {
+      "defaultValue": {
+        "value": "10"
+      },
+      "description": "TMDB API request timeout in seconds"
+    },
+    "cache_expiration_hours": {
+      "defaultValue": {
+        "value": "24"
+      },
+      "description": "Cache expiration time in hours"
+    },
+    "maintenance_message": {
+      "defaultValue": {
+        "value": ""
+      },
+      "description": "Maintenance alert message (empty to hide)"
+    },
+    "announcement_message": {
+      "defaultValue": {
+        "value": ""
+      },
+      "description": "Announcement banner message (empty to hide)"
+    },
+    "welcome_message": {
+      "defaultValue": {
+        "value": "Welcome to Movie Club Cafe! 🎬"
+      },
+      "description": "Welcome message for new users"
+    }
+  },
+  "version": {
+    "versionNumber": "1",
+    "updateTime": "2025-11-07T00:00:00Z",
+    "updateUser": {
+      "email": "admin@movieclubcafe.com"
+    },
+    "description": "Initial Remote Config template for Movie Club Cafe"
+  }
+}
+
