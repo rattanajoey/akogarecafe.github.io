@@ -63,7 +63,7 @@ const PortfolioSection = () => {
               </Typography>
             </UserNameContainer>
           </Grid2>
-          <Grid2 size={{ xs: 12, md: 7 }} mb={24}>
+          <Grid2 size={{ xs: 12, md: 7 }}>
             <SkillsContainer>
               <Typography variant="body1">
                 I&apos;m a <strong>Software Engineer</strong> with a commitment
