@@ -40,7 +40,7 @@ const SpeedDialComponent = ({ onIconSelect }) => {
           <NiraImage
             src={imageSrc}
             alt="Nira"
-            sx={isPortfolio ? { width: 96 } : undefined}
+            sx={isPortfolio ? { width: { xs: 96 } } : undefined}
           />
         }
         onClick={() => setOpen((prev) => !prev)}
