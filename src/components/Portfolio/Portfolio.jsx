@@ -75,7 +75,7 @@ const PortfolioSection = () => {
                 boundaries of front-end development.
               </Typography>
               <Typography variant="body1" mt={2}>
-                Currently, I&apos;m a{" "}
+                I previously worked as a{" "}
                 <strong>Software Engineer at StartEngine</strong>. I specialize
                 in <strong>Next.js, Typescript, React, and React Query</strong>,
                 ensuring high-performance, seamless user experiences.
@@ -103,7 +103,7 @@ const PortfolioSection = () => {
               </Typography>
               <Grid2 container mt={8}>
                 <Grid2 size={{ xs: 12, sm: 3 }}>
-                  <Typography>2022 - Present</Typography>
+                  <Typography>Previous role</Typography>
                 </Grid2>
                 <CompanyTitleContainer
                   container

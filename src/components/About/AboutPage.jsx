@@ -80,8 +80,8 @@ const AboutPage = () => {
                 <Typography variant="body1" paragraph color="white">
                   Hi, I'm Joey Rattana, a passionate Software Engineer
                   specializing in front-end development with expertise in React,
-                  Next.js, TypeScript, and modern web technologies. Currently
-                  working at StartEngine, I bring years of experience from
+                  Next.js, TypeScript, and modern web technologies. I previously
+                  worked at StartEngine and bring years of experience from
                   startups to large corporations.
                 </Typography>
                 <Typography variant="body1" paragraph color="white">
