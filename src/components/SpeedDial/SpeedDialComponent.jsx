@@ -5,11 +5,12 @@ import HomeIcon from "@mui/icons-material/Home";
 import ArticleIcon from "@mui/icons-material/Article";
 import MovieFilterIcon from "@mui/icons-material/MovieFilter";
 import { NiraImage, SpeedDialContainer } from "./style";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const SpeedDialComponent = ({ onIconSelect }) => {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const isPortfolio = useLocation().pathname === "/portfolio";
 
   const actions = [
     { icon: <ArticleIcon />, name: "Portfolio" },
@@ -35,7 +36,13 @@ const SpeedDialComponent = ({ onIconSelect }) => {
       <SpeedDial
         ariaLabel="SpeedDial openIcon example"
         sx={{ position: "fixed", bottom: 0, right: { xs: 0, sm: 48 } }}
-        icon={<NiraImage src={imageSrc} alt="Nira" />}
+        icon={
+          <NiraImage
+            src={imageSrc}
+            alt="Nira"
+            sx={isPortfolio ? { width: 96 } : undefined}
+          />
+        }
         onClick={() => setOpen((prev) => !prev)}
         open={open}
       >
