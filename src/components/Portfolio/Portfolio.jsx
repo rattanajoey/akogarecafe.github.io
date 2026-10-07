@@ -89,7 +89,7 @@ const PortfolioSection = () => {
               </Typography>
               <Grid2 container mt={8}>
                 <Grid2 size={{ xs: 12, sm: 3 }}>
-                  <Typography>Previous role</Typography>
+                  <Typography>Jan 2022 - Oct 2026</Typography>
                 </Grid2>
                 <CompanyTitleContainer
                   container
