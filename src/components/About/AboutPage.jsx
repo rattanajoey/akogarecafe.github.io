@@ -78,18 +78,19 @@ const AboutPage = () => {
                   Meet the Creator
                 </Typography>
                 <Typography variant="body1" paragraph color="white">
-                  Hi, I'm Joey Rattana, a passionate Software Engineer
-                  specializing in front-end development with expertise in React,
-                  Next.js, TypeScript, and modern web technologies. I previously
-                  worked at StartEngine and bring years of experience from
-                  startups to large corporations.
+                  Hi, I'm Joey Rattana, a frontend product engineer with 6+ years
+                  across front-end, full-stack, and QA. I build investor
+                  experiences with React, Next.js, and TypeScript, focusing on
+                  experimentation, performance, and reliable financial workflows.
+                  Previously at StartEngine, I was the sole engineer on an
+                  investor-facing redesign and built an in-house experimentation
+                  agent.
                 </Typography>
                 <Typography variant="body1" paragraph color="white">
-                  Beyond coding, I'm deeply interested in Japanese culture,
-                  anime, gaming, music, and content creation. This website
-                  represents the intersection of my technical skills and
-                  personal interests, showcasing both professional work and
-                  creative projects.
+                  Outside engineering, I'm into Japanese culture, anime, gaming,
+                  music, collecting, filming, and content creation. Akogare Cafe
+                  brings those interests together through games, music, and
+                  community projects.
                 </Typography>
               </CardContent>
             </StyledCard>
