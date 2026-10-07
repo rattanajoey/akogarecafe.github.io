@@ -26,13 +26,10 @@ export const SkillsContainerWrapper = styled(Grid2)(({ theme }) => ({
   },
 }));
 
-export const SKillGrid = styled(Grid2)(({ theme }) => ({
+export const SKillGrid = styled(Grid2)({
   marginTop: "32px",
   justifyContent: "flex-start",
-  [theme.breakpoints.up("sm")]: {
-    justifyContent: "flex-end",
-  },
-}));
+});
 
 export const UserNameContainer = styled(Grid2)(({ theme }) => ({
   color: "white",
@@ -73,6 +70,7 @@ export const SkillsContainer = styled(Box)(({ theme }) => ({
 export const SkillIcon = styled(Box)({
   width: "35px",
   height: "35px",
+  flexShrink: 0,
   display: "flex",
   alignItems: "center",
   justifyContent: "center",

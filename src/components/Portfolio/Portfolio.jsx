@@ -33,7 +33,7 @@ const PortfolioSection = () => {
   const [hoveredCompany, setHoveredCompany] = useState(null);
 
   const renderSkill = (Icon, title, level, description) => (
-    <Grid2 container flexWrap={"nowrap"} size={{ xs: 12, sm: 9 }}>
+    <Grid2 container flexWrap={"nowrap"} size={12}>
       <SkillIcon>
         <Icon fontSize="medium" />
       </SkillIcon>
