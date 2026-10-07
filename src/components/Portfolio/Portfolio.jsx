@@ -151,7 +151,7 @@ const PortfolioSection = () => {
                 {renderSkill(
                   DesignServicesIcon,
                   "Design System",
-                  "Experienced",
+                  "Expert",
                   "Developed and maintained a component library for consistent UI/UX across applications."
                 )}
                 {renderSkill(
@@ -163,7 +163,7 @@ const PortfolioSection = () => {
                 {renderSkill(
                   LanguageIcon,
                   "Webflow",
-                  "Intermediate",
+                  "Expert",
                   "Built and maintained responsive no-code websites, integrating animations and custom interactions."
                 )}
                 {renderSkill(
@@ -255,13 +255,13 @@ const PortfolioSection = () => {
                 {renderSkill(
                   InsightsIcon,
                   "SEO & Content Quality",
-                  "Intermediate",
+                  "Expert",
                   "Evaluated ad placements, page rankings, and optimized content discovery."
                 )}
                 {renderSkill(
                   GridViewIcon,
                   "Data Accuracy & Pattern Recognition",
-                  "Intermediate",
+                  "Experienced",
                   "Reviewed large datasets and detected inconsistencies in search relevance."
                 )}
               </SKillGrid>
