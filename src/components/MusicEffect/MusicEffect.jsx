@@ -3,7 +3,7 @@ import { Layer1, Layer2, Layer3, OnpuContainer } from "./style";
 
 const MusicEffect = () => {
   return (
-    <OnpuContainer>
+    <OnpuContainer aria-hidden="true">
       <Layer1 />
       <Layer2 />
       <Layer3 />

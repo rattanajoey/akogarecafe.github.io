@@ -1,6 +1,6 @@
 import React from "react";
 import { Box, IconButton, Menu, MenuItem, Typography } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
 import YouTubeIcon from "@mui/icons-material/YouTube";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import TwitterIcon from "@mui/icons-material/Twitter";
@@ -10,7 +10,6 @@ import MenuIcon from "@mui/icons-material/Menu";
 import { SocialMediaContainer, Title } from "./style";
 
 const HeaderComponent = () => {
-  const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
 
@@ -20,11 +19,6 @@ const HeaderComponent = () => {
 
   const handleClose = () => {
     setAnchorEl(null);
-  };
-
-  const handleNavigation = (path) => {
-    navigate(path);
-    handleClose();
   };
 
   const menuItems = [
@@ -41,6 +35,7 @@ const HeaderComponent = () => {
 
   return (
     <Box
+      component="header"
       className="App-header"
       sx={{
         display: "flex",
@@ -51,11 +46,16 @@ const HeaderComponent = () => {
         backdropFilter: "blur(10px)",
         borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
         gap: { xs: 1, sm: 2 },
+        flexWrap: { xs: "wrap", sm: "nowrap" },
+        position: "relative",
       }}
     >
       <SocialMediaContainer
         sx={{
           gap: { xs: 0.5, sm: 1 },
+          order: { xs: 3, sm: 0 },
+          width: { xs: "100%", sm: "auto" },
+          justifyContent: "center",
           "& .MuiIconButton-root": {
             padding: { xs: "6px", sm: "8px" },
           },
@@ -64,6 +64,7 @@ const HeaderComponent = () => {
         <IconButton
           href="https://www.youtube.com/c/akogarecafe"
           target="_blank"
+          rel="noopener noreferrer"
           aria-label="YouTube"
           size="small"
         >
@@ -72,6 +73,7 @@ const HeaderComponent = () => {
         <IconButton
           href="https://www.instagram.com/akogarecafe"
           target="_blank"
+          rel="noopener noreferrer"
           aria-label="Instagram"
           size="small"
         >
@@ -80,6 +82,7 @@ const HeaderComponent = () => {
         <IconButton
           href="https://x.com/AkogareCafe_JR"
           target="_blank"
+          rel="noopener noreferrer"
           aria-label="Twitter"
           size="small"
         >
@@ -88,6 +91,7 @@ const HeaderComponent = () => {
         <IconButton
           href="https://www.twitch.tv/akogarecafe"
           target="_blank"
+          rel="noopener noreferrer"
           aria-label="Twitch"
           size="small"
         >
@@ -96,6 +100,7 @@ const HeaderComponent = () => {
         <IconButton
           href="https://github.com/rattanajoey"
           target="_blank"
+          rel="noopener noreferrer"
           aria-label="GitHub"
           size="small"
         >
@@ -105,9 +110,12 @@ const HeaderComponent = () => {
 
       <Title
         variant="h4"
-        onClick={() => navigate("/")}
+        component={RouterLink}
+        to="/"
         sx={{
-          cursor: "pointer",
+          color: "white",
+          textDecoration: "none",
+          textAlign: { xs: "left", sm: "center" },
           "&:hover": { opacity: 0.8 },
           fontSize: { xs: "1rem", sm: "1.25rem", md: "1.5rem" },
           whiteSpace: "nowrap",
@@ -119,9 +127,10 @@ const HeaderComponent = () => {
       <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
         <Box sx={{ display: { xs: "none", md: "flex" }, gap: 1 }}>
           <Typography
-            onClick={() => navigate("/about")}
+            component={RouterLink}
+            to="/about"
             sx={{
-              cursor: "pointer",
+              textDecoration: "none",
               color: "white",
               "&:hover": { color: "#4ecdc4" },
               fontSize: "0.9rem",
@@ -131,9 +140,10 @@ const HeaderComponent = () => {
             About
           </Typography>
           <Typography
-            onClick={() => navigate("/contact")}
+            component={RouterLink}
+            to="/contact"
             sx={{
-              cursor: "pointer",
+              textDecoration: "none",
               color: "white",
               "&:hover": { color: "#4ecdc4" },
               fontSize: "0.9rem",
@@ -145,6 +155,10 @@ const HeaderComponent = () => {
         </Box>
 
         <IconButton
+          id="navigation-button"
+          aria-haspopup="menu"
+          aria-controls={open ? "navigation-menu" : undefined}
+          aria-expanded={open ? "true" : undefined}
           onClick={handleClick}
           aria-label="Navigation Menu"
           sx={{
@@ -157,11 +171,12 @@ const HeaderComponent = () => {
         </IconButton>
 
         <Menu
+          id="navigation-menu"
           anchorEl={anchorEl}
           open={open}
           onClose={handleClose}
           MenuListProps={{
-            "aria-labelledby": "basic-button",
+            "aria-labelledby": "navigation-button",
           }}
           PaperProps={{
             sx: {
@@ -175,7 +190,9 @@ const HeaderComponent = () => {
           {menuItems.map((item) => (
             <MenuItem
               key={item.path}
-              onClick={() => handleNavigation(item.path)}
+              component={RouterLink}
+              to={item.path}
+              onClick={handleClose}
               sx={{
                 color: "white",
                 "&:hover": {

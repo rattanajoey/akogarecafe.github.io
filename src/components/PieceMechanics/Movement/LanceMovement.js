@@ -11,7 +11,7 @@ export const getLanceMoves = (position, pieces, isPlayerTwo) => {
 
     if (pieceAtPosition) {
       // If the piece is an enemy piece, we can capture it
-      if (pieceAtPosition.playerTwo !== isPlayerTwo) {
+      if (Boolean(pieceAtPosition.playerTwo) !== Boolean(isPlayerTwo)) {
         moves.push(move);
       }
       break; // Stop in either case - can't move through pieces

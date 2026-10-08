@@ -1,12 +1,10 @@
 import { Box } from "@mui/material";
 import { styled } from "@mui/system";
 
-export const NiraImage = styled("img")(({ theme }) => ({
+export const NiraImage = styled("img")({
   height: "auto",
-  [theme.breakpoints.down("sm")]: {
-    width: "70%",
-  },
-}));
+  display: "block",
+});
 
 export const SpeedDialContainer = styled(Box)({
   bottom: 0,

@@ -12,7 +12,7 @@ export const getPawnMoves = (position, pieces, isPlayerTwo) => {
   const pieceAtPosition = pieces.find((p) => p.position === forwardPosition);
 
   // Can only move forward if the square is empty or contains an enemy piece
-  if (!pieceAtPosition || pieceAtPosition.playerTwo !== isPlayerTwo) {
+  if (!pieceAtPosition || Boolean(pieceAtPosition.playerTwo) !== Boolean(isPlayerTwo)) {
     return [forwardPosition];
   }
 

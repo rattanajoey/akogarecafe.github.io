@@ -31,10 +31,12 @@ const AboutPage = () => {
       <Container maxWidth="lg">
         <Typography
           variant="h2"
+          component="h1"
           align="center"
           gutterBottom
           sx={{
             marginBottom: 4,
+            fontSize: { xs: "2.25rem", sm: "3.75rem" },
             background: "linear-gradient(45deg, #ff6b6b, #4ecdc4)",
             backgroundClip: "text",
             WebkitBackgroundClip: "text",
@@ -46,10 +48,10 @@ const AboutPage = () => {
         </Typography>
 
         <Grid2 container spacing={4}>
-          <Grid2 item xs={12} md={6}>
+          <Grid2 size={{ xs: 12, md: 6 }}>
             <StyledCard>
               <CardContent>
-                <Typography variant="h4" gutterBottom color="white">
+                <Typography variant="h4" component="h2" gutterBottom color="white">
                   What is Akogare Cafe?
                 </Typography>
                 <Typography variant="body1" paragraph color="white">
@@ -71,10 +73,10 @@ const AboutPage = () => {
             </StyledCard>
           </Grid2>
 
-          <Grid2 item xs={12} md={6}>
+          <Grid2 size={{ xs: 12, md: 6 }}>
             <StyledCard>
               <CardContent>
-                <Typography variant="h4" gutterBottom color="white">
+                <Typography variant="h4" component="h2" gutterBottom color="white">
                   Meet the Creator
                 </Typography>
                 <Typography variant="body1" paragraph color="white">
@@ -96,25 +98,24 @@ const AboutPage = () => {
             </StyledCard>
           </Grid2>
 
-          <Grid2 item xs={12}>
+          <Grid2 size={12}>
             <StyledCard>
               <CardContent>
-                <Typography variant="h4" gutterBottom color="white">
+                <Typography variant="h4" component="h2" gutterBottom color="white">
                   What You'll Find Here
                 </Typography>
                 <Grid2 container spacing={3}>
-                  <Grid2 item xs={12} sm={6} md={3}>
-                    <Typography variant="h6" color="#ff6b6b" gutterBottom>
+                  <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
+                    <Typography variant="h6" component="h3" color="#ff6b6b" gutterBottom>
                       Interactive Shogi
                     </Typography>
                     <Typography variant="body2" color="white">
-                      A fully functional Shogi (Japanese chess) game built from
-                      scratch with custom piece movement logic and an intuitive
-                      interface.
+                      An interactive Shogi movement explorer with custom piece
+                      movement logic and promotion practice.
                     </Typography>
                   </Grid2>
-                  <Grid2 item xs={12} sm={6} md={3}>
-                    <Typography variant="h6" color="#4ecdc4" gutterBottom>
+                  <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
+                    <Typography variant="h6" component="h3" color="#4ecdc4" gutterBottom>
                       Music Collection
                     </Typography>
                     <Typography variant="body2" color="white">
@@ -123,8 +124,8 @@ const AboutPage = () => {
                       information.
                     </Typography>
                   </Grid2>
-                  <Grid2 item xs={12} sm={6} md={3}>
-                    <Typography variant="h6" color="#45b7d1" gutterBottom>
+                  <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
+                    <Typography variant="h6" component="h3" color="#45b7d1" gutterBottom>
                       Movie Club
                     </Typography>
                     <Typography variant="body2" color="white">
@@ -133,8 +134,8 @@ const AboutPage = () => {
                       themes.
                     </Typography>
                   </Grid2>
-                  <Grid2 item xs={12} sm={6} md={3}>
-                    <Typography variant="h6" color="#f9ca24" gutterBottom>
+                  <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
+                    <Typography variant="h6" component="h3" color="#f9ca24" gutterBottom>
                       Portfolio
                     </Typography>
                     <Typography variant="body2" color="white">
@@ -148,10 +149,10 @@ const AboutPage = () => {
             </StyledCard>
           </Grid2>
 
-          <Grid2 item xs={12}>
+          <Grid2 size={12}>
             <StyledCard>
               <CardContent>
-                <Typography variant="h4" gutterBottom color="white">
+                <Typography variant="h4" component="h2" gutterBottom color="white">
                   Technical Implementation
                 </Typography>
                 <Typography variant="body1" paragraph color="white">
@@ -173,10 +174,10 @@ const AboutPage = () => {
             </StyledCard>
           </Grid2>
 
-          <Grid2 item xs={12}>
+          <Grid2 size={12}>
             <StyledCard>
               <CardContent>
-                <Typography variant="h4" gutterBottom color="white">
+                <Typography variant="h4" component="h2" gutterBottom color="white">
                   Connect & Collaborate
                 </Typography>
                 <Typography variant="body1" paragraph color="white">

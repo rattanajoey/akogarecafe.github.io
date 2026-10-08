@@ -5,7 +5,7 @@ Allow: /ads.txt
 Disallow: /Admin
 
 # Sitemap
-Sitemap: https://akogarecafe.github.io/sitemap.xml
+Sitemap: https://akogarecafe.com/sitemap.xml
 
 # Allow Google crawler specifically
 User-agent: Googlebot

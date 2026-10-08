@@ -25,10 +25,12 @@ const TermsOfService = () => {
       <Container maxWidth="lg">
         <Typography
           variant="h2"
+          component="h1"
           align="center"
           gutterBottom
           sx={{
             marginBottom: 4,
+            fontSize: { xs: "2.25rem", sm: "3.75rem" },
             color: "white",
             fontWeight: "bold",
           }}
@@ -38,14 +40,14 @@ const TermsOfService = () => {
 
         <StyledPaper>
           <Typography variant="body2" color="gray" gutterBottom>
-            Last Updated: {new Date().toLocaleDateString()}
+            Last Updated: November 11, 2025
           </Typography>
 
-          <Typography variant="h4" gutterBottom color="white" sx={{ mt: 3 }}>
+          <Typography variant="h4" component="h2" gutterBottom color="white" sx={{ mt: 3 }}>
             Agreement to Terms
           </Typography>
           <Typography variant="body1" paragraph color="white">
-            By accessing and using Akogare Cafe (akogarecafe.github.io), you
+            By accessing and using Akogare Cafe (akogarecafe.com), you
             accept and agree to be bound by the terms and provision of this
             agreement. If you do not agree to abide by the above, please do not
             use this service.
@@ -53,7 +55,7 @@ const TermsOfService = () => {
 
           <Divider sx={{ my: 3, backgroundColor: "rgba(255,255,255,0.1)" }} />
 
-          <Typography variant="h4" gutterBottom color="white">
+          <Typography variant="h4" component="h2" gutterBottom color="white">
             Use License
           </Typography>
           <Typography variant="body1" paragraph color="white">
@@ -75,10 +77,10 @@ const TermsOfService = () => {
 
           <Divider sx={{ my: 3, backgroundColor: "rgba(255,255,255,0.1)" }} />
 
-          <Typography variant="h4" gutterBottom color="white">
+          <Typography variant="h4" component="h2" gutterBottom color="white">
             User Content and Conduct
           </Typography>
-          <Typography variant="h6" gutterBottom color="#4ecdc4" sx={{ mt: 2 }}>
+          <Typography variant="h6" component="h3" gutterBottom color="#4ecdc4" sx={{ mt: 2 }}>
             Movie Club Submissions
           </Typography>
           <Typography variant="body1" paragraph color="white">
@@ -90,7 +92,7 @@ const TermsOfService = () => {
             <br />• Respect other community members
           </Typography>
 
-          <Typography variant="h6" gutterBottom color="#4ecdc4" sx={{ mt: 2 }}>
+          <Typography variant="h6" component="h3" gutterBottom color="#4ecdc4" sx={{ mt: 2 }}>
             Prohibited Uses
           </Typography>
           <Typography variant="body1" paragraph color="white">
@@ -107,10 +109,10 @@ const TermsOfService = () => {
 
           <Divider sx={{ my: 3, backgroundColor: "rgba(255,255,255,0.1)" }} />
 
-          <Typography variant="h4" gutterBottom color="white">
+          <Typography variant="h4" component="h2" gutterBottom color="white">
             Interactive Features
           </Typography>
-          <Typography variant="h6" gutterBottom color="#4ecdc4" sx={{ mt: 2 }}>
+          <Typography variant="h6" component="h3" gutterBottom color="#4ecdc4" sx={{ mt: 2 }}>
             Shogi Game
           </Typography>
           <Typography variant="body1" paragraph color="white">
@@ -120,7 +122,7 @@ const TermsOfService = () => {
             implementation.
           </Typography>
 
-          <Typography variant="h6" gutterBottom color="#4ecdc4" sx={{ mt: 2 }}>
+          <Typography variant="h6" component="h3" gutterBottom color="#4ecdc4" sx={{ mt: 2 }}>
             Third-Party Content
           </Typography>
           <Typography variant="body1" paragraph color="white">
@@ -132,7 +134,7 @@ const TermsOfService = () => {
 
           <Divider sx={{ my: 3, backgroundColor: "rgba(255,255,255,0.1)" }} />
 
-          <Typography variant="h4" gutterBottom color="white">
+          <Typography variant="h4" component="h2" gutterBottom color="white">
             Advertising and Third-Party Services
           </Typography>
           <Typography variant="body1" paragraph color="white">
@@ -149,7 +151,7 @@ const TermsOfService = () => {
 
           <Divider sx={{ my: 3, backgroundColor: "rgba(255,255,255,0.1)" }} />
 
-          <Typography variant="h4" gutterBottom color="white">
+          <Typography variant="h4" component="h2" gutterBottom color="white">
             Intellectual Property Rights
           </Typography>
           <Typography variant="body1" paragraph color="white">
@@ -163,7 +165,7 @@ const TermsOfService = () => {
 
           <Divider sx={{ my: 3, backgroundColor: "rgba(255,255,255,0.1)" }} />
 
-          <Typography variant="h4" gutterBottom color="white">
+          <Typography variant="h4" component="h2" gutterBottom color="white">
             Disclaimer
           </Typography>
           <Typography variant="body1" paragraph color="white">
@@ -177,7 +179,7 @@ const TermsOfService = () => {
 
           <Divider sx={{ my: 3, backgroundColor: "rgba(255,255,255,0.1)" }} />
 
-          <Typography variant="h4" gutterBottom color="white">
+          <Typography variant="h4" component="h2" gutterBottom color="white">
             Limitations
           </Typography>
           <Typography variant="body1" paragraph color="white">
@@ -191,7 +193,7 @@ const TermsOfService = () => {
 
           <Divider sx={{ my: 3, backgroundColor: "rgba(255,255,255,0.1)" }} />
 
-          <Typography variant="h4" gutterBottom color="white">
+          <Typography variant="h4" component="h2" gutterBottom color="white">
             Accuracy of Materials
           </Typography>
           <Typography variant="body1" paragraph color="white">
@@ -204,7 +206,7 @@ const TermsOfService = () => {
 
           <Divider sx={{ my: 3, backgroundColor: "rgba(255,255,255,0.1)" }} />
 
-          <Typography variant="h4" gutterBottom color="white">
+          <Typography variant="h4" component="h2" gutterBottom color="white">
             Termination
           </Typography>
           <Typography variant="body1" paragraph color="white">
@@ -215,7 +217,7 @@ const TermsOfService = () => {
 
           <Divider sx={{ my: 3, backgroundColor: "rgba(255,255,255,0.1)" }} />
 
-          <Typography variant="h4" gutterBottom color="white">
+          <Typography variant="h4" component="h2" gutterBottom color="white">
             Changes to Terms
           </Typography>
           <Typography variant="body1" paragraph color="white">
@@ -227,7 +229,7 @@ const TermsOfService = () => {
 
           <Divider sx={{ my: 3, backgroundColor: "rgba(255,255,255,0.1)" }} />
 
-          <Typography variant="h4" gutterBottom color="white">
+          <Typography variant="h4" component="h2" gutterBottom color="white">
             Contact Information
           </Typography>
           <Typography variant="body1" color="white">

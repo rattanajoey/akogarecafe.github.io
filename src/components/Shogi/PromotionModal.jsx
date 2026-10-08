@@ -50,6 +50,7 @@ const PromotionModal = ({
 
   return (
     <Dialog
+      aria-labelledby="promotion-title"
       open={open}
       onClose={handleDialogClose}
       maxWidth="md"
@@ -65,6 +66,7 @@ const PromotionModal = ({
       }}
     >
       <DialogTitle
+        id="promotion-title"
         sx={{
           textAlign: "center",
           color: "#4ecdc4",
@@ -95,7 +97,7 @@ const PromotionModal = ({
             <strong style={{ color: "#ff6b6b", fontWeight: "bold" }}>
               {pieceInfo[piece.name]?.englishName}
             </strong>{" "}
-            has entered the promotion zone!
+            can promote after this move!
           </Typography>
 
           <Typography
@@ -109,7 +111,7 @@ const PromotionModal = ({
           >
             {mandatory
               ? "This piece has reached a position where promotion is mandatory! It cannot move without being promoted."
-              : "In Shogi, pieces can be promoted when they reach the opponent's territory. Promotion is optional but usually beneficial!"}
+              : "A piece can promote when its move starts or ends in the opponent’s territory. You can also keep its current form."}
           </Typography>
         </Box>
 

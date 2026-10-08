@@ -5,60 +5,36 @@ import HomeIcon from "@mui/icons-material/Home";
 import ArticleIcon from "@mui/icons-material/Article";
 import MovieFilterIcon from "@mui/icons-material/MovieFilter";
 import { NiraImage, SpeedDialContainer } from "./style";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const SpeedDialComponent = ({ onIconSelect }) => {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
-  const isPortfolio = useLocation().pathname === "/portfolio";
-
   const actions = [
-    { icon: <ArticleIcon />, name: "Portfolio" },
-    { icon: <MovieFilterIcon />, name: "MovieClub" },
-    { icon: <LibraryMusicIcon />, name: "Music" },
-    { icon: <HomeIcon />, name: "" },
+    { icon: <ArticleIcon />, name: "Portfolio", path: "/portfolio" },
+    { icon: <MovieFilterIcon />, name: "Movie Club", path: "/MovieClub" },
+    { icon: <LibraryMusicIcon />, name: "Music", path: "/music" },
+    { icon: <HomeIcon />, name: "Home", path: "/" },
   ];
-
-  const handleIconClick = (iconName) => {
-    if (onIconSelect) {
-      onIconSelect(iconName);
-    }
-  };
-
-  const handleAction = (route) => {
-    navigate(route);
-  };
-
-  const imageSrc = open ? "/pieces/nira2.png" : "/pieces/nira.png";
-
   return (
     <SpeedDialContainer>
       <SpeedDial
-        ariaLabel="SpeedDial openIcon example"
-        sx={{ position: "fixed", bottom: 0, right: { xs: 0, sm: 48 } }}
-        icon={
-          <NiraImage
-            src={imageSrc}
-            alt="Nira"
-            sx={isPortfolio ? { width: { xs: 96 } } : undefined}
-          />
-        }
-        onClick={() => setOpen((prev) => !prev)}
+        ariaLabel="Quick navigation"
+        sx={{ position: "fixed", bottom: 0, right: { xs: 8, sm: 24 } }}
+        icon={<NiraImage src={open ? "/pieces/nira2.png" : "/pieces/nira.png"} alt="" sx={{ width: { xs: 96, sm: 112 } }} />}
+        onOpen={() => setOpen(true)}
+        onClose={() => setOpen(false)}
         open={open}
       >
         {actions.map((action) => (
-          <SpeedDialAction
-            key={action.name}
-            icon={action.icon}
-            onClick={() => {
-              handleIconClick(action.name);
-              handleAction(action.name.toLowerCase());
-            }}
-          />
+          <SpeedDialAction key={action.name} icon={action.icon} tooltipTitle={action.name} onClick={() => {
+            onIconSelect?.(action.name);
+            navigate(action.path);
+            setOpen(false);
+          }} />
         ))}
       </SpeedDial>
     </SpeedDialContainer>
   );
 };
-
 export default SpeedDialComponent;

@@ -34,7 +34,10 @@ const movementLogic = {
   },
 };
 
-export const getValidMoves = (piece, pieces, isPlayerTwo) => {
+export const getValidMoves = (piece, pieces, isPlayerTwo = piece?.playerTwo) => {
+  if (!piece || !/^[A-I][1-9]$/.test(piece.position)) return [];
   const movementFn = movementLogic[piece.name];
-  return movementFn ? movementFn(piece.position, pieces, isPlayerTwo) : [];
+  return movementFn
+    ? [...new Set(movementFn(piece.position, pieces, isPlayerTwo))]
+    : [];
 };

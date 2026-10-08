@@ -8,7 +8,7 @@ import {
   Divider,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { useNavigate } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
 
 const FooterWrapper = styled(Box)({
   backgroundColor: "rgba(0, 0, 0, 0.95)",
@@ -30,7 +30,6 @@ const FooterLink = styled(Link)({
 });
 
 const Footer = () => {
-  const navigate = useNavigate();
 
   const footerSections = [
     {
@@ -69,21 +68,13 @@ const Footer = () => {
     },
   ];
 
-  const handleNavigation = (path, url) => {
-    if (url) {
-      window.open(url, "_blank", "noopener noreferrer");
-    } else {
-      navigate(path);
-    }
-  };
-
   return (
-    <FooterWrapper>
+    <FooterWrapper component="footer" sx={{ pb: { xs: 14, sm: 16 } }}>
       <Container maxWidth="lg">
         <Grid2 container spacing={4}>
-          <Grid2 item xs={12} md={4}>
+          <Grid2 size={{ xs: 12, md: 4 }}>
             <Typography
-              variant="h5"
+              variant="h5" component="h2"
               gutterBottom
               sx={{
                 background: "linear-gradient(45deg, #ff6b6b, #4ecdc4)",
@@ -109,9 +100,9 @@ const Footer = () => {
           </Grid2>
 
           {footerSections.map((section, index) => (
-            <Grid2 item xs={6} sm={3} md={2} key={index}>
+            <Grid2 size={{ xs: 6, sm: 3, md: 2 }} key={index}>
               <Typography
-                variant="h6"
+                variant="h6" component="h3"
                 gutterBottom
                 sx={{ color: "white", fontWeight: "bold", fontSize: "1rem" }}
               >
@@ -121,7 +112,11 @@ const Footer = () => {
                 {section.links.map((link, linkIndex) => (
                   <FooterLink
                     key={linkIndex}
-                    onClick={() => handleNavigation(link.path, link.url)}
+                    component={link.url ? "a" : RouterLink}
+                    to={link.path}
+                    href={link.url}
+                    target={link.url ? "_blank" : undefined}
+                    rel={link.url ? "noopener noreferrer" : undefined}
                   >
                     {link.label}
                   </FooterLink>
@@ -147,13 +142,13 @@ const Footer = () => {
           </Typography>
 
           <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-            <FooterLink onClick={() => navigate("/privacy")}>
+            <FooterLink component={RouterLink} to="/privacy">
               Privacy
             </FooterLink>
             <Typography sx={{ color: "rgba(255,255,255,0.4)" }}>|</Typography>
-            <FooterLink onClick={() => navigate("/terms")}>Terms</FooterLink>
+            <FooterLink component={RouterLink} to="/terms">Terms</FooterLink>
             <Typography sx={{ color: "rgba(255,255,255,0.4)" }}>|</Typography>
-            <FooterLink onClick={() => navigate("/contact")}>
+            <FooterLink component={RouterLink} to="/contact">
               Contact
             </FooterLink>
           </Box>

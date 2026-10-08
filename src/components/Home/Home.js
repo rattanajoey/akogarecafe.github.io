@@ -1,124 +1,25 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
-import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
+import { fetchChannelVideos } from "../../utils/youtube";
 import Grid2 from "@mui/material/Grid2";
 import { Box, Button, Tabs, Tab, Typography } from "@mui/material";
 
-// Helper function to parse ISO 8601 duration
-const parseDuration = (duration) => {
-  if (!duration) return 0;
-  const match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
-  if (!match) return 0;
-  match.shift();
-  const [hours, minutes, seconds] = match.map(
-    (part) => parseInt(part, 10) || 0
-  );
-  return hours * 3600 + minutes * 60 + seconds;
-};
-
 const HomeComponent = () => {
   const [activeView, setActiveView] = useState("youtube");
-  const [videos, setVideos] = useState([]);
-  const [shorts, setShorts] = useState([]);
-  const [currentVideoId, setCurrentVideoId] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [selectedVideoId, setCurrentVideoId] = useState(null);
   const [activeTab, setActiveTab] = useState("videos");
-  const [isLiveOnTwitch, setIsLiveOnTwitch] = useState(false);
   const twitchUsername = "akogarecafe";
-
-  const checkTwitchStatus = useCallback(async () => {
-    try {
-      const clientId = process.env.REACT_APP_TWITCH_CLIENT_ID;
-      const clientSecret = process.env.REACT_APP_TWITCH_CLIENT_SECRET;
-      if (!clientId || !clientSecret) {
-        console.warn("Twitch credentials not found. Skipping live check.");
-        return;
-      }
-      const tokenResponse = await axios.post(
-        `https://id.twitch.tv/oauth2/token?client_id=${clientId}&client_secret=${clientSecret}&grant_type=client_credentials`
-      );
-      const accessToken = tokenResponse.data.access_token;
-      const streamResponse = await axios.get(
-        `https://api.twitch.tv/helix/streams?user_login=${twitchUsername}`,
-        {
-          headers: {
-            "Client-ID": clientId,
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
-      if (streamResponse.data.data.length > 0) {
-        setIsLiveOnTwitch(true);
-        setActiveView("twitch");
-      }
-    } catch (err) {
-      console.error(
-        "Error checking Twitch status:",
-        err.response ? err.response.data : err
-      );
-    }
-  }, [twitchUsername]);
-
-  const fetchVideos = useCallback(async () => {
-    try {
-      setLoading(true);
-      const apiKey = process.env.REACT_APP_YOUTUBE_API_KEY;
-      const channelId = "UCP77ij2ue_xEz2f5TmH0Rbw";
-      const searchResponse = await axios.get(
-        `https://www.googleapis.com/youtube/v3/search`,
-        {
-          params: {
-            key: apiKey,
-            channelId,
-            part: "snippet,id",
-            order: "date",
-            maxResults: 30,
-            type: "video",
-          },
-        }
-      );
-      const videoIds = searchResponse.data.items
-        .map((item) => item.id.videoId)
-        .join(",");
-      const detailsResponse = await axios.get(
-        `https://www.googleapis.com/youtube/v3/videos`,
-        {
-          params: { key: apiKey, id: videoIds, part: "snippet,contentDetails" },
-        }
-      );
-      const allVideos = detailsResponse.data.items.map((item) => ({
-        id: item.id,
-        title: item.snippet.title,
-        duration: parseDuration(item.contentDetails.duration),
-      }));
-      const regularVideos = allVideos.filter((video) => video.duration > 120);
-      const shortVideos = allVideos.filter((video) => video.duration <= 120);
-      setVideos(regularVideos);
-      setShorts(shortVideos);
-      if (regularVideos.length > 0) {
-        setCurrentVideoId(regularVideos[0].id);
-      } else if (shortVideos.length > 0) {
-        setCurrentVideoId(shortVideos[0].id);
-        setActiveTab("shorts");
-      }
-      setLoading(false);
-    } catch (err) {
-      console.error(
-        "Error fetching YouTube videos:",
-        err.response ? err.response.data : err
-      );
-      setError(
-        "Failed to load videos. Please check the API key and try again."
-      );
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchVideos();
-    checkTwitchStatus();
-  }, [fetchVideos, checkTwitchStatus]);
+  const { data: videos = [], isPending: loading, isError: error } = useQuery({
+    queryKey: ["youtube-uploads"],
+    queryFn: ({ signal }) => fetchChannelVideos({ apiKey: process.env.REACT_APP_YOUTUBE_API_KEY, channelId: "UCP77ij2ue_xEz2f5TmH0Rbw", signal }),
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    retry: 1,
+  });
+  const shorts = videos.filter((video) => video.duration > 0 && video.duration <= 180);
+  const playlist = activeTab === "videos" ? videos : shorts;
+  const currentVideoId = playlist.some((video) => video.id === selectedVideoId) ? selectedVideoId : playlist[0]?.id;
 
   const handleVideoSelect = (videoId) => {
     setCurrentVideoId(videoId);
@@ -126,18 +27,23 @@ const HomeComponent = () => {
   };
 
   const renderPlaylist = () => {
-    const playlist = activeTab === "videos" ? videos : shorts;
     return playlist.map((video) => (
       <Box
+        component="button"
+        type="button"
+        aria-pressed={currentVideoId === video.id && activeView === "youtube"}
         key={video.id}
         sx={{
           display: "flex",
+          width: "100%",
+          color: "inherit",
+          font: "inherit",
+          textAlign: "left",
           alignItems: "center",
           gap: 1,
           cursor: "pointer",
           borderRadius: 1,
-          border:
-            currentVideoId === video.id && activeView === "youtube" ? 2 : 0,
+          border: 2,
           borderColor:
             currentVideoId === video.id && activeView === "youtube"
               ? "error.main"
@@ -156,17 +62,20 @@ const HomeComponent = () => {
         <Box
           component="img"
           src={`https://i3.ytimg.com/vi/${video.id}/mqdefault.jpg`}
-          alt={video.title}
+          alt=""
+          loading="lazy"
           sx={{
             width: { xs: 60, sm: 80, md: 100 },
             height: { xs: 34, sm: 45, md: 56 },
             objectFit: "cover",
+            flexShrink: 0,
             borderRadius: 1,
           }}
         />
         <Typography
           variant="body2"
           sx={{
+            minWidth: 0,
             fontSize: { xs: "0.8rem", sm: "0.9rem" },
             lineHeight: 1.3,
             overflow: "hidden",
@@ -186,7 +95,7 @@ const HomeComponent = () => {
     <Box
       sx={{
         position: "relative",
-        width: "100vw",
+        width: "100%",
         minHeight: "100vh",
         background:
           "radial-gradient(ellipse at center, #3a3a3a 0%, #1a1a1a 70%)",
@@ -199,7 +108,7 @@ const HomeComponent = () => {
         pt: { xs: 2, md: 5 },
         boxSizing: "border-box",
         px: { xs: 1.5, sm: 2, md: 0 },
-        pb: { xs: 25, md: 15 },
+        pb: { xs: 14, md: 16 },
       }}
     >
       <Box
@@ -218,12 +127,14 @@ const HomeComponent = () => {
         container
         spacing={{ xs: 1, md: 4 }}
         sx={{
-          width: { xs: "100vw", md: "90vw" },
+          width: "100%",
           maxWidth: 1200,
-          minHeight: { xs: "auto", md: "80vh" },
-          height: { md: "80vh" },
+          alignItems: "flex-start",
         }}
       >
+        <Grid2 size={12}>
+          <Typography component="h1" variant="h4" sx={{ mb: 2, textAlign: "center", fontSize: { xs: "1.75rem", sm: "2.25rem" } }}>Welcome to Akogare Cafe</Typography>
+        </Grid2>
         <Grid2 size={{ xs: 12, md: 9 }}>
           <Box
             sx={{
@@ -234,6 +145,48 @@ const HomeComponent = () => {
               height: "100%",
             }}
           >
+              {/* Monitor Controls */}
+              <Box
+                sx={{
+                  bgcolor: "rgba(0,0,0,0.7)",
+                  borderRadius: 2,
+                  p: { xs: 0.5, md: 1 },
+                  display: "flex",
+                  gap: { xs: 1, md: 2 },
+                }}
+                role="group"
+                aria-label="Video source"
+              >
+                <Button
+                  aria-pressed={activeView === "youtube"}
+                  onClick={() => setActiveView("youtube")}
+                  variant={activeView === "youtube" ? "contained" : "outlined"}
+                  color={activeView === "youtube" ? "error" : "inherit"}
+                  size="small"
+                  sx={{
+                    textTransform: "uppercase",
+                    fontWeight: "bold",
+                    borderRadius: 1,
+                  }}
+                >
+                  YouTube
+                </Button>
+                <Button
+                  aria-pressed={activeView === "twitch"}
+                  onClick={() => setActiveView("twitch")}
+                  variant={activeView === "twitch" ? "contained" : "outlined"}
+                  color={activeView === "twitch" ? "primary" : "inherit"}
+                  size="small"
+                  sx={{
+                    textTransform: "uppercase",
+                    fontWeight: "bold",
+                    borderRadius: 1,
+                    position: "relative",
+                  }}
+                >
+                  Twitch
+                </Button>
+              </Box>
             {/* PC Monitor */}
             <Box
               sx={{
@@ -252,73 +205,12 @@ const HomeComponent = () => {
               }}
               className="pc-monitor"
             >
-              {/* Monitor Controls */}
-              <Box
-                sx={{
-                  position: "absolute",
-                  top: { xs: 8, md: 16 },
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                  bgcolor: "rgba(0,0,0,0.7)",
-                  borderRadius: 2,
-                  p: { xs: 0.5, md: 1 },
-                  display: "flex",
-                  gap: { xs: 1, md: 2 },
-                  opacity: 1,
-                  zIndex: 10,
-                }}
-                className="monitor-controls"
-              >
-                <Button
-                  onClick={() => setActiveView("youtube")}
-                  variant={activeView === "youtube" ? "contained" : "outlined"}
-                  color={activeView === "youtube" ? "error" : "inherit"}
-                  size="small"
-                  sx={{
-                    textTransform: "uppercase",
-                    fontWeight: "bold",
-                    borderRadius: 1,
-                  }}
-                >
-                  YouTube
-                </Button>
-                <Button
-                  onClick={() => isLiveOnTwitch && setActiveView("twitch")}
-                  variant={activeView === "twitch" ? "contained" : "outlined"}
-                  color={activeView === "twitch" ? "primary" : "inherit"}
-                  size="small"
-                  disabled={!isLiveOnTwitch}
-                  sx={{
-                    textTransform: "uppercase",
-                    fontWeight: "bold",
-                    borderRadius: 1,
-                    opacity: isLiveOnTwitch ? 1 : 0.5,
-                    position: "relative",
-                  }}
-                >
-                  Twitch
-                  {isLiveOnTwitch && (
-                    <Box
-                      component="span"
-                      sx={{
-                        ml: 1,
-                        bgcolor: "error.main",
-                        color: "white",
-                        fontSize: "0.7rem",
-                        fontWeight: "bold",
-                        px: 1,
-                        borderRadius: 1,
-                        animation: "pulse 1.5s infinite",
-                        position: "absolute",
-                        top: -8,
-                        right: -15,
-                      }}
-                    >
-                      LIVE
-                    </Box>
-                  )}
-                </Button>
-              </Box>
+              {activeView === "youtube" && !currentVideoId && (
+                <Box sx={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", p: 2, textAlign: "center" }} role="status">
+                  <Typography sx={{ mb: 1 }}>{loading ? "Loading videos…" : error ? "The video feed is unavailable right now." : "No videos in this selection."}</Typography>
+                  {!loading && <Button href="https://www.youtube.com/c/akogarecafe" target="_blank" rel="noopener noreferrer" color="inherit">Watch on YouTube</Button>}
+                </Box>
+              )}
               {/* Video Embeds */}
               {activeView === "youtube" && currentVideoId && (
                 <Box
@@ -333,10 +225,10 @@ const HomeComponent = () => {
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
-                  title="Featured Video"
+                  title={`YouTube: ${playlist.find((video) => video.id === currentVideoId)?.title || "Featured video"}`}
                 />
               )}
-              {activeView === "twitch" && isLiveOnTwitch && (
+              {activeView === "twitch" && (
                 <Box
                   component="iframe"
                   sx={{
@@ -458,10 +350,14 @@ const HomeComponent = () => {
             className="video-playlist"
           >
             <Tabs
+              textColor="inherit"
+              aria-label="Video length"
               value={activeTab}
               onChange={(_, v) => setActiveTab(v)}
               variant="fullWidth"
               sx={{
+                "& .MuiTabs-indicator": { bgcolor: "#4ecdc4" },
+                "& .Mui-selected": { color: "white" },
                 mb: 1,
                 flexDirection: { xs: "column", sm: "row" },
                 minHeight: 0,
@@ -479,7 +375,8 @@ const HomeComponent = () => {
                   borderBottom: activeTab === "videos" ? 3 : 0,
                   borderBottomColor:
                     activeTab === "videos" ? "error.main" : "transparent",
-                  fontSize: { xs: "0.95rem", md: "1rem" },
+                  minWidth: 0,
+                  fontSize: { xs: "0.85rem", md: "0.9rem" },
                   textTransform: "uppercase",
                 }}
                 className={
@@ -487,7 +384,7 @@ const HomeComponent = () => {
                 }
               />
               <Tab
-                label="Shorts"
+                label="Short videos"
                 value="shorts"
                 sx={{
                   flexGrow: 1,
@@ -497,7 +394,8 @@ const HomeComponent = () => {
                   borderBottom: activeTab === "shorts" ? 3 : 0,
                   borderBottomColor:
                     activeTab === "shorts" ? "error.main" : "transparent",
-                  fontSize: { xs: "0.95rem", md: "1rem" },
+                  minWidth: 0,
+                  fontSize: { xs: "0.85rem", md: "0.9rem" },
                   textTransform: "uppercase",
                 }}
                 className={
@@ -513,9 +411,10 @@ const HomeComponent = () => {
               }}
               className="playlist-content"
             >
-              {loading && <Typography>Loading...</Typography>}
-              {error && <Typography color="error.main">{error}</Typography>}
-              {!loading && !error && renderPlaylist()}
+              {activeTab === "shorts" && <Typography variant="caption" sx={{ display: "block", mb: 1 }}>Uploads up to 3 minutes</Typography>}
+              {loading && <Typography role="status">Loading videos…</Typography>}
+              {error && <Typography role="status">The video feed is unavailable. Visit the full channel below.</Typography>}
+              {!loading && !error && (playlist.length ? renderPlaylist() : <Typography>No videos in this selection.</Typography>)}
             </Box>
             <Button
               href="https://www.youtube.com/c/akogarecafe"

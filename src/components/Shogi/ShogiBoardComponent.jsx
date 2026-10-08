@@ -1,11 +1,10 @@
 import React, { useState } from "react";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, useMediaQuery } from "@mui/material";
 import MomoComponent from "../Momo/MomoComponent";
 import CustomTooltip from "../Tooltip/CustomTooltip";
 import {
   initialShogiPieces,
   pieceInfo,
-  promotionRules,
 } from "../constants/InitialShogiPieces";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import PromotionModal from "./PromotionModal";
@@ -15,8 +14,10 @@ import { ShogiBoardWrapper, ShogiBoard, ShogiPiece, DropZone } from "./style";
 import { getValidMoves } from "../PieceMechanics";
 import { calculatePosition } from "../utils";
 import { IconButton } from "@mui/material";
+import { getPromotionForMove } from "./promotion";
 
 const ShogiBoardComponent = () => {
+  const showHoverInfo = useMediaQuery("(hover: hover) and (min-width: 600px)");
   const [pieces, setPieces] = useState(initialShogiPieces);
   const [selectedPiece, setSelectedPiece] = useState(null);
   const [highlightedSquare, setHighlightedSquare] = useState(null);
@@ -61,34 +62,19 @@ const ShogiBoardComponent = () => {
         const movedPiece = { ...currentSelectedPiece, position };
 
         // Check for promotion opportunity
-        const promotionRule = promotionRules[currentSelectedPiece.name];
-        if (promotionRule) {
-          const promotionZone = currentSelectedPiece.playerTwo
-            ? promotionRule.playerTwoPromotionZone
-            : promotionRule.promotionZone;
-
-          const mandatoryPromotionZone = currentSelectedPiece.playerTwo
-            ? promotionRule.playerTwoMandatoryPromotionZone
-            : promotionRule.mandatoryPromotionZone;
-
-          if (promotionZone.includes(position)) {
-            // Check if promotion is mandatory
-            const isMandatory =
-              mandatoryPromotionZone &&
-              mandatoryPromotionZone.includes(position);
-
-            // Show promotion modal with the moved piece
-            setPromotionModal({
-              open: true,
-              piece: movedPiece,
-              mandatory: isMandatory,
-            });
-
-            // Add the moved piece to the board immediately
-            newPieces.push(movedPiece);
-            setPieces(newPieces);
-            return;
-          }
+        const promotion = getPromotionForMove(currentSelectedPiece, position);
+        if (promotion) {
+          setPromotionModal({
+            open: true,
+            piece: movedPiece,
+            mandatory: promotion.mandatory,
+          });
+          newPieces.push(movedPiece);
+          setPieces(newPieces);
+          setSelectedPiece(null);
+          setHighlightedSquare(null);
+          setValidMoves(null);
+          return;
         }
 
         newPieces.push(movedPiece);
@@ -125,21 +111,6 @@ const ShogiBoardComponent = () => {
   };
 
   const handlePromotionModalClose = () => {
-    // Only complete the move if the modal is closed without promoting
-    // (i.e., if the piece hasn't been promoted yet)
-    if (promotionModal.piece) {
-      const currentPiece = pieces.find((p) => p.id === promotionModal.piece.id);
-      // Only add the piece if it hasn't been promoted (still has original name)
-      if (currentPiece && currentPiece.name === promotionModal.piece.name) {
-        const newPieces = pieces.filter(
-          (p) =>
-            p.id !== promotionModal.piece.id &&
-            p.position !== promotionModal.piece.position
-        );
-        newPieces.push(promotionModal.piece);
-        setPieces(newPieces);
-      }
-    }
     setPromotionModal({ open: false, piece: null });
     setSelectedPiece(null);
     setHighlightedSquare(null);
@@ -158,12 +129,14 @@ const ShogiBoardComponent = () => {
         alignItems: "center",
         pt: 4,
         px: 2,
+        pb: 14,
       }}
     >
       {/* Artistic Title */}
-      <Box sx={{ textAlign: "center", mb: 6 }}>
+      <Box sx={{ textAlign: "center", mb: { xs: 3, sm: 6 } }}>
         <Typography
           variant="h2"
+          component="h1"
           sx={{
             background: "linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1)",
             backgroundClip: "text",
@@ -178,6 +151,7 @@ const ShogiBoardComponent = () => {
         </Typography>
         <Typography
           variant="h5"
+          component="p"
           sx={{
             color: "rgba(255,255,255,0.7)",
             fontStyle: "italic",
@@ -196,9 +170,9 @@ const ShogiBoardComponent = () => {
             lineHeight: 1.6,
           }}
         >
-          A thousand-year-old strategic masterpiece where captured pieces find
-          new life. Click pieces to explore their movements and discover the
-          depth of Japanese strategy.
+          Practice Shogi piece movements and promotions. Select a piece, then
+          choose a highlighted square. This practice board doesn’t enforce turns,
+          check, or captured-piece drops.
         </Typography>
       </Box>
 
@@ -206,7 +180,7 @@ const ShogiBoardComponent = () => {
       <Box
         sx={{
           display: "grid",
-          gridTemplateColumns: { xs: "1fr", lg: "350px 1fr 350px" },
+          gridTemplateColumns: { xs: "minmax(0, 1fr)", xl: "300px minmax(0, 1fr) 300px" },
           gap: 4,
           alignItems: "start",
           maxWidth: "1400px",
@@ -223,11 +197,12 @@ const ShogiBoardComponent = () => {
             borderRadius: 3,
             p: 3,
             color: "white",
-            display: { xs: "none", lg: "block" },
+            display: { xs: "none", xl: "block" },
           }}
         >
           <Typography
             variant="h6"
+            component="h2"
             sx={{
               color: "#ff6b6b",
               mb: 3,
@@ -271,6 +246,7 @@ const ShogiBoardComponent = () => {
 
           <Typography
             variant="h6"
+            component="h2"
             sx={{
               color: "#ff6b6b",
               mb: 2,
@@ -303,21 +279,32 @@ const ShogiBoardComponent = () => {
             alignItems: "center",
           }}
         >
-          <div style={{ position: "relative" }}>
+          <div style={{ position: "relative", width: "100%" }}>
             <ShogiBoardWrapper>
               <ShogiBoard>
                 {pieces.map((piece) => {
                   const piecePosition = calculatePosition(piece.position);
                   return (
-                    <ShogiPiece
+                    <CustomTooltip
                       key={piece.id}
+                      describeChild
+                      open={showHoverInfo && highlightedSquare === piece.position && !promotionModal.open}
+                      player={piece.playerTwo ? "P2" : "P1"}
+                      title={<MomoComponent
+                        text={`${pieceInfo[piece.name]?.englishName || piece.name}:`}
+                        secondLine={pieceInfo[piece.name]?.description || ""}
+                        player={piece.playerTwo ? "P2" : "P1"}
+                      />}
+                    >
+                    <ShogiPiece
+                      type="button"
+                      aria-label={`${piece.playerTwo ? "Player two" : "Player one"} ${pieceInfo[piece.name]?.englishName || piece.name} at ${piece.position}`}
+                      aria-pressed={selectedPiece?.id === piece.id}
                       style={{
-                        left: `${piecePosition.left}px`,
-                        top: `${piecePosition.top}px`,
+                        left: `${piecePosition.left / 450 * 100}%`,
+                        top: `${piecePosition.top / 450 * 100}%`,
                         cursor: "pointer",
                         transform: piece.playerTwo ? "rotate(180deg)" : "none",
-                        pointerEvents:
-                          selectedPiece && validMoves ? "none" : "auto",
                         border:
                           selectedPiece?.id === piece.id
                             ? "3px solid #4ecdc4"
@@ -329,7 +316,11 @@ const ShogiBoardComponent = () => {
                             ? "0 0 15px rgba(78, 205, 196, 0.6)"
                             : "none",
                       }}
-                      onClick={() => handlePieceClick(piece)}
+                      onClick={() => validMoves?.includes(piece.position)
+                        ? handleSquareClick(piece.position)
+                        : handlePieceClick(piece)}
+                      onFocus={() => setHighlightedSquare(piece.position)}
+                      onBlur={() => !selectedPiece && setHighlightedSquare(null)}
                       onMouseEnter={() =>
                         !selectedPiece && setHighlightedSquare(piece.position)
                       }
@@ -340,6 +331,7 @@ const ShogiBoardComponent = () => {
                     >
                       <img src={piece.image} alt={piece.name} />
                     </ShogiPiece>
+                    </CustomTooltip>
                   );
                 })}
                 {Array.from({ length: 9 }).map((_, rowIndex) =>
@@ -350,11 +342,13 @@ const ShogiBoardComponent = () => {
                     return (
                       <DropZone
                         key={position}
+                        type="button"
+                        aria-label={`Move to ${position}`}
+                        disabled={!validMoves?.includes(position)}
+                        aria-hidden={!validMoves?.includes(position)}
                         style={{
-                          left: `${colIndex * 50}px`,
-                          top: `${rowIndex * 50}px`,
-                          width: "50px",
-                          height: "50px",
+                          left: `${colIndex / 9 * 100}%`,
+                          top: `${rowIndex / 9 * 100}%`,
                           backgroundColor: validMoves?.includes(position)
                             ? "rgba(78, 205, 196, 0.4)"
                             : "transparent",
@@ -365,40 +359,14 @@ const ShogiBoardComponent = () => {
                   })
                 )}
               </ShogiBoard>
-              {highlightedSquare &&
-                !promotionModal.open &&
-                (() => {
-                  const pieceAtSquare = pieces.find(
-                    (p) => p.position === highlightedSquare
-                  );
-                  const pieceData = pieceAtSquare
-                    ? pieceInfo[pieceAtSquare.name]
-                    : null;
-
-                  if (!pieceData) return null;
-
-                  return (
-                    <CustomTooltip
-                      open={true}
-                      title={
-                        <MomoComponent
-                          text={`${
-                            pieceData.englishName || pieceData.name || "Unknown"
-                          } (${pieceData.name || "Unknown"}):`}
-                          secondLine={
-                            pieceData.description || "No description available."
-                          }
-                          player={pieceAtSquare?.playerTwo ? "P2" : "P1"}
-                        />
-                      }
-                      player={pieceAtSquare?.playerTwo ? "P2" : "P1"}
-                    >
-                      <div style={{ width: 0, height: 0 }} />
-                    </CustomTooltip>
-                  );
-                })()}
             </ShogiBoardWrapper>
 
+            {!showHoverInfo && selectedPiece && (
+              <Box role="status" sx={{ color: "white", textAlign: "center", mt: 2, px: 2 }}>
+                <Typography fontWeight="bold">{pieceInfo[selectedPiece.name]?.englishName || selectedPiece.name}</Typography>
+                <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.8)" }}>{pieceInfo[selectedPiece.name]?.description}</Typography>
+              </Box>
+            )}
             {/* Game Controls */}
             <Box
               sx={{
@@ -410,6 +378,7 @@ const ShogiBoardComponent = () => {
             >
               <IconButton
                 onClick={resetBoard}
+                aria-label="Reset Shogi board"
                 sx={{
                   background: "linear-gradient(45deg, #4ecdc4, #45b7d1)",
                   color: "white",
@@ -439,11 +408,12 @@ const ShogiBoardComponent = () => {
             borderRadius: 3,
             p: 3,
             color: "white",
-            display: { xs: "none", lg: "block" },
+            display: { xs: "none", xl: "block" },
           }}
         >
           <Typography
             variant="h6"
+            component="h2"
             sx={{
               color: "#ffb6c1",
               mb: 3,
@@ -519,6 +489,7 @@ const ShogiBoardComponent = () => {
 
           <Typography
             variant="h6"
+            component="h2"
             sx={{
               color: "#ffb6c1",
               mb: 2,

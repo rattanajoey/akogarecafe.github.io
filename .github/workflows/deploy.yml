@@ -12,16 +12,21 @@ jobs:
       contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
 
       - name: Install and Build
         run: |
           npm ci
+          npm test -- --watchAll=false --runInBand
           npm run build
         env:
           REACT_APP_YOUTUBE_API_KEY: ${{ secrets.REACT_APP_YOUTUBE_API_KEY }}
-          REACT_APP_TWITCH_CLIENT_ID: ${{ secrets.REACT_APP_TWITCH_CLIENT_ID }}
-          REACT_APP_TWITCH_CLIENT_SECRET: ${{ secrets.REACT_APP_TWITCH_CLIENT_SECRET }}
           REACT_APP_FIREBASE_API_KEY: ${{ secrets.REACT_APP_FIREBASE_API_KEY }}
           REACT_APP_FIREBASE_APP_ID: ${{ secrets.REACT_APP_FIREBASE_APP_ID }}
           REACT_APP_FIREBASE_AUTH_DOMAIN: ${{ secrets.REACT_APP_FIREBASE_AUTH_DOMAIN }}
@@ -35,7 +40,7 @@ jobs:
         run: echo "akogarecafe.com" > build/CNAME
 
       - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./build

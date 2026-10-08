@@ -5,15 +5,16 @@ export const MomoContainer = styled(Box)({
     display: 'flex',
     alignItems: 'center',
     position: 'relative',
-    width: '300px', // Adjust width as needed
+    width: 'min(300px, calc(100vw - 32px))',
   });
   
   export const MomoImage = styled('img')({
-    width: '120px', // Size of Momo's image
+    width: '90px',
+    flexShrink: 0,
     height: 'auto',
   });
   
-  export const SpeechBubble = styled(Box)(({ player }) => ({
+  export const SpeechBubble = styled(Box, { shouldForwardProp: (prop) => prop !== 'player' })(({ player }) => ({
     position: 'relative',
     backgroundColor: 'white',
     borderRadius: '10px',

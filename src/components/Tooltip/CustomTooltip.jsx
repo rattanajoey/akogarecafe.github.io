@@ -13,19 +13,20 @@ const CustomTooltip = styled(({ className, player, ...props }) => (
             {
             name: 'offset',
             options: {
-                offset: [ player === 'P2' ? -610 : 150, player === 'P2' ? -250 : 100],
+                offset: [0, 12],
             },
             },
         ],
         },
     }}         
+    placement={player === 'P2' ? 'top' : 'bottom'}
     TransitionComponent={Fade}
     TransitionProps={{ timeout: 600 }}
   />
 ))(({ theme }) => ({
   [`& .${tooltipClasses.tooltip}`]: {
     backgroundColor: 'transparent',
-    maxWidth: 'none',
+    maxWidth: 'calc(100vw - 32px)',
     margin: 0,
     padding: 0,
   },

@@ -13,10 +13,10 @@ export const getKnightMoves = (position, pieces, isPlayerTwo) => {
 
   // Filter out moves that are off the board or blocked by friendly pieces
   return potentialMoves.filter((move) => {
-    const [col, row] = [move[0], move[1]];
-    if (col < "A" || col > "I" || row < "1" || row > "9") return false;
+    const [col, row] = [move[0], Number(move.slice(1))];
+    if (col < "A" || col > "I" || row < 1 || row > 9) return false;
 
     const pieceAtPosition = pieces.find((p) => p.position === move);
-    return !pieceAtPosition || pieceAtPosition.playerTwo !== isPlayerTwo;
+    return !pieceAtPosition || Boolean(pieceAtPosition.playerTwo) !== Boolean(isPlayerTwo);
   });
 };

@@ -52,11 +52,11 @@ const PortfolioSection = () => {
         <SkillsContainerWrapper container>
           <Grid2 size={{ xs: 12, md: 5 }} mb={{ xs: 0, sm: 2, md: 0 }}>
             <UserNameContainer>
-              <Typography variant="h3">Joey Rattana</Typography>
-              <Typography variant="h6" mt={1}>
+              <Typography variant="h3" component="h1">Joey Rattana</Typography>
+              <Typography component="p" variant="h6" mt={1}>
                 Class: Frontend Product Engineer
               </Typography>
-              <Typography variant="h6">
+              <Typography component="p" variant="h6">
                 Subclass: Experimentation &amp; Performance
               </Typography>
               <Typography variant="body1" color="gray" mt={1}>
@@ -98,7 +98,7 @@ const PortfolioSection = () => {
                   onMouseEnter={() => setHoveredCompany("startengine")}
                   onMouseLeave={() => setHoveredCompany(null)}
                 >
-                  <CompanyTitle href="http://startengine.com/" target="_blank">
+                  <CompanyTitle href="https://www.startengine.com/" target="_blank" rel="noopener noreferrer">
                     Software Engineer · StartEngine
                   </CompanyTitle>
                   <ArrowContainer
@@ -222,7 +222,7 @@ const PortfolioSection = () => {
                   onMouseEnter={() => setHoveredCompany("isbx")}
                   onMouseLeave={() => setHoveredCompany(null)}
                 >
-                  <CompanyTitle href="https://www.isbx.com/" target="_blank">
+                  <CompanyTitle href="https://www.isbx.com/" target="_blank" rel="noopener noreferrer">
                     Junior Software Developer (Full Stack) · ISBX
                   </CompanyTitle>
                   <ArrowContainer
@@ -275,7 +275,7 @@ const PortfolioSection = () => {
                   onMouseEnter={() => setHoveredCompany("isbx-qa")}
                   onMouseLeave={() => setHoveredCompany(null)}
                 >
-                  <CompanyTitle href="https://www.isbx.com/" target="_blank">
+                  <CompanyTitle href="https://www.isbx.com/" target="_blank" rel="noopener noreferrer">
                     Quality Assurance Tester · ISBX
                   </CompanyTitle>
                   <ArrowContainer
@@ -314,7 +314,7 @@ const PortfolioSection = () => {
                   onMouseEnter={() => setHoveredCompany("appen")}
                   onMouseLeave={() => setHoveredCompany(null)}
                 >
-                  <CompanyTitle href="https://www.appen.com/" target="_blank">
+                  <CompanyTitle href="https://www.appen.com/" target="_blank" rel="noopener noreferrer">
                     Web Search Evaluator · Appen Global
                   </CompanyTitle>
                   <ArrowContainer

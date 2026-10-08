@@ -90,7 +90,7 @@ export const CompanyTitleContainer = styled(Grid2)({
 });
 
 export const CompanyTitle = styled("a")(({ theme }) => ({
-  color: "#006672",
+  color: "#4ecdc4",
   textDecoration: "none",
   [theme.breakpoints.down("sm")]: { fontSize: "18px" },
 }));

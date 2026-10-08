@@ -25,10 +25,12 @@ const PrivacyPolicy = () => {
       <Container maxWidth="lg">
         <Typography
           variant="h2"
+          component="h1"
           align="center"
           gutterBottom
           sx={{
             marginBottom: 4,
+            fontSize: { xs: "2.25rem", sm: "3.75rem" },
             color: "white",
             fontWeight: "bold",
           }}
@@ -38,26 +40,26 @@ const PrivacyPolicy = () => {
 
         <StyledPaper>
           <Typography variant="body2" color="gray" gutterBottom>
-            Last Updated: {new Date().toLocaleDateString()}
+            Last Updated: October 8, 2026
           </Typography>
 
-          <Typography variant="h4" gutterBottom color="white" sx={{ mt: 3 }}>
+          <Typography variant="h4" component="h2" gutterBottom color="white" sx={{ mt: 3 }}>
             Introduction
           </Typography>
           <Typography variant="body1" paragraph color="white">
             Welcome to Akogare Cafe ("we," "our," or "us"). This Privacy Policy
             explains how we collect, use, disclose, and safeguard your
-            information when you visit our website akogarecafe.github.io (the
+            information when you visit our website akogarecafe.com (the
             "Service"). Please read this Privacy Policy carefully.
           </Typography>
 
           <Divider sx={{ my: 3, backgroundColor: "rgba(255,255,255,0.1)" }} />
 
-          <Typography variant="h4" gutterBottom color="white">
+          <Typography variant="h4" component="h2" gutterBottom color="white">
             Information We Collect
           </Typography>
 
-          <Typography variant="h6" gutterBottom color="#4ecdc4" sx={{ mt: 2 }}>
+          <Typography variant="h6" component="h3" gutterBottom color="#4ecdc4" sx={{ mt: 2 }}>
             Information You Provide
           </Typography>
           <Typography variant="body1" paragraph color="white">
@@ -65,10 +67,10 @@ const PrivacyPolicy = () => {
             <br />
             • Movie submissions and preferences in our Movie Club section
             <br />• Any other information you voluntarily provide through our
-            contact forms or interactions
+            interactions
           </Typography>
 
-          <Typography variant="h6" gutterBottom color="#4ecdc4" sx={{ mt: 2 }}>
+          <Typography variant="h6" component="h3" gutterBottom color="#4ecdc4" sx={{ mt: 2 }}>
             Automatically Collected Information
           </Typography>
           <Typography variant="body1" paragraph color="white">
@@ -80,7 +82,7 @@ const PrivacyPolicy = () => {
             <br />• Usage patterns and site navigation data
           </Typography>
 
-          <Typography variant="h6" gutterBottom color="#4ecdc4" sx={{ mt: 2 }}>
+          <Typography variant="h6" component="h3" gutterBottom color="#4ecdc4" sx={{ mt: 2 }}>
             Third-Party Services
           </Typography>
           <Typography variant="body1" paragraph color="white">
@@ -88,14 +90,14 @@ const PrivacyPolicy = () => {
             collect information:
             <br />• Google AdSense for advertising
             <br />• YouTube API for video content
-            <br />• Twitch API for streaming status
+            <br />• Twitch embeds for streaming
             <br />• Firebase for backend services
             <br />• Google Analytics for website analytics
           </Typography>
 
           <Divider sx={{ my: 3, backgroundColor: "rgba(255,255,255,0.1)" }} />
 
-          <Typography variant="h4" gutterBottom color="white">
+          <Typography variant="h4" component="h2" gutterBottom color="white">
             How We Use Your Information
           </Typography>
           <Typography variant="body1" paragraph color="white">
@@ -110,7 +112,7 @@ const PrivacyPolicy = () => {
 
           <Divider sx={{ my: 3, backgroundColor: "rgba(255,255,255,0.1)" }} />
 
-          <Typography variant="h4" gutterBottom color="white">
+          <Typography variant="h4" component="h2" gutterBottom color="white">
             Google AdSense and Advertising
           </Typography>
           <Typography variant="body1" paragraph color="white">
@@ -128,7 +130,7 @@ const PrivacyPolicy = () => {
 
           <Divider sx={{ my: 3, backgroundColor: "rgba(255,255,255,0.1)" }} />
 
-          <Typography variant="h4" gutterBottom color="white">
+          <Typography variant="h4" component="h2" gutterBottom color="white">
             Cookies and Tracking Technologies
           </Typography>
           <Typography variant="body1" paragraph color="white">
@@ -145,7 +147,7 @@ const PrivacyPolicy = () => {
 
           <Divider sx={{ my: 3, backgroundColor: "rgba(255,255,255,0.1)" }} />
 
-          <Typography variant="h4" gutterBottom color="white">
+          <Typography variant="h4" component="h2" gutterBottom color="white">
             Information Sharing and Disclosure
           </Typography>
           <Typography variant="body1" paragraph color="white">
@@ -159,7 +161,7 @@ const PrivacyPolicy = () => {
 
           <Divider sx={{ my: 3, backgroundColor: "rgba(255,255,255,0.1)" }} />
 
-          <Typography variant="h4" gutterBottom color="white">
+          <Typography variant="h4" component="h2" gutterBottom color="white">
             Data Security
           </Typography>
           <Typography variant="body1" paragraph color="white">
@@ -171,7 +173,7 @@ const PrivacyPolicy = () => {
 
           <Divider sx={{ my: 3, backgroundColor: "rgba(255,255,255,0.1)" }} />
 
-          <Typography variant="h4" gutterBottom color="white">
+          <Typography variant="h4" component="h2" gutterBottom color="white">
             Your Rights
           </Typography>
           <Typography variant="body1" paragraph color="white">
@@ -186,7 +188,7 @@ const PrivacyPolicy = () => {
 
           <Divider sx={{ my: 3, backgroundColor: "rgba(255,255,255,0.1)" }} />
 
-          <Typography variant="h4" gutterBottom color="white">
+          <Typography variant="h4" component="h2" gutterBottom color="white">
             Children's Privacy
           </Typography>
           <Typography variant="body1" paragraph color="white">
@@ -198,7 +200,7 @@ const PrivacyPolicy = () => {
 
           <Divider sx={{ my: 3, backgroundColor: "rgba(255,255,255,0.1)" }} />
 
-          <Typography variant="h4" gutterBottom color="white">
+          <Typography variant="h4" component="h2" gutterBottom color="white">
             Changes to This Privacy Policy
           </Typography>
           <Typography variant="body1" paragraph color="white">
@@ -209,7 +211,7 @@ const PrivacyPolicy = () => {
 
           <Divider sx={{ my: 3, backgroundColor: "rgba(255,255,255,0.1)" }} />
 
-          <Typography variant="h4" gutterBottom color="white">
+          <Typography variant="h4" component="h2" gutterBottom color="white">
             Contact Us
           </Typography>
           <Typography variant="body1" color="white">
