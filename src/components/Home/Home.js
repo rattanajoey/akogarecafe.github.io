@@ -3,9 +3,10 @@ import { Link as RouterLink } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { fetchChannelVideos } from "../../utils/youtube";
 import Grid2 from "@mui/material/Grid2";
-import { Box, Button, Tabs, Tab, Typography } from "@mui/material";
+import { Box, Button, Tabs, Tab, Typography, useMediaQuery } from "@mui/material";
 
 const HomeComponent = () => {
+  const canEmbedTwitch = useMediaQuery("(min-width: 600px)");
   const [activeView, setActiveView] = useState("youtube");
   const [selectedVideoId, setCurrentVideoId] = useState(null);
   const [activeTab, setActiveTab] = useState("videos");
@@ -200,7 +201,7 @@ const HomeComponent = () => {
                 justifyContent: "center",
                 overflow: "hidden",
                 aspectRatio: "16 / 9",
-                minHeight: 0,
+                minHeight: activeView === "twitch" && canEmbedTwitch ? 324 : 0,
                 borderRadius: 2,
               }}
               className="pc-monitor"
@@ -209,6 +210,12 @@ const HomeComponent = () => {
                 <Box sx={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", p: 2, textAlign: "center" }} role="status">
                   <Typography sx={{ mb: 1 }}>{loading ? "Loading videos…" : error ? "The video feed is unavailable right now." : "No videos in this selection."}</Typography>
                   {!loading && <Button href="https://www.youtube.com/c/akogarecafe" target="_blank" rel="noopener noreferrer" color="inherit">Watch on YouTube</Button>}
+                </Box>
+              )}
+              {activeView === "twitch" && !canEmbedTwitch && (
+                <Box sx={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", p: 2, textAlign: "center" }}>
+                  <Typography sx={{ mb: 1 }}>Catch my streams on Twitch.</Typography>
+                  <Button href="https://www.twitch.tv/akogarecafe" target="_blank" rel="noopener noreferrer" variant="outlined" color="inherit">Watch on Twitch</Button>
                 </Box>
               )}
               {/* Video Embeds */}
@@ -228,7 +235,7 @@ const HomeComponent = () => {
                   title={`YouTube: ${playlist.find((video) => video.id === currentVideoId)?.title || "Featured video"}`}
                 />
               )}
-              {activeView === "twitch" && (
+              {activeView === "twitch" && canEmbedTwitch && (
                 <Box
                   component="iframe"
                   sx={{
@@ -239,6 +246,7 @@ const HomeComponent = () => {
                   src={`https://player.twitch.tv/?channel=${twitchUsername}&parent=${window.location.hostname}&muted=true`}
                   frameBorder="0"
                   allowFullScreen
+                  allow="autoplay; fullscreen"
                   scrolling="no"
                   title="Twitch Stream"
                 />

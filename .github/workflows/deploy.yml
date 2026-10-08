@@ -44,3 +44,5 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./build
+          # Keep previous versioned bundles available for visitors with cached pages.
+          keep_files: true
