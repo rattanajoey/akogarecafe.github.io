@@ -187,6 +187,12 @@ const PortfolioSection = () => {
                   "Built and maintained responsive Webflow sites with animations and custom interactions."
                 )}
                 {renderSkill(
+                  ViewQuiltIcon,
+                  "Builder.io",
+                  "Experienced",
+                  "Built marketing campaign pages with Builder.io for StartEngine."
+                )}
+                {renderSkill(
                   SmartToyIcon,
                   "AI-Assisted Development & Research",
                   "Experienced",
