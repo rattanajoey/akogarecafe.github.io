@@ -1,6 +1,6 @@
 # Studio analytics
 
-Open https://akogarecafe.com/dashboard (the GitHub Pages entry redirects to the existing hash router).
+Open https://akogarecafe.com/dashboard (the GitHub Pages entry redirects to the existing hash router). The exact `akogarecafe.com` domain is authorized for Firebase Google sign-in, alongside the existing movieclub domain; the original domains were preserved.
 
 The public site contains an empty dashboard shell. All shared reports require a Firebase ID token. The `projectAnalytics` callable checks the verified email against `allowedEmails` in the `AKOGARE_ANALYTICS_CONNECTIONS` Secret Manager secret, or a trusted `dashboardViewer` custom claim, before fetching or returning cached data. A Firestore user document cannot grant dashboard access. Only the owner's two existing Google accounts were initially allowlisted. Add invited readers deliberately through the secret or a server-admin custom claim; never broaden this to all authenticated accounts.
 
