@@ -2,6 +2,7 @@
 const functions=require('firebase-functions/v1');
 const admin=require('firebase-admin');
 const {range,reporter,accountCounts,allowed}=require('./providers');
+const {isWorkspaceMember}=require('./authorization');
 const app=admin.apps.find(a=>a.name==='[DEFAULT]')||admin.initializeApp();
 const cache=new Map();
 
@@ -9,8 +10,7 @@ exports.projectAnalytics=functions.runWith({secrets:['AKOGARE_ANALYTICS_CONNECTI
   if(!context.auth)throw new functions.https.HttpsError('unauthenticated','Sign in to your Akogare workspace first.');
   if(!allowed(data))throw new functions.https.HttpsError('invalid-argument','Choose a supported reporting period: 7, 28 or 90 days.');
   let config;try{config=JSON.parse(process.env.AKOGARE_ANALYTICS_CONNECTIONS||'');}catch{throw new functions.https.HttpsError('failed-precondition','The private analytics connection is not configured.');}
-  const email=String(context.auth.token.email||'').toLowerCase();
-  const authorized=context.auth.token.email_verified===true&&((config.allowedEmails||[]).includes(email)||context.auth.token.dashboardViewer===true);
+  const authorized=await isWorkspaceMember(context.auth,config,uid=>admin.auth(app).getUser(uid));
   if(!authorized)throw new functions.https.HttpsError('permission-denied','This account has not been invited to the analytics workspace. Sign out and use your Akogare admin account.');
   // Authorization precedes all cached data access. Only this approved workspace
   // audience shares these reports. Provider tokens never leave the server.

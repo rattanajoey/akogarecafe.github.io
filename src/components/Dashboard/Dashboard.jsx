@@ -28,6 +28,12 @@ function Icon({ name, size = 20, ...props }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>{paths[name] || paths.trend}</svg>;
 }
 const statusLabel = report => report?.stale ? 'Refresh failed' : ({ connected: 'Connected', partial: 'Limited access', unavailable: 'Needs connection', error: 'Needs attention' }[report?.status] || 'Not connected');
+const SIGN_IN_ORIGIN = 'https://ac-movie-club.firebaseapp.com';
+const signInError = err => ({
+  'auth/unauthorized-domain': 'This website is not authorized for sign-in. Open the secure workspace and try again.',
+  'auth/network-request-failed': 'Google sign-in could not reach the server. Check your connection and try again.',
+  'auth/account-exists-with-different-credential': 'This account uses another sign-in method. Use your existing email login.',
+}[err.code] || `Sign-in could not finish (${err.code || 'unknown error'}). Please try again.`);
 
 function ActivityChart({ sources, reports, metric }) {
   const rows = chartSeries(sources, reports, metric);
@@ -140,12 +146,25 @@ export default function Dashboard() {
   useEffect(() => {
     let unsubscribe, mounted = true;
     import('../../config/firebase').then(async ({ auth }) => {
-      const { onAuthStateChanged } = await import('firebase/auth');
+      const { onAuthStateChanged, getRedirectResult, signInWithRedirect, GoogleAuthProvider } = await import('firebase/auth');
       if (!mounted) return;
       unsubscribe = onAuthStateChanged(auth, next => {
         generation.current++; request.current?.abort(); sessions.current = {}; identity.current = next?.uid || null;
         setReports({}); setProducts(null); setLastUpdated(null); setSource(null); setSourceToken(null); setProperties([]); setStreams([]); setError(''); setUser(next);
       });
+      try {
+        await getRedirectResult(auth);
+        if (!mounted) return;
+        const startGoogle = new URLSearchParams(window.location.hash.split('?')[1] || '').get('signin') === 'google';
+        if (startGoogle && window.location.origin === SIGN_IN_ORIGIN) {
+          window.history.replaceState(null, '', `${window.location.pathname}#/dashboard`);
+          if (!auth.currentUser) {
+            setLoginOpen(true); setLoginBusy(true);
+            const provider = new GoogleAuthProvider(); provider.setCustomParameters({ prompt: 'select_account' });
+            await signInWithRedirect(auth, provider);
+          }
+        }
+      } catch (err) { if (mounted) { setError(signInError(err)); setLoginOpen(true); setLoginBusy(false); } }
     }).catch(() => mounted && setError('Sign-in is not configured in this environment. The dashboard is available on the live website.'));
     return () => { mounted = false; unsubscribe?.(); cancelRequests(); };
   }, [cancelRequests]);
@@ -176,10 +195,17 @@ export default function Dashboard() {
     event?.preventDefault(); setLoginBusy(true); setError('');
     try {
       const [{ auth }, sdk] = await Promise.all([import('../../config/firebase'), import('firebase/auth')]);
-      if (google) { const provider = new sdk.GoogleAuthProvider(); provider.setCustomParameters({ prompt: 'select_account' }); await sdk.signInWithPopup(auth, provider); }
+      if (google) {
+        if (window.location.origin !== SIGN_IN_ORIGIN) {
+          window.location.assign(`${SIGN_IN_ORIGIN}/#/dashboard?signin=google`);
+          return;
+        }
+        const provider = new sdk.GoogleAuthProvider(); provider.setCustomParameters({ prompt: 'select_account' });
+        await sdk.signInWithRedirect(auth, provider);
+      }
       else await sdk.signInWithEmailAndPassword(auth, email.trim(), password);
       setPassword(''); setLoginOpen(false);
-    } catch (err) { setError(err.code === 'auth/popup-closed-by-user' ? 'Sign-in was closed. Try again when ready.' : 'Sign-in failed. Check your account details or try Google sign-in.'); }
+    } catch (err) { setError(signInError(err)); }
     finally { setLoginBusy(false); }
   };
   const logout = async () => { generation.current++; identity.current = null; request.current?.abort(); sessions.current = {}; setReports({}); setProducts(null); setUser(null); setSource(null); setSourceToken(null); const { auth } = await import('../../config/firebase'); const { signOut } = await import('firebase/auth'); await signOut(auth); };
@@ -217,10 +243,10 @@ export default function Dashboard() {
       {sourceReport?.metrics && <div className="studio-source-metrics">{Object.entries(sourceReport.metrics).filter(([, value]) => finite(value)).map(([key, value]) => <div key={key}><span>{({ lifetimeViews: 'Lifetime views', followers: 'Subscribers / followers · current', publishedItems: 'Published items · current', views: 'Views · selected period', watchHours: 'Watch hours · selected period', activeUsers: 'Active users · selected period', sessions: 'Sessions · selected period', downloads: 'App downloads · selected period', impressions: 'Impressions · selected period' }[key] || key.replace(/([A-Z])/g, ' $1'))}</span><strong>{format(value)}</strong></div>)}</div>}
       <p className="studio-dialog-description">{sourceReport?.note || sourceReport?.error || 'Connect this account to bring its reporting into your dashboard.'}</p>
       {source && ['youtube', 'web', 'ios'].includes(source.kind) ? <>
-        <p className="studio-dialog-description">Google access is restudio-only. Choose the account that owns this {source.kind === 'youtube' ? 'YouTube channel' : 'Analytics property'}. Reporting access lasts for this browser session; reconnect when it expires.</p>
+        <p className="studio-dialog-description">Google access is read-only. Choose the account that owns this {source.kind === 'youtube' ? 'YouTube channel' : 'Analytics property'}. Reporting access lasts for this browser session; reconnect when it expires.</p>
         <button className="studio-primary" disabled={sourceBusy} onClick={consent}>{sourceBusy ? 'Connecting…' : source.kind === 'youtube' ? 'Connect YouTube Analytics' : 'Connect Google Analytics'}<Icon name="arrow" size={16}/></button>
         {sourceToken && <div className="studio-form studio-stream-form"><label>Analytics property<select value={mapping.propertyId} onChange={e => propertyChange(e.target.value)} disabled={sourceBusy}><option value="">Choose a property</option>{properties.map(p => <option key={p.id} value={p.id}>{p.name} · {p.id}</option>)}</select></label>{!properties.length && <p>No Analytics properties are available to this Google account.</p>}<label>{source.kind === 'ios' ? 'iOS' : 'Web'} data stream<select value={mapping.streamId} disabled={!streams.length || sourceBusy} onChange={e => setMapping(old => ({ ...old, streamId: e.target.value }))}><option value="">Choose a stream</option>{streams.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label><button className="studio-primary" disabled={!mapping.streamId || sourceBusy} onClick={saveGoogle}>Use this stream <Icon name="check" size={16}/></button></div>}
-      </> : <div className="studio-setup-note"><Icon name="lock" size={18}/><p>{source?.kind === 'pinterest' ? 'Pinterest needs its own restudio-only account authorization before automatic reporting can begin. Your signed-in Pinterest browser session does not grant API access.' : 'Basic account metrics use the saved server connection. Views, reach and saves require Instagram Insights permission. If those are missing, the account needs renewed consent.'}</p></div>}
+      </> : <div className="studio-setup-note"><Icon name="lock" size={18}/><p>{source?.kind === 'pinterest' ? 'Pinterest needs its own read-only account authorization before automatic reporting can begin. Your signed-in Pinterest browser session does not grant API access.' : 'Basic account metrics use the saved server connection. Views, reach and saves require Instagram Insights permission. If those are missing, the account needs renewed consent.'}</p></div>}
       {source?.kind === 'ios' && <p className="studio-dialog-description">App usage comes from Firebase/GA4. Download and sales reports need a separate App Store Connect reporting key.</p>}
       {sourceError && <p className="studio-form-error" role="alert">{sourceError}</p>}
     </DialogContent></Dialog>
