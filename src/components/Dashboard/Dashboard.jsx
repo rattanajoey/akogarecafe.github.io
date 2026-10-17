@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Dialog, DialogTitle, DialogContent } from '@mui/material';
 import { Link } from 'react-router-dom';
-import { PROJECTS, SOURCES, METRICS, coverage, dateRange, chartSeries, format, compact, csv, finite, change, sumKnown } from './data';
+import { PROJECTS, SOURCES, METRICS, coverage, dateRange, chartSeries, chartFraction, format, compact, csv, finite, change, sumKnown } from './data';
 import { loadWorkspace, googleConsent, completeGoogleConsent, listProperties, listStreams, fetchGoogle } from './api';
 import './dashboard.css';
 
@@ -35,16 +35,17 @@ const signInError = err => ({
   'auth/account-exists-with-different-credential': 'This account uses another sign-in method. Use your existing email login.',
 }[err.code] || `Sign-in could not finish (${err.code || 'unknown error'}). Please try again.`);
 
-function ActivityChart({ sources, reports, metric }) {
+function ActivityChart({ sources, reports, metric, range }) {
   const rows = chartSeries(sources, reports, metric);
   const projects = PROJECTS.filter(p => sources.some(s => s.project === p.id));
   const max = Math.max(1, ...rows.flatMap(row => projects.map(p => row[p.id] || 0)));
-  const points = (p) => rows.flatMap((r, i) => finite(r[p.id]) ? [{ x: 46 + i * 694 / Math.max(rows.length - 1, 1), y: 178 - r[p.id] / max * 150, date: r.date, value: r[p.id] }] : []);
+  const ticks = [range.start, new Date((Date.parse(range.start) + Date.parse(range.end)) / 2).toISOString().slice(0, 10), range.end].filter((value, i, all) => all.indexOf(value) === i);
+  const points = (p) => rows.flatMap(r => { const fraction = chartFraction(r.date, range); return finite(r[p.id]) && fraction !== null ? [{ x: 46 + fraction * 694, y: 178 - r[p.id] / max * 150, date: r.date, value: r[p.id] }] : []; });
   return <div className="studio-chart">
     <svg viewBox="0 0 780 218" role="img" aria-label={rows.length ? `${METRICS[metric].label} by project and date` : 'No activity report connected yet'}>
       {[0, 1, 2, 3].map(i => <g key={i}><line x1="46" x2="750" y1={28 + i * 50} y2={28 + i * 50} stroke="currentColor" strokeOpacity=".08" strokeDasharray="3 6"/>{rows.length > 0 && <text x="36" y={32 + i * 50} textAnchor="end">{compact(max * (3 - i) / 3)}</text>}</g>)}
       {projects.map(p => { const pts = points(p); return <g key={p.id}><polyline points={pts.map(v => `${v.x},${v.y}`).join(' ')} fill="none" stroke={p.color} strokeWidth="2.5" strokeLinejoin="round"/>{pts.map(v => <circle key={v.date} cx={v.x} cy={v.y} r="3" fill={p.color}><title>{p.name} · {v.date}: {format(v.value)}</title></circle>)}</g>; })}
-      {rows.length > 0 && [0, Math.floor((rows.length - 1) / 2), rows.length - 1].filter((v, i, a) => a.indexOf(v) === i).map(i => <text key={i} x={46 + i * 694 / Math.max(rows.length - 1, 1)} y="208" textAnchor="middle">{new Date(`${rows[i].date}T12:00:00Z`).toLocaleDateString('en', { month: 'short', day: 'numeric', timeZone: 'UTC' })}</text>)}
+      {rows.length > 0 && ticks.map(date => <text key={date} x={46 + chartFraction(date, range) * 694} y="208" textAnchor="middle">{new Date(`${date}T12:00:00Z`).toLocaleDateString('en', { month: 'short', day: 'numeric', timeZone: 'UTC' })}</text>)}
     </svg>
     {!rows.length && <div className="studio-chart-empty"><span className="studio-empty-icon"><Icon name="trend" size={25}/></span><strong>Your growth story starts here</strong><span>Connect a reporting source to see daily performance.</span></div>}
   </div>;
@@ -53,13 +54,14 @@ function ActivityChart({ sources, reports, metric }) {
 export function DashboardWorkspace({ user, reports, products, busy, error, days, setDays, onRefresh, onLogin, onLogout, onConnect, lastUpdated }) {
   const [page, setPage] = useState('overview');
   const [project, setProject] = useState('all');
-  const [metric, setMetric] = useState('views');
+  const [metric, setMetric] = useState(null);
   const [platform, setPlatform] = useState('all');
   const sources = SOURCES.filter(s => (project === 'all' || s.project === project) && (platform === 'all' || s.kind === platform));
   const projects = PROJECTS.filter(p => project === 'all' || p.id === project);
   const connected = sources.filter(s => ['connected', 'partial'].includes(reports[s.id]?.status)).length;
   const anyData = sources.some(s => Object.values(reports[s.id]?.metrics || {}).some(finite));
   const range = dateRange(days);
+  const activeMetric = metric || ['views', 'sessions', 'activeUsers'].find(key => sources.some(source => (reports[source.id]?.daily || []).some(point => finite(point[key])))) || 'views';
   const exportData = () => {
     const blob = new Blob([csv(reports, sources, range)], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `akogare-analytics-${range.start}-${range.end}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
@@ -92,7 +94,7 @@ export function DashboardWorkspace({ user, reports, products, busy, error, days,
             const delta = comparable.length === eligible.length && comparable.length ? change(c.value, comparable.reduce((sum, s) => sum + reports[s.id].previous[key], 0)) : null;
             return <article className="studio-stat" key={key}><div className="studio-stat-label">{m.label}<Icon name={['people', 'youtube', 'web', 'ios'][i]} size={17}/></div><div className="studio-stat-value">{format(c.value)}{delta !== null && <span className={delta >= 0 ? 'studio-positive' : 'studio-negative'}>{delta > 0 ? '+' : ''}{delta.toFixed(1)}%</span>}</div><div className="studio-stat-description">{m.detail}</div><div className="studio-coverage"><span style={{ width: `${c.total ? c.known / c.total * 100 : 0}%` }}/></div><div className="studio-stat-foot">{c.total ? `${c.known} of ${c.total} sources reporting${c.known && c.known < c.total ? ' · partial total' : ''}` : 'No sources in this filter'}</div></article>;
           })}</div>
-          <section className="studio-panel studio-activity"><div className="studio-panel-head"><div><h2>Across the studio</h2><p>{range.start} — {range.end} <span>· completed days</span></p></div><select aria-label="Chart metric" value={metric} onChange={e => setMetric(e.target.value)}><option value="views">Content views</option><option value="sessions">Website sessions</option><option value="activeUsers">App active users</option></select></div><ActivityChart sources={sources} reports={reports} metric={metric}/><div className="studio-chart-legend">{projects.map(p => <span key={p.id}><i style={{ background: p.color }}/>{p.name}</span>)}<small>{metric === 'activeUsers' ? 'Daily users · not additive across days' : 'Source reporting timezones may differ'}</small></div></section>
+          <section className="studio-panel studio-activity"><div className="studio-panel-head"><div><h2>Across the studio</h2><p>{range.start} — {range.end} <span>· completed days</span></p></div><select aria-label="Chart metric" value={activeMetric} onChange={e => setMetric(e.target.value)}><option value="views">Content views</option><option value="sessions">Website sessions</option><option value="activeUsers">App active users</option></select></div><ActivityChart sources={sources} reports={reports} metric={activeMetric} range={range}/><div className="studio-chart-legend">{projects.map(p => <span key={p.id}><i style={{ background: p.color }}/>{p.name}</span>)}<small>{activeMetric === 'activeUsers' ? 'Daily users · not additive across days' : 'Source reporting timezones may differ'}</small></div></section>
           <section className="studio-project-section"><div className="studio-section-head"><div><h2>Your projects <span>{projects.length.toString().padStart(2, '0')}</span></h2><p>Different ideas. One shared view.</p></div>{project !== 'all' && <button className="studio-text-button" onClick={() => pickProject('all')}>All projects <Icon name="arrow" size={16}/></button>}</div><div className="studio-project-grid">{projects.map(p => {
             const own = sources.filter(s => s.project === p.id);
             const c = own.filter(s => ['connected', 'partial'].includes(reports[s.id]?.status)).length;

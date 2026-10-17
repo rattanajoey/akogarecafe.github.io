@@ -1,4 +1,4 @@
-import { coverage, dateRange, change, chartSeries, csv, SOURCES } from './data';
+import { coverage, dateRange, change, chartSeries, chartFraction, csv, SOURCES } from './data';
 import { fetchGoogle } from './api';
 
 test('missing sources remain unknown and a real zero remains zero', () => {
@@ -49,4 +49,15 @@ test('Google authorization failures cannot become successful empty reports', asy
   global.fetch = jest.fn(async () => ({ ok: false, status: 403, json: async () => ({ error: { message: 'forbidden' } }) }));
   try { await expect(fetchGoogle(SOURCES[0], 'test-token', 7)).rejects.toThrow('Google denied this report'); }
   finally { global.fetch = original; }
+});
+
+test('chart positions preserve real calendar spacing and reject dates outside the chosen period', () => {
+  const range = { start: '2026-10-01', end: '2026-10-15' };
+  const firstDay = chartFraction('2026-10-01', range);
+  const nextDay = chartFraction('2026-10-02', range);
+  const lastDay = chartFraction('2026-10-15', range);
+  expect(firstDay).toBe(0);
+  expect(lastDay).toBe(1);
+  expect((lastDay - nextDay) / (nextDay - firstDay)).toBeCloseTo(13);
+  expect(chartFraction('2026-09-30', range)).toBeNull();
 });
