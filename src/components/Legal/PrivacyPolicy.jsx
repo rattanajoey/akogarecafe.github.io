@@ -40,7 +40,7 @@ const PrivacyPolicy = () => {
 
         <StyledPaper>
           <Typography variant="body2" color="gray" gutterBottom>
-            Last Updated: October 8, 2026
+            Last Updated: October 17, 2026
           </Typography>
 
           <Typography variant="h4" component="h2" gutterBottom color="white" sx={{ mt: 3 }}>
@@ -108,6 +108,30 @@ const PrivacyPolicy = () => {
             <br />• To display relevant advertisements through Google AdSense
             <br />• To analyze website usage and optimize performance
             <br />• To comply with legal obligations
+          </Typography>
+
+          <Divider sx={{ my: 3, backgroundColor: "rgba(255,255,255,0.1)" }} />
+
+          <Typography variant="h4" component="h2" gutterBottom color="white">
+            Private Studio Analytics
+          </Typography>
+          <Typography variant="body1" paragraph color="white">
+            Our Studio Analytics dashboard is available to the studio owner and
+            explicitly invited members. When an account owner authorizes a
+            reporting connection, the dashboard reads account totals and
+            aggregate performance reports from services such as Google Analytics,
+            YouTube, Instagram and Pinterest. Reporting access is used to display
+            our projects' performance; it does not publish or edit content.
+          </Typography>
+          <Typography variant="body1" paragraph color="white">
+            Saved reporting credentials are encrypted in our server-side secret
+            storage. They are not included in public website files or reports
+            returned to the browser. Reports may be cached briefly on the server,
+            and approved members can export available metrics as CSV files.
+            Product account reports contain aggregate counts, not individual
+            user records. Provider reporting authorization can be revoked in the
+            provider's account settings. Contact us to request removal of a saved
+            reporting connection.
           </Typography>
 
           <Divider sx={{ my: 3, backgroundColor: "rgba(255,255,255,0.1)" }} />
