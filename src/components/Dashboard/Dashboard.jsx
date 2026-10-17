@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Dialog, DialogTitle, DialogContent } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { PROJECTS, SOURCES, METRICS, coverage, dateRange, chartSeries, format, compact, csv, finite, change, sumKnown } from './data';
-import { loadWorkspace, googleConsent, listProperties, listStreams, fetchGoogle } from './api';
+import { loadWorkspace, googleConsent, completeGoogleConsent, listProperties, listStreams, fetchGoogle } from './api';
 import './dashboard.css';
 
 function Icon({ name, size = 20, ...props }) {
@@ -139,6 +139,7 @@ export default function Dashboard() {
   const [streams, setStreams] = useState([]);
   const [mapping, setMapping] = useState({ propertyId: '', streamId: '' });
   const sessions = useRef({});
+  const analyticsToken = useRef(null);
   const generation = useRef(0);
   const identity = useRef(null);
   const request = useRef(null);
@@ -149,12 +150,30 @@ export default function Dashboard() {
       const { onAuthStateChanged, getRedirectResult, signInWithRedirect, GoogleAuthProvider } = await import('firebase/auth');
       if (!mounted) return;
       unsubscribe = onAuthStateChanged(auth, next => {
-        generation.current++; request.current?.abort(); sessions.current = {}; identity.current = next?.uid || null;
+        generation.current++; request.current?.abort(); sessions.current = {}; analyticsToken.current = null; identity.current = next?.uid || null;
         setReports({}); setProducts(null); setLastUpdated(null); setSource(null); setSourceToken(null); setProperties([]); setStreams([]); setError(''); setUser(next);
       });
       try {
         await getRedirectResult(auth);
         if (!mounted) return;
+        await auth.authStateReady();
+        try {
+          const reporting = await completeGoogleConsent();
+          if (reporting && mounted && reporting.uid === auth.currentUser?.uid) {
+            const selected = SOURCES.find(s => s.id === reporting.sourceId);
+            if (!selected) throw new Error('Choose a valid reporting source.');
+            setDays(reporting.days); setSource(selected); setSourceBusy(true);
+            if (selected.kind === 'youtube') {
+              const report = await fetchGoogle(selected, reporting.token, reporting.days);
+              if (mounted) { sessions.current[selected.id] = { token: reporting.token }; setReports(old => ({ ...old, [selected.id]: report })); setSource(null); }
+            } else {
+              analyticsToken.current = reporting.token;
+              const available = await listProperties(reporting.token);
+              if (mounted) { setSourceToken(reporting.token); setProperties(available); }
+            }
+          }
+        } catch (err) { if (mounted) { setSourceError(err.message); setError(`Reporting connection: ${err.message}`); } }
+        finally { if (mounted) setSourceBusy(false); }
         const startGoogle = new URLSearchParams(window.location.hash.split('?')[1] || '').get('signin') === 'google';
         if (startGoogle && window.location.origin === SIGN_IN_ORIGIN) {
           window.history.replaceState(null, '', `${window.location.pathname}#/dashboard`);
@@ -178,7 +197,7 @@ export default function Dashboard() {
       if (version !== generation.current) return;
       const next = { ...data.sources };
       await Promise.all(Object.entries(sessions.current).map(async ([id, session]) => {
-        try { next[id] = { ...next[id], ...await fetchGoogle(SOURCES.find(s => s.id === id), session.token, days, session.mapping) }; }
+        try { next[id] = await fetchGoogle(SOURCES.find(s => s.id === id), session.token, days, session.mapping); }
         catch (err) { next[id] = { ...next[id], error: err.message, status: Object.values(next[id]?.metrics || {}).some(finite) ? 'partial' : 'error' }; }
       }));
       if (version !== generation.current) return;
@@ -208,19 +227,23 @@ export default function Dashboard() {
     } catch (err) { setError(signInError(err)); }
     finally { setLoginBusy(false); }
   };
-  const logout = async () => { generation.current++; identity.current = null; request.current?.abort(); sessions.current = {}; setReports({}); setProducts(null); setUser(null); setSource(null); setSourceToken(null); const { auth } = await import('../../config/firebase'); const { signOut } = await import('firebase/auth'); await signOut(auth); };
-  const connect = selected => { if (!user) { setLoginOpen(true); return; } setSource(selected); setSourceError(''); setSourceToken(null); setProperties([]); setStreams([]); setMapping({ propertyId: '', streamId: '' }); };
+  const logout = async () => { generation.current++; identity.current = null; request.current?.abort(); sessions.current = {}; analyticsToken.current = null; setReports({}); setProducts(null); setUser(null); setSource(null); setSourceToken(null); const { auth } = await import('../../config/firebase'); const { signOut } = await import('firebase/auth'); await signOut(auth); };
+  const connect = async selected => {
+    if (!user) { setLoginOpen(true); return; }
+    const uid = user.uid;
+    setSource(selected); setSourceError(''); setSourceToken(null); setProperties([]); setStreams([]); setMapping({ propertyId: '', streamId: '' });
+    if (['web', 'ios'].includes(selected.kind) && analyticsToken.current) {
+      setSourceBusy(true);
+      try { const available = await listProperties(analyticsToken.current); if (identity.current === uid) { setSourceToken(analyticsToken.current); setProperties(available); } }
+      catch (err) { if (identity.current === uid) setSourceError(err.message); }
+      finally { setSourceBusy(false); }
+    }
+  };
   const consent = async () => {
     if (!source || !user) return;
     const uid = user.uid; const selected = source; setSourceBusy(true); setSourceError('');
     try {
-      const token = await googleConsent(selected.kind);
-      if (identity.current !== uid) return;
-      if (selected.kind === 'youtube') {
-        const report = await fetchGoogle(selected, token, days);
-        if (identity.current !== uid) return;
-        sessions.current[selected.id] = { token }; setReports(old => ({ ...old, [selected.id]: report })); setSource(null);
-      } else { const available = await listProperties(token); if (identity.current !== uid) return; setSourceToken(token); setProperties(available); }
+      await googleConsent(selected.kind, { sourceId: selected.id, uid, days });
     } catch (err) { if (identity.current === uid) setSourceError(err.message); }
     finally { setSourceBusy(false); }
   };

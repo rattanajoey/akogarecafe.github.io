@@ -21,25 +21,48 @@ async function googleRequest(url, token, options = {}) {
   }
   return body;
 }
-export async function googleConsent(kind) {
-  // Use a separate, memory-only Firebase session for reporting accounts. Connecting
-  // a Brand Account must not replace the dashboard owner's login.
-  const [{ initializeApp, getApp, getApps }, { getAuth, GoogleAuthProvider, signInWithPopup, setPersistence, inMemoryPersistence }] = await Promise.all([import('firebase/app'), import('firebase/auth')]);
+const REPORTING_REDIRECT = 'studio-reporting-redirect';
+async function reportingAuth() {
+  const [{ initializeApp, getApp, getApps }, sdk] = await Promise.all([import('firebase/app'), import('firebase/auth')]);
   await import('../../config/firebase');
   const name = 'dashboard-reporting';
-  const app = getApps().find(a => a.name === name) || initializeApp(getApp().options, name);
-  const auth = getAuth(app);
-  await setPersistence(auth, inMemoryPersistence);
-  const provider = new GoogleAuthProvider();
+  let app = getApps().find(a => a.name === name);
+  if (!app) {
+    app = initializeApp(getApp().options, name);
+    sdk.initializeAuth(app, { persistence: sdk.browserSessionPersistence, popupRedirectResolver: sdk.browserPopupRedirectResolver });
+  }
+  return { auth: sdk.getAuth(app), sdk };
+}
+export async function googleConsent(kind, pending) {
+  // Only non-secret source IDs and the workspace identity survive the navigation.
+  // The separate Firebase session is cleared immediately after the redirect.
+  const { auth, sdk } = await reportingAuth();
+  await sdk.setPersistence(auth, sdk.browserSessionPersistence);
+  const provider = new sdk.GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
   if (kind === 'youtube') {
     provider.addScope('https://www.googleapis.com/auth/youtube.readonly');
     provider.addScope('https://www.googleapis.com/auth/yt-analytics.readonly');
   } else provider.addScope('https://www.googleapis.com/auth/analytics.readonly');
-  const result = await signInWithPopup(auth, provider);
-  const token = GoogleAuthProvider.credentialFromResult(result)?.accessToken;
-  if (!token) throw new Error('Google did not grant reporting access.');
-  return token;
+  sessionStorage.setItem(REPORTING_REDIRECT, JSON.stringify(pending));
+  try { await sdk.signInWithRedirect(auth, provider); }
+  catch (err) { sessionStorage.removeItem(REPORTING_REDIRECT); throw err; }
+}
+export async function completeGoogleConsent() {
+  const saved = sessionStorage.getItem(REPORTING_REDIRECT);
+  if (!saved) return null;
+  const { auth, sdk } = await reportingAuth();
+  try {
+    const pending = JSON.parse(saved);
+    const result = await sdk.getRedirectResult(auth);
+    const token = result && sdk.GoogleAuthProvider.credentialFromResult(result)?.accessToken;
+    if (!token) throw new Error('Google did not return reporting access. Connect this source again.');
+    return { ...pending, token };
+  } finally {
+    sessionStorage.removeItem(REPORTING_REDIRECT);
+    await sdk.signOut(auth);
+    await sdk.setPersistence(auth, sdk.inMemoryPersistence);
+  }
 }
 export async function listProperties(token) {
   const properties = [];
