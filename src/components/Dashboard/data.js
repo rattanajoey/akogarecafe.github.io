@@ -1,8 +1,8 @@
 export const PROJECTS = [
-  { id: 'cafe', name: 'Akogare Cafe', short: 'AC', category: 'Gaming · Culture', color: '#d4e8bc', url: 'https://akogarecafe.com' },
-  { id: 'watch', name: 'Akogare Watch Club', short: 'AW', category: 'Anime · Commentary', color: '#d5ccf0', url: 'https://www.youtube.com/channel/UC6MT4WM8saZSk4B4pt4aFwA' },
-  { id: 'pindo', name: 'PinDo.', short: 'Pi', category: 'Create · Make · Share', color: '#f3d0ac', url: 'https://pindo.akogarecafe.com' },
-  { id: 'cine', name: 'CineClub Cafe', short: 'CC', category: 'Films · Community', color: '#bfdae8', url: 'https://movieclub.akogarecafe.com' },
+  { id: 'cafe', name: 'Akogare Cafe', short: 'AC', category: 'Gaming · Culture', color: '#d4e8bc', chartColor: '#52773b', url: 'https://akogarecafe.com' },
+  { id: 'watch', name: 'Akogare Watch Club', short: 'AW', category: 'Anime · Commentary', color: '#d5ccf0', chartColor: '#795aa0', url: 'https://www.youtube.com/channel/UC6MT4WM8saZSk4B4pt4aFwA' },
+  { id: 'pindo', name: 'PinDo.', short: 'Pi', category: 'Create · Make · Share', color: '#f3d0ac', chartColor: '#aa622b', url: 'https://pindo.akogarecafe.com' },
+  { id: 'cine', name: 'CineClub Cafe', short: 'CC', category: 'Films · Community', color: '#bfdae8', chartColor: '#377b8a', url: 'https://movieclub.akogarecafe.com' },
 ];
 export const SOURCES = [
   { id: 'cafe-youtube', project: 'cafe', kind: 'youtube', label: 'YouTube', account: '@akogarecafe', channelId: 'UCP77ij2ue_xEz2f5TmH0Rbw', url: 'https://www.youtube.com/@akogarecafe' },

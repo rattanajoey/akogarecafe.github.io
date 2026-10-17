@@ -93,7 +93,7 @@ test('a new Analytics property does not invent zero traffic before collection st
     const startDate=new Date().toISOString().slice(0,10);
     const reports=await reporter({ga4OAuth:{refresh_token:'test'},ga4:{'pindo-web':{propertyId:'123',streamId:'456',platform:'web',hostname:'pindo.akogarecafe.com',startDate}}}).sources(7);
     assert.equal(reports['pindo-web'].status,'connected');assert.equal(reports['pindo-web'].connectionMode,'automatic');
-    assert.deepEqual(reports['pindo-web'].metrics,{});assert.deepEqual(reports['pindo-web'].daily,[]);
+    assert.deepEqual(reports['pindo-web'].metrics,{});assert.deepEqual(reports['pindo-web'].daily,[]);assert.equal(reports['pindo-web'].connectionState,'collecting');
     assert.match(reports['pindo-web'].note,/earlier traffic is unavailable/);assert.equal(calls.length,0);
   }finally{global.fetch=originalFetch;}
 });
@@ -107,4 +107,15 @@ test('new Analytics collection keeps available traffic but suppresses unavailabl
     assert.equal(reports['pindo-web'].metrics.sessions,3);assert.equal(reports['pindo-web'].previous,undefined);
     assert.equal(requests.length,2);assert.equal(requests.every(r=>r.dateRanges[0].startDate===startDate),true);
   }finally{GoogleAuth.prototype.getClient=originalGetClient;global.fetch=originalFetch;}
+});
+
+test('Pinterest review status appears only while reporting authorization is missing',async()=>{
+  const originalFetch=global.fetch;let calls=0;
+  global.fetch=async(url)=>{calls++;return{ok:true,json:async()=>url.includes('/analytics?')?{all:{summary_metrics:{IMPRESSION:0,OUTBOUND_CLICK:0,SAVE:0}}}:{username:'akogarecafestudio',follower_count:1}};};
+  try{
+    const pending=await reporter({pinterest:{approvalStatus:'pending'}}).sources(7);
+    assert.equal(pending['pindo-pinterest'].connectionState,'pending-review');assert.equal(pending['pindo-pinterest'].status,'unavailable');assert.equal(calls,0);
+    const connected=await reporter({pinterest:{approvalStatus:'pending',access_token:'test-readonly'}}).sources(7);
+    assert.equal(connected['pindo-pinterest'].connectionState,undefined);assert.equal(connected['pindo-pinterest'].status,'connected');assert.equal(connected['pindo-pinterest'].metrics.impressions,0);
+  }finally{global.fetch=originalFetch;}
 });

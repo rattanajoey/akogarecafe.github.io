@@ -84,7 +84,9 @@ function reporter(config) {
     return report;
   }
   async function pinterest(dates) {
-    if (!config.pinterest?.access_token) return unavailable('Pinterest @akogarecafestudio is identified. Automatic reporting needs Pinterest read-only API authorization.');
+    if (!config.pinterest?.access_token) return config.pinterest?.approvalStatus === 'pending'
+      ? {...unavailable('Your reporting application has been submitted. Pinterest is reviewing access; reports can be connected after approval and read-only authorization.'),connectionState:'pending-review'}
+      : unavailable('Pinterest @akogarecafestudio is identified. Automatic reporting needs Pinterest read-only API authorization.');
     const token=config.pinterest.access_token;
     const params=new URLSearchParams({start_date:dates.start,end_date:dates.end,metric_types:'IMPRESSION,OUTBOUND_CLICK,SAVE'});
     const [profile,analytics]=await Promise.all([jsonRequest('https://api.pinterest.com/v5/user_account',token),jsonRequest(`https://api.pinterest.com/v5/user_account/analytics?${params}`,token)]);
@@ -99,7 +101,7 @@ function reporter(config) {
     const startDate=mapping.startDate||null;
     if(startDate&&(!/^\d{4}-\d{2}-\d{2}$/.test(startDate)||!Number.isFinite(Date.parse(startDate+'T00:00:00Z'))))throw new Error('The Analytics collection start date is invalid.');
     const historyNote=startDate?`This Analytics property started on ${startDate}; earlier traffic is unavailable. `:'';
-    if(startDate&&dates.end<startDate)return{status:'connected',metrics:{},daily:[],note:historyNote+'The first period report will appear after a completed reporting day and provider processing.'};
+    if(startDate&&dates.end<startDate)return{status:'connected',connectionState:'collecting',metrics:{},daily:[],note:historyNote+'The first period report will appear after a completed reporting day and provider processing.'};
     if(!googleAccess)googleAccess=config.ga4OAuth?.refresh_token
       ?refreshGoogle(config.ga4OAuth,'ga4',config.googleReportingClient)
       :(async()=>{const{GoogleAuth}=require('google-auth-library');const client=await new GoogleAuth({scopes:['https://www.googleapis.com/auth/analytics.readonly']}).getClient();return(await client.getAccessToken()).token;})();
