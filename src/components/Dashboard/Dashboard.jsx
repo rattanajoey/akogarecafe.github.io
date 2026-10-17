@@ -39,17 +39,18 @@ const signInError = err => ({
 
 function ActivityChart({ sources, reports, metric, range }) {
   const rows = chartSeries(sources, reports, metric);
+  const collecting = sources.some(s => METRICS[metric].kinds.includes(s.kind) && sourceState(reports[s.id]) === 'collecting');
   const projects = PROJECTS.filter(p => sources.some(s => s.project === p.id));
   const max = Math.max(1, ...rows.flatMap(row => projects.map(p => row[p.id] || 0)));
   const ticks = [range.start, new Date((Date.parse(range.start) + Date.parse(range.end)) / 2).toISOString().slice(0, 10), range.end].filter((value, i, all) => all.indexOf(value) === i);
   const points = (p) => rows.flatMap(r => { const fraction = chartFraction(r.date, range); return finite(r[p.id]) && fraction !== null ? [{ x: 46 + fraction * 694, y: 178 - r[p.id] / max * 150, date: r.date, value: r[p.id] }] : []; });
   return <div className="studio-chart">
-    <svg viewBox="0 0 780 218" role="img" aria-label={rows.length ? `${METRICS[metric].label} by project and date` : 'No activity report connected yet'}>
+    <svg viewBox="0 0 780 218" role="img" aria-label={rows.length ? `${METRICS[metric].label} by project and date` : collecting ? 'Collecting new data for daily reports' : 'No activity report connected yet'}>
       {[0, 1, 2, 3].map(i => <g key={i}><line x1="46" x2="750" y1={28 + i * 50} y2={28 + i * 50} stroke="currentColor" strokeOpacity=".16" strokeDasharray="3 6"/>{rows.length > 0 && <text x="36" y={32 + i * 50} textAnchor="end">{compact(max * (3 - i) / 3)}</text>}</g>)}
       {projects.map(p => { const pts = points(p); return <g key={p.id}><polyline points={pts.map(v => `${v.x},${v.y}`).join(' ')} fill="none" stroke={p.chartColor} strokeWidth="3" strokeLinejoin="round"/>{pts.map(v => <circle key={v.date} cx={v.x} cy={v.y} r="3" fill={p.chartColor}><title>{p.name} · {v.date}: {format(v.value)}</title></circle>)}</g>; })}
       {rows.length > 0 && ticks.map(date => <text key={date} x={46 + chartFraction(date, range) * 694} y="208" textAnchor="middle">{new Date(`${date}T12:00:00Z`).toLocaleDateString('en', { month: 'short', day: 'numeric', timeZone: 'UTC' })}</text>)}
     </svg>
-    {!rows.length && <div className="studio-chart-empty"><span className="studio-empty-icon"><Icon name="trend" size={25}/></span><strong>Your growth story starts here</strong><span>Connect a reporting source to see daily performance.</span></div>}
+    {!rows.length && <div className="studio-chart-empty"><span className="studio-empty-icon"><Icon name="trend" size={25}/></span><strong>{collecting ? 'Collecting new data' : 'Your growth story starts here'}</strong><span>{collecting ? 'Daily reports appear after a completed day and processing.' : 'Connect a reporting source to see daily performance.'}</span></div>}
   </div>;
 }
 
@@ -64,7 +65,7 @@ export function DashboardWorkspace({ user, reports, products, busy, error, days,
   const sourceUpdates = sources.filter(s => ['collecting', 'pending-review'].includes(sourceState(reports[s.id])));
   const anyData = sources.some(s => Object.values(reports[s.id]?.metrics || {}).some(finite));
   const range = dateRange(days);
-  const activeMetric = metric || ['views', 'sessions', 'activeUsers'].find(key => sources.some(source => (reports[source.id]?.daily || []).some(point => finite(point[key])))) || 'views';
+  const activeMetric = metric || ['views', 'sessions', 'activeUsers'].find(key => sources.some(source => (reports[source.id]?.daily || []).some(point => finite(point[key])))) || ['views', 'sessions', 'activeUsers'].find(key => sources.some(s => METRICS[key].kinds.includes(s.kind))) || 'views';
   const exportData = () => {
     const blob = new Blob([csv(reports, sources, range)], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `akogare-analytics-${range.start}-${range.end}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
