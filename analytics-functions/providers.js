@@ -24,19 +24,23 @@ async function jsonRequest(url, token, options = {}) {
 function reporter(config) {
   const tokenPromises = new Map();
   let googleAccess;
-  async function youtubeToken(id) {
-    const connection = config.youtube?.[id];
-    if (!connection?.refresh_token || connection.channelId !== CHANNELS[id]) throw new Error('The saved YouTube connection does not match this channel.');
-    if (!tokenPromises.has(id)) tokenPromises.set(id, (async () => {
-      const body = await jsonRequest('https://oauth2.googleapis.com/token', null, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ client_id: config.youtubeClient.client_id, client_secret: config.youtubeClient.client_secret, refresh_token: connection.refresh_token, grant_type: 'refresh_token' }) });
+  const youtubeConnection = id => config.youtubeReporting?.[id] || config.youtube?.[id];
+  async function refreshGoogle(connection, key, client) {
+    if (!tokenPromises.has(key)) tokenPromises.set(key, (async () => {
+      const body = await jsonRequest('https://oauth2.googleapis.com/token', null, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ client_id: client.client_id, client_secret: client.client_secret, refresh_token: connection.refresh_token, grant_type: 'refresh_token' }) });
       if (!body.access_token) throw new Error('Google did not issue reporting access.');
       return body.access_token;
     })());
-    return tokenPromises.get(id);
+    return tokenPromises.get(key);
+  }
+  async function youtubeToken(id) {
+    const connection = youtubeConnection(id);
+    if (!connection?.refresh_token || connection.channelId !== CHANNELS[id]) throw new Error('The saved YouTube connection does not match this channel.');
+    return refreshGoogle(connection, id, config.youtubeReporting?.[id] ? config.googleReportingClient : config.youtubeClient);
   }
   async function youtube(id, dates) {
-    const connection = config.youtube?.[id];
-    const fallbackId = config.youtube?.['cafe-youtube'] ? 'cafe-youtube' : 'watch-youtube';
+    const connection = youtubeConnection(id);
+    const fallbackId = youtubeConnection('cafe-youtube') ? 'cafe-youtube' : 'watch-youtube';
     const token = await youtubeToken(connection ? id : fallbackId);
     const body = await jsonRequest(`https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${CHANNELS[id]}`, token);
     const stats = body.items?.find(item => item.id === CHANNELS[id])?.statistics;
@@ -44,7 +48,9 @@ function reporter(config) {
     const report = { status: 'partial', metrics: { followers: stats.hiddenSubscriberCount ? null : safeNumber(stats.subscriberCount), lifetimeViews: safeNumber(stats.viewCount), publishedItems: safeNumber(stats.videoCount) }, daily: [], note: 'Current channel totals are live. Connect YouTube Analytics for views, watch time and growth during the selected period. YouTube subscriber totals may be rounded.' };
     if (String(connection?.scope || '').split(' ').includes(SCOPES.youtube)) {
       const params = new URLSearchParams({ ids: `channel==${CHANNELS[id]}`, startDate: dates.start, endDate: dates.end, dimensions: 'day', metrics: 'views,estimatedMinutesWatched,subscribersGained,subscribersLost,likes,comments', sort: 'day' });
-      const data = await jsonRequest(`https://youtubeanalytics.googleapis.com/v2/reports?${params}`, token);
+      let data;
+      try { data = await jsonRequest(`https://youtubeanalytics.googleapis.com/v2/reports?${params}`, token); }
+      catch { report.note = 'Current channel totals are live, but the period report could not be loaded. Check the channel reporting authorization; recent reports may still be processing.'; return report; }
       if (!Array.isArray(data.columnHeaders)) throw new Error('YouTube returned an invalid analytics report.');
       const names = data.columnHeaders.map(h => h.name);
       const rows = (data.rows || []).map(row => Object.fromEntries(names.map((name,i) => [name,row[i]])));
@@ -90,7 +96,9 @@ function reporter(config) {
   async function ga4(id,dates,days){
     const mapping=config.ga4[id];
     if(!/^\d+$/.test(mapping.propertyId)||!/^\d+$/.test(mapping.streamId))throw new Error('The Analytics stream mapping is invalid.');
-    if(!googleAccess)googleAccess=(async()=>{const{GoogleAuth}=require('google-auth-library');const client=await new GoogleAuth({scopes:['https://www.googleapis.com/auth/analytics.readonly']}).getClient();return(await client.getAccessToken()).token;})();
+    if(!googleAccess)googleAccess=config.ga4OAuth?.refresh_token
+      ?refreshGoogle(config.ga4OAuth,'ga4',config.googleReportingClient)
+      :(async()=>{const{GoogleAuth}=require('google-auth-library');const client=await new GoogleAuth({scopes:['https://www.googleapis.com/auth/analytics.readonly']}).getClient();return(await client.getAccessToken()).token;})();
     const token=await googleAccess;
     const names=['activeUsers','sessions','screenPageViews','newUsers'];
     const expressions=[{filter:{fieldName:'streamId',stringFilter:{matchType:'EXACT',value:mapping.streamId}}},{filter:{fieldName:'platform',stringFilter:{matchType:'EXACT',value:mapping.platform,caseSensitive:false}}}];
@@ -109,7 +117,8 @@ function reporter(config) {
       try {
         result=CHANNELS[id]?await youtube(id,dates):INSTAGRAM_IDS[id]?await instagram(id,dates):id==='pindo-pinterest'?await pinterest(dates):config.ga4?.[id]?await ga4(id,dates,days):unavailable(id.endsWith('-ios')?'Connect the matching iOS stream in Google Analytics for app activity. App Store download reports require App Store Connect reporting access.':'Connect the matching web stream in Google Analytics for traffic and visitors.');
       } catch(e) { result={status:'error',metrics:{},daily:[],error:e.message,note:'The source could not be refreshed. Other sources remain available.'}; }
-      return [id,{...result,fetchedAt:new Date().toISOString()}];
+      const automatic = ['connected','partial'].includes(result.status) && (CHANNELS[id] ? Boolean(config.youtubeReporting?.[id]) : Boolean(config.ga4?.[id] && config.ga4OAuth?.refresh_token));
+      return [id,{...result,...(automatic ? {connectionMode:'automatic'} : {}),fetchedAt:new Date().toISOString()}];
     })));
   }
   return {sources};

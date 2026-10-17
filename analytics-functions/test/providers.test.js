@@ -40,3 +40,48 @@ test('shared GA4 streams are separated by website hostname and period users are 
     assert.equal(requests[0].dimensionFilter.andGroup.expressions.find(e=>e.filter.fieldName==='hostName').filter.stringFilter.value,'^(www\\.)?movieclub\\.akogarecafe\\.com$');
   }finally{GoogleAuth.prototype.getClient=originalGetClient;global.fetch=originalFetch;}
 });
+test('automatic reports use their own read-only client and share each refresh without changing publishing connections',async()=>{
+  const originalFetch=global.fetch;
+  const config={
+    youtubeClient:{client_id:'publishing-client',client_secret:'publishing-secret'},
+    googleReportingClient:{client_id:'reporting-client',client_secret:'reporting-secret'},
+    youtube:{'cafe-youtube':{channelId:'UCP77ij2ue_xEz2f5TmH0Rbw',refresh_token:'publishing-cafe'},'watch-youtube':{channelId:'UC6MT4WM8saZSk4B4pt4aFwA',refresh_token:'publishing-watch'}},
+    youtubeReporting:{'cafe-youtube':{channelId:'UCP77ij2ue_xEz2f5TmH0Rbw',refresh_token:'reporting-cafe',scope:'https://www.googleapis.com/auth/yt-analytics.readonly'}},
+    ga4OAuth:{refresh_token:'reporting-ga4'},
+    ga4:{'cafe-web':{propertyId:'123',streamId:'456',platform:'web',hostname:'akogarecafe.com'},'cine-web':{propertyId:'123',streamId:'456',platform:'web',hostname:'movieclub.akogarecafe.com'}},
+  };
+  const before=JSON.stringify(config),refreshes=[];
+  global.fetch=async(url,options)=>{
+    let data;
+    if(url==='https://oauth2.googleapis.com/token'){
+      const body=options.body;refreshes.push({client:body.get('client_id'),refresh:body.get('refresh_token')});
+      data={access_token:'access-'+body.get('refresh_token')};
+    }else if(url.startsWith('https://www.googleapis.com/youtube/v3/channels')){
+      data={items:[{id:new URL(url).searchParams.get('id'),statistics:{subscriberCount:'10',viewCount:'50',videoCount:'3'}}]};
+    }else if(url.startsWith('https://youtubeanalytics.googleapis.com')){
+      assert.equal(options.headers.Authorization,'Bearer access-reporting-cafe');
+      data={columnHeaders:[{name:'day'},{name:'views'},{name:'estimatedMinutesWatched'}],rows:[['2026-10-16',24,120]]};
+    }else if(url.startsWith('https://analyticsdata.googleapis.com')){
+      assert.equal(options.headers.Authorization,'Bearer access-reporting-ga4');data={rows:[]};
+    }else throw new Error('Unexpected provider request');
+    return{ok:true,json:async()=>data};
+  };
+  try{
+    const reports=await reporter(config).sources(7);
+    assert.equal(reports['cafe-youtube'].status,'connected');assert.equal(reports['cafe-youtube'].metrics.watchHours,2);
+    assert.equal(reports['cafe-web'].status,'connected');assert.equal(reports['cine-web'].status,'connected');
+    assert.equal(reports['cafe-web'].connectionMode,'automatic');assert.equal(reports['cafe-youtube'].connectionMode,'automatic');assert.equal(reports['watch-youtube'].connectionMode,undefined);
+    assert.deepEqual(refreshes.sort((a,b)=>a.refresh.localeCompare(b.refresh)),[{client:'publishing-client',refresh:'publishing-watch'},{client:'reporting-client',refresh:'reporting-cafe'},{client:'reporting-client',refresh:'reporting-ga4'}]);
+    assert.equal(JSON.stringify(config),before);
+    assert.equal(JSON.stringify(reports).includes('reporting-secret'),false);
+  }finally{global.fetch=originalFetch;}
+});
+test('a YouTube period permission failure preserves fresh public totals and hides provider details',async()=>{
+  const originalFetch=global.fetch;
+  global.fetch=async(url)=>url.includes('/token')?{ok:true,json:async()=>({access_token:'test-access'})}:url.includes('/channels?')?{ok:true,json:async()=>({items:[{id:new URL(url).searchParams.get('id'),statistics:{subscriberCount:'0',viewCount:'0',videoCount:'0'}}]})}:{ok:false,status:403,json:async()=>({error:{message:'private-provider-details'}})};
+  try{
+    const reports=await reporter({googleReportingClient:{client_id:'test',client_secret:'test'},youtubeReporting:{'cafe-youtube':{channelId:'UCP77ij2ue_xEz2f5TmH0Rbw',refresh_token:'test-refresh',scope:'https://www.googleapis.com/auth/yt-analytics.readonly'}}}).sources(7);
+    assert.equal(reports['cafe-youtube'].status,'partial');assert.equal(reports['cafe-youtube'].metrics.lifetimeViews,0);
+    assert.equal(reports['cafe-youtube'].metrics.views,undefined);assert.equal(JSON.stringify(reports).includes('private-provider-details'),false);
+  }finally{global.fetch=originalFetch;}
+});
