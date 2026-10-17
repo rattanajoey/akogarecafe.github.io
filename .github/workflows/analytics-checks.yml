@@ -1,0 +1,26 @@
+name: Check private analytics service
+on:
+  push:
+    paths:
+      - 'analytics-functions/**'
+      - 'firebase.analytics.json'
+      - '.github/workflows/analytics-checks.yml'
+  pull_request:
+    paths:
+      - 'analytics-functions/**'
+      - 'firebase.analytics.json'
+      - '.github/workflows/analytics-checks.yml'
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: analytics-functions/package-lock.json
+      - run: npm ci --prefix analytics-functions
+      - run: npm test --prefix analytics-functions

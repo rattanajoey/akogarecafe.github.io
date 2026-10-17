@@ -1,0 +1,96 @@
+import { dateRange } from './data';
+
+export const ENDPOINT = 'https://us-central1-ac-movie-club.cloudfunctions.net/projectAnalytics';
+export async function loadWorkspace(user, days, signal) {
+  const token = await user.getIdToken();
+  const response = await fetch(ENDPOINT, {
+    method: 'POST', signal, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ data: { days } }), cache: 'no-store',
+  });
+  const body = await response.json();
+  if (!response.ok || body.error) throw new Error(body.error?.message || 'The analytics service could not be reached. Please retry.');
+  return body.result;
+}
+async function googleRequest(url, token, options = {}) {
+  const response = await fetch(url, { ...options, headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, cache: 'no-store' });
+  const body = await response.json();
+  if (!response.ok) {
+    if (response.status === 401) throw new Error('Google authorization expired. Connect this source again.');
+    if (response.status === 403) throw new Error('Google denied this report. Check account access, read-only consent, and that the Analytics APIs are enabled.');
+    throw new Error(body.error?.message || 'Google could not return this report.');
+  }
+  return body;
+}
+export async function googleConsent(kind) {
+  // Use a separate, memory-only Firebase session for reporting accounts. Connecting
+  // a Brand Account must not replace the dashboard owner's login.
+  const [{ initializeApp, getApp, getApps }, { getAuth, GoogleAuthProvider, signInWithPopup, setPersistence, inMemoryPersistence }] = await Promise.all([import('firebase/app'), import('firebase/auth')]);
+  await import('../../config/firebase');
+  const name = 'dashboard-reporting';
+  const app = getApps().find(a => a.name === name) || initializeApp(getApp().options, name);
+  const auth = getAuth(app);
+  await setPersistence(auth, inMemoryPersistence);
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+  if (kind === 'youtube') {
+    provider.addScope('https://www.googleapis.com/auth/youtube.readonly');
+    provider.addScope('https://www.googleapis.com/auth/yt-analytics.readonly');
+  } else provider.addScope('https://www.googleapis.com/auth/analytics.readonly');
+  const result = await signInWithPopup(auth, provider);
+  const token = GoogleAuthProvider.credentialFromResult(result)?.accessToken;
+  if (!token) throw new Error('Google did not grant reporting access.');
+  return token;
+}
+export async function listProperties(token) {
+  const properties = [];
+  let nextPageToken = '';
+  do {
+    const query = new URLSearchParams({ pageSize: '200' });
+    if (nextPageToken) query.set('pageToken', nextPageToken);
+    const body = await googleRequest(`https://analyticsadmin.googleapis.com/v1beta/accountSummaries?${query}`, token);
+    for (const account of body.accountSummaries || []) for (const p of account.propertySummaries || []) properties.push({ id: p.property.split('/').pop(), name: p.displayName });
+    nextPageToken = body.nextPageToken;
+  } while (nextPageToken && properties.length < 1000);
+  return properties;
+}
+export async function listStreams(token, propertyId) {
+  if (!/^\d+$/.test(propertyId)) throw new Error('Choose a valid Google Analytics property.');
+  const body = await googleRequest(`https://analyticsadmin.googleapis.com/v1beta/properties/${propertyId}/dataStreams?pageSize=200`, token);
+  return (body.dataStreams || []).map(s => ({ id: s.name.split('/').pop(), name: s.displayName, type: s.type }));
+}
+export async function fetchGoogle(source, token, days, mapping = {}) {
+  const range = dateRange(days);
+  const result = { status: 'connected', fetchedAt: new Date().toISOString(), metrics: {}, previous: {}, daily: [], note: '' };
+  if (source.kind === 'youtube') {
+    const info = await googleRequest(`https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${source.channelId}`, token);
+    const stats = info.items?.[0]?.statistics;
+    if (stats) result.metrics = { followers: stats.hiddenSubscriberCount ? null : Number(stats.subscriberCount), lifetimeViews: Number(stats.viewCount), publishedItems: Number(stats.videoCount) };
+    const query = async (start, end, daily) => {
+      const params = new URLSearchParams({ ids: `channel==${source.channelId}`, startDate: start, endDate: end, metrics: 'views,estimatedMinutesWatched,subscribersGained,subscribersLost,likes,comments', ...(daily ? { dimensions: 'day', sort: 'day' } : {}) });
+      return googleRequest(`https://youtubeanalytics.googleapis.com/v2/reports?${params}`, token);
+    };
+    const [current, previous, daily] = await Promise.all([query(range.start, range.end, false), query(range.previousStart, range.previousEnd, false), query(range.start, range.end, true)]);
+    const parse = row => row ? { views: Number(row[0]), watchHours: Number(row[1]) / 60, subscribersGained: Number(row[2]), subscribersLost: Number(row[3]), likes: Number(row[4]), comments: Number(row[5]) } : { views: 0, watchHours: 0, subscribersGained: 0, subscribersLost: 0, likes: 0, comments: 0 };
+    Object.assign(result.metrics, parse(current.rows?.[0]));
+    result.previous = parse(previous.rows?.[0]);
+    result.daily = (daily.rows || []).map(row => ({ date: row[0], ...parse(row.slice(1)) }));
+    result.note = 'YouTube reporting dates use Pacific time. Recent days may still be processing.';
+    return result;
+  }
+  if (!/^\d+$/.test(mapping.propertyId || '') || !/^\d+$/.test(mapping.streamId || '')) throw new Error('Choose a property and its matching web or iOS stream first.');
+  const ios = source.kind === 'ios';
+  const names = ['activeUsers', 'sessions', 'screenPageViews', 'newUsers'];
+  const dimensionFilter = { andGroup: { expressions: [
+    { filter: { fieldName: 'streamId', stringFilter: { matchType: 'EXACT', value: mapping.streamId } } },
+    { filter: { fieldName: 'platform', stringFilter: { matchType: 'EXACT', value: ios ? 'iOS' : 'web', caseSensitive: false } } },
+  ] } };
+  if (!ios) dimensionFilter.andGroup.expressions.push({ filter: { fieldName: 'hostName', stringFilter: { matchType: 'FULL_REGEXP', value: `^(www\\.)?${new URL(source.url).hostname.replace(/\./g, '\\.').replace(/^www\\\./, '')}$`, caseSensitive: false } } });
+  const run = (startDate, endDate, daily) => googleRequest(`https://analyticsdata.googleapis.com/v1beta/properties/${mapping.propertyId}:runReport`, token, { method: 'POST', body: JSON.stringify({ dateRanges: [{ startDate, endDate }], metrics: names.map(name => ({ name })), dimensionFilter, ...(daily ? { dimensions: [{ name: 'date' }], orderBys: [{ dimension: { dimensionName: 'date' } }] } : {}) }) });
+  const [current, previous, daily] = await Promise.all([run(range.start, range.end, false), run(range.previousStart, range.previousEnd, false), run(range.start, range.end, true)]);
+  const parse = row => Object.fromEntries(names.map((name, i) => [name, Number(row?.metricValues?.[i]?.value || 0)]));
+  result.metrics = parse(current.rows?.[0]);
+  result.previous = parse(previous.rows?.[0]);
+  result.daily = (daily.rows || []).map(row => { const d = row.dimensionValues[0].value; return { date: `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`, ...parse(row) }; });
+  result.note = `${ios ? 'iOS' : 'Web'} stream only. GA4 uses the property's reporting timezone. Active users are deduplicated within this stream and period.`;
+  return result;
+}

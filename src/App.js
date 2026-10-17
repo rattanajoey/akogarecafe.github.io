@@ -18,6 +18,7 @@ const AboutPage = lazy(() => import("./components/About/AboutPage"));
 const PrivacyPolicy = lazy(() => import("./components/Legal/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./components/Legal/TermsOfService"));
 const ContactPage = lazy(() => import("./components/Contact/ContactPage"));
+const Dashboard = lazy(() => import("./components/Dashboard/Dashboard"));
 
 const PageMessage = ({ title, children, reload = false }) => (
   <Box sx={{ color: "white", textAlign: "center", px: 2, py: 8 }}>
@@ -45,17 +46,18 @@ const AppContent = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
     const titles = { "/": "Home", "/portfolio": "Joey Rattana · Portfolio", "/music": "Music Collection", "/shogi": "Shogi", "/about": "About", "/contact": "Contact", "/privacy": "Privacy Policy", "/terms": "Terms of Service", "/MovieClub": "Movie Club", "/Admin": "Admin" };
-    document.title = `${titles[location.pathname] || "Page not found"} | Akogare Cafe`;
+    document.title = `${location.pathname === "/dashboard" ? "Studio Analytics" : titles[location.pathname] || "Page not found"} | Akogare Cafe`;
   }, [location.pathname]);
   const showFooter = ["/about", "/privacy", "/terms", "/contact"].includes(location.pathname);
+  const dashboard = location.pathname === "/dashboard";
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       <a className="skip-link" href="#main-content" onClick={(event) => {
         event.preventDefault();
         document.getElementById("main-content")?.focus();
       }}>Skip to content</a>
-      <HeaderComponent />
-      <PointerFollower />
+      {!dashboard && <HeaderComponent />}
+      {!dashboard && <PointerFollower />}
       <Box component="main" id="main-content" tabIndex={-1} sx={{ flexGrow: 1, minWidth: 0 }}>
         <PageBoundary key={location.pathname}>
           <Suspense fallback={<Box role="status" sx={{ color: "white", textAlign: "center", py: 8 }}><CircularProgress color="inherit" size={24} /><Typography>Loading page…</Typography></Box>}>
@@ -70,13 +72,14 @@ const AppContent = () => {
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/terms" element={<TermsOfService />} />
               <Route path="/contact" element={<ContactPage />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="*" element={<PageMessage title="Page not found">That address doesn't match a page at Akogare Cafe.</PageMessage>} />
             </Routes>
           </Suspense>
         </PageBoundary>
       </Box>
       {showFooter && <Footer />}
-      <SpeedDialComponent />
+      {!dashboard && <SpeedDialComponent />}
     </Box>
   );
 };

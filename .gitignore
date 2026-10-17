@@ -2,6 +2,9 @@
 
 # dependencies
 /node_modules
+/analytics-functions/node_modules
+/.secrets
+firebase-debug.log*
 /.pnp
 .pnp.js
 

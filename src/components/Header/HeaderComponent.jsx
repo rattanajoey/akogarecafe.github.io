@@ -28,6 +28,7 @@ const HeaderComponent = () => {
     { label: "Shogi Game", path: "/shogi" },
     { label: "Music", path: "/music" },
     { label: "Movie Club", path: "/MovieClub" },
+    { label: "Studio Analytics", path: "/dashboard" },
     { label: "Contact", path: "/contact" },
     { label: "Privacy Policy", path: "/privacy" },
     { label: "Terms of Service", path: "/terms" },

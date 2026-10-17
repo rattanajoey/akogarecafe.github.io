@@ -1,0 +1,3 @@
+{
+  "functions": [{ "source": "analytics-functions", "codebase": "akogare-analytics", "ignore": ["node_modules", ".git", "test", "*.log"] }]
+}
