@@ -96,6 +96,10 @@ function reporter(config) {
   async function ga4(id,dates,days){
     const mapping=config.ga4[id];
     if(!/^\d+$/.test(mapping.propertyId)||!/^\d+$/.test(mapping.streamId))throw new Error('The Analytics stream mapping is invalid.');
+    const startDate=mapping.startDate||null;
+    if(startDate&&(!/^\d{4}-\d{2}-\d{2}$/.test(startDate)||!Number.isFinite(Date.parse(startDate+'T00:00:00Z'))))throw new Error('The Analytics collection start date is invalid.');
+    const historyNote=startDate?`This Analytics property started on ${startDate}; earlier traffic is unavailable. `:'';
+    if(startDate&&dates.end<startDate)return{status:'connected',metrics:{},daily:[],note:historyNote+'The first period report will appear after a completed reporting day and provider processing.'};
     if(!googleAccess)googleAccess=config.ga4OAuth?.refresh_token
       ?refreshGoogle(config.ga4OAuth,'ga4',config.googleReportingClient)
       :(async()=>{const{GoogleAuth}=require('google-auth-library');const client=await new GoogleAuth({scopes:['https://www.googleapis.com/auth/analytics.readonly']}).getClient();return(await client.getAccessToken()).token;})();
@@ -106,9 +110,11 @@ function reporter(config) {
     const run=(startDate,endDate,daily)=>jsonRequest(`https://analyticsdata.googleapis.com/v1beta/properties/${mapping.propertyId}:runReport`,token,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dateRanges:[{startDate,endDate}],metrics:names.map(name=>({name})),dimensionFilter:{andGroup:{expressions}},...(daily?{dimensions:[{name:'date'}],orderBys:[{dimension:{dimensionName:'date'}}]}:{})})});
     const previousStart=new Date(dates.start+'T00:00:00Z');previousStart.setUTCDate(previousStart.getUTCDate()-days);
     const previousEnd=new Date(dates.start+'T00:00:00Z');previousEnd.setUTCDate(previousEnd.getUTCDate()-1);
-    const[current,previous,daily]=await Promise.all([run(dates.start,dates.end,false),run(previousStart.toISOString().slice(0,10),previousEnd.toISOString().slice(0,10),false),run(dates.start,dates.end,true)]);
+    const currentStart=startDate&&dates.start<startDate?startDate:dates.start;
+    const previousFrom=previousStart.toISOString().slice(0,10);
+    const[current,previous,daily]=await Promise.all([run(currentStart,dates.end,false),!startDate||previousFrom>=startDate?run(previousFrom,previousEnd.toISOString().slice(0,10),false):Promise.resolve(null),run(currentStart,dates.end,true)]);
     const parse=row=>Object.fromEntries(names.map((name,i)=>[name,safeNumber(row?.metricValues?.[i]?.value??0)]));
-    return{status:'connected',metrics:parse(current.rows?.[0]),previous:parse(previous.rows?.[0]),daily:(daily.rows||[]).map(row=>{const d=row.dimensionValues[0].value;return{date:`${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`,...parse(row)};}),note:`${mapping.platform==='iOS'?'iOS stream only':'Web stream filtered to '+mapping.hostname}. GA4 uses the property reporting timezone. Period active users are deduplicated within this source.`};
+    return{status:'connected',metrics:parse(current.rows?.[0]),...(previous?{previous:parse(previous.rows?.[0])}:{}),daily:(daily.rows||[]).map(row=>{const d=row.dimensionValues[0].value;return{date:`${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`,...parse(row)};}),note:`${historyNote}${mapping.platform==='iOS'?'iOS stream only':'Web stream filtered to '+mapping.hostname}. GA4 uses the property reporting timezone. Period active users are deduplicated within this source.`};
   }
   async function sources(days) {
     const dates=range(days);

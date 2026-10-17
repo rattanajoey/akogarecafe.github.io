@@ -85,3 +85,26 @@ test('a YouTube period permission failure preserves fresh public totals and hide
     assert.equal(reports['cafe-youtube'].metrics.views,undefined);assert.equal(JSON.stringify(reports).includes('private-provider-details'),false);
   }finally{global.fetch=originalFetch;}
 });
+
+test('a new Analytics property does not invent zero traffic before collection starts',async()=>{
+  const originalFetch=global.fetch;const calls=[];
+  global.fetch=async(url)=>{calls.push(url);throw new Error('Historical traffic should not be requested');};
+  try{
+    const startDate=new Date().toISOString().slice(0,10);
+    const reports=await reporter({ga4OAuth:{refresh_token:'test'},ga4:{'pindo-web':{propertyId:'123',streamId:'456',platform:'web',hostname:'pindo.akogarecafe.com',startDate}}}).sources(7);
+    assert.equal(reports['pindo-web'].status,'connected');assert.equal(reports['pindo-web'].connectionMode,'automatic');
+    assert.deepEqual(reports['pindo-web'].metrics,{});assert.deepEqual(reports['pindo-web'].daily,[]);
+    assert.match(reports['pindo-web'].note,/earlier traffic is unavailable/);assert.equal(calls.length,0);
+  }finally{global.fetch=originalFetch;}
+});
+test('new Analytics collection keeps available traffic but suppresses unavailable history comparisons',async()=>{
+  const{GoogleAuth}=require('google-auth-library');const originalGetClient=GoogleAuth.prototype.getClient,originalFetch=global.fetch;const requests=[];
+  GoogleAuth.prototype.getClient=async()=>({getAccessToken:async()=>({token:'test-google-token'})});
+  global.fetch=async(url,options)=>{const body=JSON.parse(options.body);requests.push(body);return{ok:true,json:async()=>({rows:body.dimensions?[]:[{metricValues:[{value:'2'},{value:'3'},{value:'4'},{value:'2'}]}]})};};
+  try{
+    const startDate=range(7).end;
+    const reports=await reporter({ga4:{'pindo-web':{propertyId:'123',streamId:'456',platform:'web',hostname:'pindo.akogarecafe.com',startDate}}}).sources(7);
+    assert.equal(reports['pindo-web'].metrics.sessions,3);assert.equal(reports['pindo-web'].previous,undefined);
+    assert.equal(requests.length,2);assert.equal(requests.every(r=>r.dateRanges[0].startDate===startDate),true);
+  }finally{GoogleAuth.prototype.getClient=originalGetClient;global.fetch=originalFetch;}
+});
