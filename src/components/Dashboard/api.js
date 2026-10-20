@@ -93,9 +93,14 @@ export async function fetchGoogle(source, token, days, mapping = {}) {
       return googleRequest(`https://youtubeanalytics.googleapis.com/v2/reports?${params}`, token);
     };
     const [current, previous, daily] = await Promise.all([query(range.start, range.end, false), query(range.previousStart, range.previousEnd, false), query(range.start, range.end, true)]);
+    if (days === 1 && !current.rows?.length && !daily.rows?.length) {
+      result.connectionState = 'processing';
+      result.note = 'YouTube has not returned a report for this day yet. Daily reports can take 48–72 hours to process. Current channel totals are available; missing daily metrics stay unknown.';
+      return result;
+    }
     const parse = row => row ? { views: Number(row[0]), watchHours: Number(row[1]) / 60, subscribersGained: Number(row[2]), subscribersLost: Number(row[3]), likes: Number(row[4]), comments: Number(row[5]) } : { views: 0, watchHours: 0, subscribersGained: 0, subscribersLost: 0, likes: 0, comments: 0 };
     Object.assign(result.metrics, parse(current.rows?.[0]));
-    result.previous = parse(previous.rows?.[0]);
+    result.previous = days === 1 && !previous.rows?.length ? {} : parse(previous.rows?.[0]);
     result.daily = (daily.rows || []).map(row => ({ date: row[0], ...parse(row.slice(1)) }));
     result.note = 'YouTube reporting dates use Pacific time. Recent days may still be processing.';
     return result;

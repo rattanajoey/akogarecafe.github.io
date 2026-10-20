@@ -3,9 +3,10 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 const {range,safeNumber,allowed,accountCounts,reporter}=require('../providers');
 test('reporting inputs and missing values are validated',()=>{
-  assert.equal(allowed({days:28}),true);assert.equal(allowed({days:29}),false);assert.equal(allowed({days:7,url:'https://example.com'}),false);
+  assert.equal(allowed({days:1}),true);assert.equal(allowed({days:28}),true);assert.equal(allowed({days:29}),false);assert.equal(allowed({days:'1'}),false);assert.equal(allowed({days:0}),false);assert.equal(allowed({days:7,url:'https://example.com'}),false);
   assert.equal(safeNumber(null),null);assert.equal(safeNumber(''),null);assert.equal(safeNumber('0'),0);
   assert.equal(range(7,new Date('2026-01-04T00:00:00Z')).start,'2025-12-28');
+  assert.deepEqual(range(1,new Date('2026-01-01T00:05:00Z')),{start:'2025-12-31',end:'2025-12-31',startSeconds:1767139200,untilSeconds:1767225600});
 });
 test('account counts paginate and never return account identities',async()=>{
   const dates=range(7,new Date('2026-10-17T00:00:00Z'));const calls=[];
@@ -118,4 +119,34 @@ test('Pinterest review status appears only while reporting authorization is miss
     const connected=await reporter({pinterest:{approvalStatus:'pending',access_token:'test-readonly'}}).sources(7);
     assert.equal(connected['pindo-pinterest'].connectionState,undefined);assert.equal(connected['pindo-pinterest'].status,'connected');assert.equal(connected['pindo-pinterest'].metrics.impressions,0);
   }finally{global.fetch=originalFetch;}
+});
+
+test('one-day YouTube reports preserve unknown metrics until a day row exists, including real zeroes',async()=>{
+  const originalFetch=global.fetch,queries=[];let rows=[];
+  global.fetch=async(url)=>({ok:true,json:async()=>{
+    if(url.includes('/token'))return{access_token:'test-access'};
+    if(url.includes('/channels?'))return{items:[{id:new URL(url).searchParams.get('id'),statistics:{subscriberCount:'10',viewCount:'100',videoCount:'3'}}]};
+    const query=new URL(url);queries.push(query);return{columnHeaders:[{name:'day'},{name:'views'}],rows};
+  }});
+  const config={googleReportingClient:{client_id:'test',client_secret:'test'},youtubeReporting:{'cafe-youtube':{channelId:'UCP77ij2ue_xEz2f5TmH0Rbw',refresh_token:'test-refresh',scope:'https://www.googleapis.com/auth/yt-analytics.readonly'}}};
+  try{
+    const pending=(await reporter(config).sources(1))['cafe-youtube'];
+    assert.equal(pending.status,'connected');assert.equal(pending.connectionState,'processing');assert.equal(pending.metrics.views,undefined);assert.equal(pending.metrics.followers,10);
+    assert.equal(queries.every(q=>q.searchParams.get('startDate')===range(1).end&&q.searchParams.get('endDate')===range(1).end),true);
+    rows=[[range(1).end,0]];
+    const zero=(await reporter(config).sources(1))['cafe-youtube'];
+    assert.equal(zero.metrics.views,0);assert.equal(zero.connectionState,undefined);assert.equal(zero.daily[0].views,0);
+  }finally{global.fetch=originalFetch;}
+});
+
+test('one-day Analytics compares yesterday with the preceding completed day',async()=>{
+  const{GoogleAuth}=require('google-auth-library');const originalGetClient=GoogleAuth.prototype.getClient,originalFetch=global.fetch,requests=[];
+  GoogleAuth.prototype.getClient=async()=>({getAccessToken:async()=>({token:'test-google-token'})});
+  global.fetch=async(url,options)=>{const body=JSON.parse(options.body);requests.push(body);return{ok:true,json:async()=>({rows:body.dimensions?[]:[{metricValues:[{value:'2'},{value:'3'},{value:'4'},{value:'2'}]}]})};};
+  try{
+    const report=(await reporter({ga4:{'pindo-web':{propertyId:'123',streamId:'456',platform:'web',hostname:'pindo.akogarecafe.com'}}}).sources(1))['pindo-web'];
+    const yesterday=range(1).end,previous=new Date(Date.parse(yesterday+'T00:00:00Z')-86400000).toISOString().slice(0,10);
+    assert.deepEqual(requests.map(r=>r.dateRanges[0]),[{startDate:yesterday,endDate:yesterday},{startDate:previous,endDate:previous},{startDate:yesterday,endDate:yesterday}]);
+    assert.equal(report.metrics.sessions,3);assert.equal(report.previous.sessions,3);
+  }finally{GoogleAuth.prototype.getClient=originalGetClient;global.fetch=originalFetch;}
 });

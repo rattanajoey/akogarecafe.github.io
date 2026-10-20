@@ -12,6 +12,7 @@ test('social views do not include lifetime views, Pinterest impressions or websi
 });
 test('completed UTC reporting periods handle month and year boundaries', () => {
   expect(dateRange(7, new Date('2026-01-04T01:00:00Z'))).toEqual({ start: '2025-12-28', end: '2026-01-03', previousStart: '2025-12-21', previousEnd: '2025-12-27' });
+  expect(dateRange(1, new Date('2026-01-01T00:05:00Z'))).toEqual({ start: '2025-12-31', end: '2025-12-31', previousStart: '2025-12-30', previousEnd: '2025-12-30' });
   expect(change(10, 0)).toBeNull();
   expect(change(0, 20)).toBe(-100);
 });
@@ -60,4 +61,31 @@ test('chart positions preserve real calendar spacing and reject dates outside th
   expect(lastDay).toBe(1);
   expect((lastDay - nextDay) / (nextDay - firstDay)).toBeCloseTo(13);
   expect(chartFraction('2026-09-30', range)).toBeNull();
+  expect(chartFraction('2026-10-01', { start: '2026-10-01', end: '2026-10-01' })).toBe(0.5);
+});
+
+test('one-day YouTube reports distinguish processing from an explicit zero and request the previous day', async () => {
+  const original = global.fetch, requests = [];
+  let reported = false;
+  global.fetch = jest.fn(async url => {
+    const query = new URL(url); requests.push(query);
+    return { ok: true, json: async () => url.includes('/channels?')
+      ? { items: [{ statistics: { subscriberCount: '10', viewCount: '100', videoCount: '3' } }] }
+      : { rows: reported && query.searchParams.get('startDate') === dateRange(1).start
+        ? [query.searchParams.has('dimensions') ? [dateRange(1).start, 0, 0, 0, 0, 0, 0] : [0, 0, 0, 0, 0, 0]] : [] } };
+  });
+  try {
+    const pending = await fetchGoogle(SOURCES[0], 'test-token', 1);
+    expect(pending.connectionState).toBe('processing');
+    expect(pending.metrics.views).toBeUndefined();
+    expect(pending.metrics.followers).toBe(10);
+    const periods = requests.filter(url => url.hostname === 'youtubeanalytics.googleapis.com').map(url => [url.searchParams.get('startDate'), url.searchParams.get('endDate')]);
+    expect(periods).toEqual([[dateRange(1).start, dateRange(1).end], [dateRange(1).previousStart, dateRange(1).previousEnd], [dateRange(1).start, dateRange(1).end]]);
+    reported = true;
+    const zero = await fetchGoogle(SOURCES[0], 'test-token', 1);
+    expect(zero.connectionState).toBeUndefined();
+    expect(zero.metrics.views).toBe(0);
+    expect(zero.previous).toEqual({});
+    expect(zero.daily[0].views).toBe(0);
+  } finally { global.fetch = original; }
 });

@@ -65,7 +65,7 @@ export function chartFraction(date, range) {
   const start = Date.parse(`${range.start}T00:00:00Z`);
   const end = Date.parse(`${range.end}T00:00:00Z`);
   if (![value, start, end].every(Number.isFinite) || end < start || value < start || value > end) return null;
-  return end === start ? 0 : (value - start) / (end - start);
+  return end === start ? 0.5 : (value - start) / (end - start);
 }
 export const format = value => finite(value) ? new Intl.NumberFormat('en', { maximumFractionDigits: 0 }).format(value) : '—';
 export const compact = value => finite(value) ? new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(value) : '—';

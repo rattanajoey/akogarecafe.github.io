@@ -54,6 +54,11 @@ function reporter(config) {
       if (!Array.isArray(data.columnHeaders)) throw new Error('YouTube returned an invalid analytics report.');
       const names = data.columnHeaders.map(h => h.name);
       const rows = (data.rows || []).map(row => Object.fromEntries(names.map((name,i) => [name,row[i]])));
+      if (dates.start === dates.end && !rows.length) {
+        report.status = 'connected'; report.connectionState = 'processing';
+        report.note = 'YouTube has not returned a report for this day yet. Daily reports can take 48–72 hours to process. Current channel totals are available; missing daily metrics stay unknown.';
+        return report;
+      }
       const sum = key => rows.reduce((n,row) => n+(safeNumber(row[key]) || 0),0);
       Object.assign(report.metrics,{ views:sum('views'),watchHours:sum('estimatedMinutesWatched')/60,subscribersGained:sum('subscribersGained'),subscribersLost:sum('subscribersLost'),likes:sum('likes'),comments:sum('comments') });
       report.daily = rows.map(row => ({ date:row.day,views:safeNumber(row.views) }));
@@ -140,5 +145,5 @@ async function accountCounts(auth, dates) {
   }while(pageToken&&pages<20);
   return {registeredUsers,signedInUsers,note:pageToken?'Limited to the first 20,000 accounts; counts are partial.':'Registered accounts are current totals. Sign-ins measure authentication activity, not all product usage.'};
 }
-function allowed(data) { return data && [7,28,90].includes(data.days) && Object.keys(data).length===1; }
+function allowed(data) { return data && [1,7,28,90].includes(data.days) && Object.keys(data).length===1; }
 module.exports={SOURCE_IDS,CHANNELS,range,safeNumber,reporter,accountCounts,allowed};
