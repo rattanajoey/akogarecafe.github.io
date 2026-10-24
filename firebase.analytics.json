@@ -6,6 +6,7 @@
     "ignore": ["firebase.analytics.json", "**/.*", "**/node_modules/**"],
     "headers": [
       { "source": "**", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
+      { "source": "/", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] },
       { "source": "/index.html", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] }
     ],
     "rewrites": [{ "source": "**", "destination": "/index.html" }]

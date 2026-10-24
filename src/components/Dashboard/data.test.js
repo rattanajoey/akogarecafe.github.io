@@ -143,3 +143,12 @@ test('browser YouTube comparisons match reported dates and preserve current metr
     expect(retained.metrics.views).toBe(50);expect(retained.previous).toEqual({});
   } finally { global.fetch = original; }
 });
+
+test('Patreon membership exports are snapshots and do not inflate social followers or views', () => {
+  const source=SOURCES.find(s=>s.id==='watch-patreon');
+  const reports={'watch-patreon':{status:'connected',metrics:{patrons:4,paidMembers:2,followers:900,views:800}}};
+  expect(audienceTotal([source],reports).value).toBeNull();
+  expect(coverage([source],reports,'views').value).toBeNull();
+  const text=csv(reports,[source],{start:'2026-10-01',end:'2026-10-28'});
+  expect(text).toContain('"AkogareWatchClub","","","connected","paidMembers","2"');
+});

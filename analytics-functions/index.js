@@ -32,3 +32,7 @@ exports.projectAnalytics=functions.runWith({secrets:['AKOGARE_ANALYTICS_CONNECTI
   cache.set(key,{at:Date.now(),value});
   return value;
 });
+
+// The one-time server handoff uses an expiring, creator-approved state and an
+// atomic replay claim. Its secret has no pending state after setup completes.
+exports.patreonReportingCallback=functions.runWith({secrets:['AKOGARE_PATREON_CONNECTION'],timeoutSeconds:60,memory:'256MB',maxInstances:1}).region('us-central1').https.onRequest(require('./patreon-callback').handler);

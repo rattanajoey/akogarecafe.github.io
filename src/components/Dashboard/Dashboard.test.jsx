@@ -75,3 +75,20 @@ test('project cards separate YouTube subscribers from Instagram while the overvi
   expect(card.querySelector('.studio-project-audience-detail')).toBeNull();
   expect(container.querySelector('.studio-summary .studio-stat-label').textContent).toBe('Instagram followers');
 });
+
+test('Patreon is separate from social audience and its snapshot filter never invents period growth', () => {
+  const { container } = render(<Workspace reports={{
+    'watch-youtube': {status:'connected',metrics:{followers:1990}},
+    'watch-patreon': {status:'connected',connectionMode:'automatic',metrics:{patrons:4,paidMembers:2,trialMembers:1,declinedMembers:0},previous:{paidMembers:100}},
+  }}/>);
+  expect(container.querySelector('.studio-summary .studio-stat-value').textContent).toBe('≈1,990');
+  const panel=screen.getByRole('region',{name:'Patreon membership'});
+  expect(panel.textContent).toContain('Paid memberships2');
+  expect(panel.textContent).toContain('separate from your social audience');
+  fireEvent.change(screen.getByLabelText('Filter by platform'),{target:{value:'patreon'}});
+  expect(container.querySelectorAll('.studio-summary .studio-stat-value')[1].textContent).toBe('2');
+  expect(container.querySelector('.studio-summary').textContent).not.toContain('vs previous');
+  expect(container.querySelector('.studio-summary').textContent).not.toContain('−98');
+  expect(container.querySelector('.studio-chart')).toBeNull();
+  expect(screen.getByText('Patrons with access · current')).toBeTruthy();
+});

@@ -1,6 +1,6 @@
 'use strict';
 
-const SOURCE_IDS = ['cafe-youtube','cafe-instagram','cafe-web','watch-youtube','watch-instagram','pindo-web','pindo-ios','pindo-pinterest','cine-web','cine-ios','cine-youtube'];
+const SOURCE_IDS = ['cafe-youtube','cafe-instagram','cafe-web','watch-youtube','watch-instagram','watch-patreon','pindo-web','pindo-ios','pindo-pinterest','cine-web','cine-ios','cine-youtube'];
 const CHANNELS = { 'cafe-youtube': 'UCP77ij2ue_xEz2f5TmH0Rbw', 'watch-youtube': 'UC6MT4WM8saZSk4B4pt4aFwA', 'cine-youtube': 'UCpilsdPRmwBxCTLxCZmBXDg' };
 const INSTAGRAM_IDS = { 'cafe-instagram': '17841443596200565', 'watch-instagram': '28974337878870504' };
 const SCOPES = { youtube: 'https://www.googleapis.com/auth/yt-analytics.readonly' };
@@ -14,7 +14,7 @@ function unavailable(note) { return { status: 'unavailable', metrics: {}, daily:
 async function jsonRequest(url, token, options = {}) {
   const response = await fetch(url, { ...options, signal: AbortSignal.timeout(20000), headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), ...options.headers } });
   let body; try { body = await response.json(); } catch { throw new Error('The provider returned an unreadable report.'); }
-  if (!response.ok || body.error) {
+  if (!response.ok || body.error || body.errors) {
     // Never include raw provider responses, request URLs, tokens or headers in errors.
     const e = new Error(response.status === 401 || response.status === 403 ? 'This source needs renewed read-only authorization or reporting permission.' : `The provider could not return this report (HTTP ${response.status}).`);
     e.httpStatus = response.status; throw e;
@@ -174,14 +174,19 @@ function reporter(config, dependencies = {}) {
     const parse=row=>Object.fromEntries(names.map((name,i)=>[name,safeNumber(row?.metricValues?.[i]?.value??0)]));
     return{status:'connected',metrics:parse(current.rows?.[0]),...(previous?{previous:parse(previous.rows?.[0])}:{}),daily:(daily.rows||[]).map(row=>{const d=row.dimensionValues[0].value;return{date:`${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`,...parse(row)};}),note:`${historyNote}${mapping.platform==='iOS'?'iOS stream only':'Web stream filtered to '+mapping.hostname}. GA4 uses the property reporting timezone. Period active users are deduplicated within this source.`};
   }
+  async function patreon(){
+    if(config.patreon?.connectionSecret!=='AKOGARE_PATREON_CONNECTION')return unavailable('Akogare Watch Club on Patreon is identified. Authorize its creator account for automatic read-only membership reports.');
+    const connection=await(dependencies.patreonConnection || require('./patreon-connection').getConnection)();
+    return require('./patreon-report').membershipReport(connection,jsonRequest);
+  }
   async function sources(days) {
     const dates=range(days);
     return Object.fromEntries(await Promise.all(SOURCE_IDS.map(async id=>{
       let result;
       try {
-        result=CHANNELS[id]?await youtube(id,dates):INSTAGRAM_IDS[id]?await instagram(id,dates):id==='pindo-pinterest'?await pinterest(dates):config.ga4?.[id]?await ga4(id,dates,days):unavailable(id.endsWith('-ios')?'Connect the matching iOS stream in Google Analytics for app activity. App Store download reports require App Store Connect reporting access.':'Connect the matching web stream in Google Analytics for traffic and visitors.');
+        result=CHANNELS[id]?await youtube(id,dates):INSTAGRAM_IDS[id]?await instagram(id,dates):id==='pindo-pinterest'?await pinterest(dates):id==='watch-patreon'?await patreon():config.ga4?.[id]?await ga4(id,dates,days):unavailable(id.endsWith('-ios')?'Connect the matching iOS stream in Google Analytics for app activity. App Store download reports require App Store Connect reporting access.':'Connect the matching web stream in Google Analytics for traffic and visitors.');
       } catch(e) { result={status:'error',metrics:{},daily:[],error:e.message,note:'The source could not be refreshed. Other sources remain available.'}; }
-      const automatic = ['connected','partial'].includes(result.status) && (CHANNELS[id] ? Boolean(config.youtubeReporting?.[id]) : id==='pindo-pinterest' ? config.pinterest?.connectionSecret==='AKOGARE_PINTEREST_CONNECTION' : Boolean(config.ga4?.[id] && config.ga4OAuth?.refresh_token));
+      const automatic = ['connected','partial'].includes(result.status) && (CHANNELS[id] ? Boolean(config.youtubeReporting?.[id]) : id==='pindo-pinterest' ? config.pinterest?.connectionSecret==='AKOGARE_PINTEREST_CONNECTION' : id==='watch-patreon' ? config.patreon?.connectionSecret==='AKOGARE_PATREON_CONNECTION' : Boolean(config.ga4?.[id] && config.ga4OAuth?.refresh_token));
       return [id,{...result,...(automatic ? {connectionMode:'automatic'} : {}),fetchedAt:new Date().toISOString()}];
     })));
   }

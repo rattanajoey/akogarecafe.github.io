@@ -9,6 +9,7 @@ export const SOURCES = [
   { id: 'cafe-instagram', project: 'cafe', kind: 'instagram', label: 'Instagram', account: '@akogarecafe', url: 'https://www.instagram.com/akogarecafe/' },
   { id: 'cafe-web', project: 'cafe', kind: 'web', label: 'Website', account: 'akogarecafe.com', url: 'https://akogarecafe.com' },
   { id: 'watch-youtube', project: 'watch', kind: 'youtube', label: 'YouTube', account: '@akogarewatchclub', channelId: 'UC6MT4WM8saZSk4B4pt4aFwA', url: 'https://www.youtube.com/channel/UC6MT4WM8saZSk4B4pt4aFwA' },
+  { id: 'watch-patreon', project: 'watch', kind: 'patreon', label: 'Patreon', account: 'AkogareWatchClub', url: 'https://www.patreon.com/c/AkogareWatchClub' },
   { id: 'watch-instagram', project: 'watch', kind: 'instagram', label: 'Instagram', account: '@akogarewatchclub', url: 'https://www.instagram.com/akogarewatchclub/' },
   { id: 'pindo-web', project: 'pindo', kind: 'web', label: 'Website', account: 'pindo.akogarecafe.com', url: 'https://pindo.akogarecafe.com' },
   { id: 'pindo-ios', project: 'pindo', kind: 'ios', label: 'iOS app', account: 'PinDo · iOS' },
@@ -18,6 +19,10 @@ export const SOURCES = [
   { id: 'cine-youtube', project: 'cine', kind: 'youtube', label: 'YouTube', account: '@CineClubCafe', channelId: 'UCpilsdPRmwBxCTLxCZmBXDg', url: 'https://www.youtube.com/@CineClubCafe' },
 ];
 export const METRICS = {
+  patrons: { label: 'Patrons with access', detail: 'Patreon · current API total', kinds: ['patreon'] },
+  paidMembers: { label: 'Paid memberships', detail: 'Active paid access · current', kinds: ['patreon'] },
+  trialMembers: { label: 'Free trials', detail: 'Active trial access · current', kinds: ['patreon'] },
+  declinedMembers: { label: 'Declined memberships', detail: 'Payment declined · current', kinds: ['patreon'] },
   followers: { label: 'Combined audience', detail: 'YouTube subscribers + social followers', kinds: ['youtube', 'instagram', 'pinterest'] },
   netFollowers: { label: 'Net subscribers', detail: 'Gained minus lost · selected period', kinds: ['youtube', 'instagram', 'pinterest'] },
   views: { label: 'Content views', detail: 'YouTube + Instagram · selected period', kinds: ['youtube', 'instagram'] },
@@ -89,7 +94,7 @@ export function csv(reports, sources, range) {
   for (const source of sources) {
     const report = reports[source.id];
     for (const [metric, value] of Object.entries(report?.metrics || {})) {
-      if (finite(value)) rows.push([PROJECTS.find(p => p.id === source.project).name, source.label, source.account, metric === 'followers' || metric === 'lifetimeViews' || metric === 'publishedItems' ? '' : range.start, metric === 'followers' || metric === 'lifetimeViews' || metric === 'publishedItems' ? '' : range.end, report.status, metric, value, report.fetchedAt]);
+      if (finite(value)) rows.push([PROJECTS.find(p => p.id === source.project).name, source.label, source.account, ['followers', 'lifetimeViews', 'publishedItems', 'patrons', 'paidMembers', 'trialMembers', 'declinedMembers'].includes(metric) ? '' : range.start, ['followers', 'lifetimeViews', 'publishedItems', 'patrons', 'paidMembers', 'trialMembers', 'declinedMembers'].includes(metric) ? '' : range.end, report.status, metric, value, report.fetchedAt]);
     }
   }
   return rows.map(row => row.map(cell).join(',')).join('\r\n');
