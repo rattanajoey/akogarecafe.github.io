@@ -116,8 +116,26 @@ test('Pinterest review status appears only while reporting authorization is miss
   try{
     const pending=await reporter({pinterest:{approvalStatus:'pending'}}).sources(7);
     assert.equal(pending['pindo-pinterest'].connectionState,'pending-review');assert.equal(pending['pindo-pinterest'].status,'unavailable');assert.equal(calls,0);
+    const approved=await reporter({pinterest:{approvalStatus:'approved'}}).sources(7);
+    assert.equal(approved['pindo-pinterest'].connectionState,undefined);assert.match(approved['pindo-pinterest'].note,/approved/);assert.equal(calls,0);
     const connected=await reporter({pinterest:{approvalStatus:'pending',access_token:'test-readonly'}}).sources(7);
     assert.equal(connected['pindo-pinterest'].connectionState,undefined);assert.equal(connected['pindo-pinterest'].status,'connected');assert.equal(connected['pindo-pinterest'].metrics.impressions,0);
+  }finally{global.fetch=originalFetch;}
+});
+
+test('automatic Pinterest reports pin the account, separate impressions and preserve unavailable history',async()=>{
+  const originalFetch=global.fetch,queries=[];
+  global.fetch=async(url)=>{const parsed=new URL(url);queries.push(parsed);return{ok:true,json:async()=>parsed.pathname.endsWith('/analytics')?{all:{summary_metrics:{IMPRESSION:10,OUTBOUND_CLICK:0,SAVE:2},daily_metrics:[{date:range(7).end,data_status:'READY',metrics:{IMPRESSION:10,OUTBOUND_CLICK:0,SAVE:2}},{date:range(7).end,data_status:'PROCESSING',metrics:{IMPRESSION:0}}]}}:{id:'123',username:'renamed-studio',follower_count:0}};};
+  const config={pinterest:{connectionSecret:'AKOGARE_PINTEREST_CONNECTION'}};
+  try{
+    const deps={pinterestConnection:async()=>({access_token:'private-pinterest-access',userId:'123'})};
+    const report=(await reporter(config,deps).sources(7))['pindo-pinterest'];
+    assert.equal(report.status,'connected');assert.equal(report.connectionMode,'automatic');assert.equal(report.metrics.followers,0);assert.equal(report.metrics.impressions,10);assert.equal(report.metrics.views,undefined);assert.equal(report.previous,undefined);assert.equal(report.daily.length,1);
+    assert(queries.filter(url=>url.pathname.endsWith('/analytics')).every(url=>url.searchParams.get('content_type')==='ORGANIC'&&url.searchParams.get('source')==='YOUR_PINS'));
+    assert.equal(JSON.stringify(report).includes('private-pinterest-access'),false);
+    queries.length=0;const long=(await reporter(config,deps).sources(90))['pindo-pinterest'];assert.equal(long.previous,undefined);assert.equal(queries.length,2);
+    queries.length=0;deps.pinterestConnection=async()=>({access_token:'private-pinterest-access',userId:'different'});
+    assert.equal((await reporter(config,deps).sources(7))['pindo-pinterest'].status,'error');assert.equal(queries.length,1);
   }finally{global.fetch=originalFetch;}
 });
 

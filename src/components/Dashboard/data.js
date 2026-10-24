@@ -21,6 +21,7 @@ export const METRICS = {
   followers: { label: 'Combined audience', detail: 'YouTube subscribers + social followers', kinds: ['youtube', 'instagram', 'pinterest'] },
   netFollowers: { label: 'Net subscribers', detail: 'Gained minus lost · selected period', kinds: ['youtube', 'instagram', 'pinterest'] },
   views: { label: 'Content views', detail: 'YouTube + Instagram · selected period', kinds: ['youtube', 'instagram'] },
+  impressions: { label: 'Pinterest impressions', detail: 'Organic Pinterest activity · selected period', kinds: ['pinterest'] },
   lifetimeViews: { label: 'YouTube views', detail: 'Lifetime views · current channel totals', kinds: ['youtube'] },
   sessions: { label: 'Website sessions', detail: 'Website visits · selected period', kinds: ['web'] },
   activeUsers: { label: 'App active users', detail: 'iOS activity · selected period', kinds: ['ios'] },

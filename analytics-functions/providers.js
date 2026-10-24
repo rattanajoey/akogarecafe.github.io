@@ -21,7 +21,7 @@ async function jsonRequest(url, token, options = {}) {
   }
   return body;
 }
-function reporter(config) {
+function reporter(config, dependencies = {}) {
   const tokenPromises = new Map();
   let googleAccess;
   const youtubeConnection = id => config.youtubeReporting?.[id] || config.youtube?.[id];
@@ -109,16 +109,33 @@ function reporter(config) {
     return report;
   }
   async function pinterest(dates) {
-    if (!config.pinterest?.access_token) return config.pinterest?.approvalStatus === 'pending'
+    const automatic=config.pinterest?.connectionSecret === 'AKOGARE_PINTEREST_CONNECTION';
+    if (!automatic && !config.pinterest?.access_token) return config.pinterest?.approvalStatus === 'pending'
       ? {...unavailable('Your reporting application has been submitted. Pinterest is reviewing access; reports can be connected after approval and read-only authorization.'),connectionState:'pending-review'}
-      : unavailable('Pinterest @akogarecafestudio is identified. Automatic reporting needs Pinterest read-only API authorization.');
-    const token=config.pinterest.access_token;
-    const params=new URLSearchParams({start_date:dates.start,end_date:dates.end,metric_types:'IMPRESSION,OUTBOUND_CLICK,SAVE'});
-    const [profile,analytics]=await Promise.all([jsonRequest('https://api.pinterest.com/v5/user_account',token),jsonRequest(`https://api.pinterest.com/v5/user_account/analytics?${params}`,token)]);
-    if (profile.username !== 'akogarecafestudio') throw new Error('The Pinterest connection does not match the studio account.');
-    const report=analytics.all;
+      : unavailable(config.pinterest?.approvalStatus === 'approved' ? 'Pinterest approved the reporting app. Authorize @akogarecafestudio for read-only account analytics to activate reports.' : 'Pinterest @akogarecafestudio is identified. Automatic reporting needs Pinterest read-only API authorization.');
+    const connection=automatic ? await (dependencies.pinterestConnection || require('./pinterest-connection').getConnection)() : config.pinterest;
+    const token=connection.access_token;
+    const profile=await jsonRequest('https://api.pinterest.com/v5/user_account',token);
+    if (connection.userId ? String(profile.id)!==String(connection.userId) : profile.username!=='akogarecafestudio') throw new Error('The Pinterest connection does not match the studio account.');
+    const query=async(start,end)=>{
+      const params=new URLSearchParams({start_date:start,end_date:end,metric_types:'IMPRESSION,OUTBOUND_CLICK,SAVE',content_type:'ORGANIC',source:'YOUR_PINS',split_field:'NO_SPLIT'});
+      return jsonRequest(`https://api.pinterest.com/v5/user_account/analytics?${params}`,token);
+    };
+    const analytics=await query(dates.start,dates.end),report=analytics.all;
     if (!report?.summary_metrics) throw new Error('Pinterest did not provide a complete report.');
-    return {status:'connected',metrics:{followers:safeNumber(profile.follower_count),impressions:safeNumber(report.summary_metrics.IMPRESSION),outboundClicks:safeNumber(report.summary_metrics.OUTBOUND_CLICK),saves:safeNumber(report.summary_metrics.SAVE)},daily:[],note:'Pinterest impressions are shown separately from YouTube and Instagram content views.'};
+    const parse=metrics=>({impressions:safeNumber(metrics.IMPRESSION),outboundClicks:safeNumber(metrics.OUTBOUND_CLICK),saves:safeNumber(metrics.SAVE)});
+    const rows=report.daily_metrics||[];
+    if(dates.start===dates.end && rows.length && rows.every(row=>row.data_status!=='READY'))return{status:'connected',connectionState:'processing',metrics:{followers:safeNumber(profile.follower_count)},daily:[],note:'Pinterest has not finalized this day yet. Current followers are available; daily metrics stay unknown until processing finishes.'};
+    const result={status:'connected',metrics:{followers:safeNumber(profile.follower_count),...parse(report.summary_metrics)},daily:(report.daily_metrics||[]).filter(row=>row.data_status==='READY' && /^\d{4}-\d{2}-\d{2}$/.test(row.date)).map(row=>({date:row.date,...parse(row.metrics||{})})),note:'Organic activity on pins created or saved by @akogarecafestudio, in UTC. Pinterest impressions are separate from video views. Recent dates may still be processing.'};
+    const days=Math.round((Date.parse(dates.end)-Date.parse(dates.start))/86400000)+1;
+    const shift=date=>new Date(Date.parse(date+'T00:00:00Z')-days*86400000).toISOString().slice(0,10);
+    // Pinterest only retains 90 days through this endpoint. Never compare a
+    // truncated previous period with a complete current period.
+    const previousStart=shift(dates.start);
+    if(previousStart>=range(90).start && rows.length===days && rows.every(row=>row.data_status==='READY')){
+      try{const previous=(await query(previousStart,shift(dates.end))).all;if(previous?.summary_metrics && previous.daily_metrics?.length===days && previous.daily_metrics.every(row=>row.data_status==='READY'))result.previous=parse(previous.summary_metrics);}catch{/* Current reports remain available without comparison history. */}
+    }
+    return result;
   }
   async function ga4(id,dates,days){
     const mapping=config.ga4[id];
@@ -150,7 +167,7 @@ function reporter(config) {
       try {
         result=CHANNELS[id]?await youtube(id,dates):INSTAGRAM_IDS[id]?await instagram(id,dates):id==='pindo-pinterest'?await pinterest(dates):config.ga4?.[id]?await ga4(id,dates,days):unavailable(id.endsWith('-ios')?'Connect the matching iOS stream in Google Analytics for app activity. App Store download reports require App Store Connect reporting access.':'Connect the matching web stream in Google Analytics for traffic and visitors.');
       } catch(e) { result={status:'error',metrics:{},daily:[],error:e.message,note:'The source could not be refreshed. Other sources remain available.'}; }
-      const automatic = ['connected','partial'].includes(result.status) && (CHANNELS[id] ? Boolean(config.youtubeReporting?.[id]) : Boolean(config.ga4?.[id] && config.ga4OAuth?.refresh_token));
+      const automatic = ['connected','partial'].includes(result.status) && (CHANNELS[id] ? Boolean(config.youtubeReporting?.[id]) : id==='pindo-pinterest' ? config.pinterest?.connectionSecret==='AKOGARE_PINTEREST_CONNECTION' : Boolean(config.ga4?.[id] && config.ga4OAuth?.refresh_token));
       return [id,{...result,...(automatic ? {connectionMode:'automatic'} : {}),fetchedAt:new Date().toISOString()}];
     })));
   }
