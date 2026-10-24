@@ -81,7 +81,7 @@ export function DashboardWorkspace({ user, reports, products, busy, error, days,
   const [metric, setMetric] = useState(null);
   const [platform, setPlatform] = useState('all');
   const sources = SOURCES.filter(s => (project === 'all' || s.project === project) && (platform === 'all' || s.kind === platform));
-  const projects = PROJECTS.filter(p => project === 'all' || p.id === project);
+  const projects = PROJECTS.filter(p => (project === 'all' || p.id === project) && (platform === 'all' || sources.some(s => s.project === p.id)));
   const connected = sources.filter(s => ['connected', 'partial'].includes(reports[s.id]?.status)).length;
   const sourceUpdates = sources.filter(s => ['collecting', 'pending-review', 'processing'].includes(sourceState(reports[s.id])));
   const membershipOnly = sources.length > 0 && sources.every(s => s.kind === 'patreon');

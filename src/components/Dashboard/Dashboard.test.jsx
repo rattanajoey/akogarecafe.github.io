@@ -90,5 +90,7 @@ test('Patreon is separate from social audience and its snapshot filter never inv
   expect(container.querySelector('.studio-summary').textContent).not.toContain('vs previous');
   expect(container.querySelector('.studio-summary').textContent).not.toContain('−98');
   expect(container.querySelector('.studio-chart')).toBeNull();
+  expect(container.querySelectorAll('.studio-project-card')).toHaveLength(1);
+  expect(container.querySelector('.studio-project-card').textContent).toContain('Akogare Watch Club');
   expect(screen.getByText('Patrons with access · current')).toBeTruthy();
 });
