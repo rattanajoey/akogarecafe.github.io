@@ -70,7 +70,7 @@ function ActivityChart({ sources, reports, metric, range }) {
       {projects.map(p => { const pts = points(p); return <g key={p.id}><polyline points={pts.map(v => `${v.x},${v.y}`).join(' ')} fill="none" stroke={p.chartColor} strokeWidth="3" strokeLinejoin="round"/>{pts.map(v => <circle key={v.date} cx={v.x} cy={v.y} r="3" fill={p.chartColor}><title>{p.name} · {v.date}: {format(v.value)}</title></circle>)}</g>; })}
       {rows.length > 0 && ticks.map(date => <text key={date} x={46 + chartFraction(date, range) * 694} y="208" textAnchor="middle">{new Date(`${date}T12:00:00Z`).toLocaleDateString('en', { month: 'short', day: 'numeric', timeZone: 'UTC' })}</text>)}
     </svg>
-    {!rows.length && <div className="studio-chart-empty"><span className="studio-empty-icon"><Icon name="trend" size={25}/></span><strong>{collecting ? 'Collecting new data' : processing ? 'Waiting for daily reports' : 'Your growth story starts here'}</strong><span>{collecting ? 'Daily reports appear after a completed day and processing.' : processing ? 'YouTube has not returned this day yet. Try a longer period or check back later.' : 'Connect a reporting source to see daily performance.'}</span></div>}
+    {!rows.length && <div className="studio-chart-empty"><span className="studio-empty-icon"><Icon name="trend" size={25}/></span><strong>{collecting ? 'Collecting new data' : processing ? 'Waiting for daily reports' : 'Your growth story starts here'}</strong><span>{collecting ? 'Daily reports appear after a completed day and processing.' : processing ? 'The provider has not finalized this day yet. Try a longer period or check back later.' : 'Connect a reporting source to see daily performance.'}</span></div>}
   </div>;
 }
 
