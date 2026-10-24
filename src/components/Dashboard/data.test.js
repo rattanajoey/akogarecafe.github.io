@@ -1,4 +1,4 @@
-import { coverage, audienceTotal, formatAudience, dateRange, change, chartSeries, chartFraction, periodComparison, signed, csv, SOURCES } from './data';
+import { coverage, audienceTotal, formatAudience, formatMoney, dateRange, change, chartSeries, chartFraction, periodComparison, signed, csv, SOURCES } from './data';
 import { fetchGoogle } from './api';
 
 test('missing sources remain unknown and a real zero remains zero', () => {
@@ -151,4 +151,22 @@ test('Patreon membership exports are snapshots and do not inflate social followe
   expect(coverage([source],reports,'views').value).toBeNull();
   const text=csv(reports,[source],{start:'2026-10-01',end:'2026-10-28'});
   expect(text).toContain('"AkogareWatchClub","","","connected","paidMembers","2"');
+});
+
+test('money keeps cents and currency explicit and exports lifetime support without period dates', () => {
+  expect(formatMoney(0,'USD')).toMatch(/USD\s0\.00/);
+  expect(formatMoney(1234,'EUR')).toMatch(/EUR\s12\.34/);
+  expect(formatMoney(null,'USD')).toBe('—');
+  expect(formatMoney(100,undefined)).toBe('—');
+  const source=SOURCES.find(s=>s.id==='watch-patreon');
+  const text=csv({'watch-patreon':{status:'connected',currency:'EUR',metrics:{lifetimeSupportCents:1234}}},[source],{start:'2026-10-01',end:'2026-10-28'});
+  expect(text).toContain('"Currency"');
+  expect(text).toContain('"AkogareWatchClub","","","connected","lifetimeSupportCents","1234","","EUR"');
+});
+
+
+test('Stripe exports net payment activity with its actual dates and currency', () => {
+  const source=SOURCES.find(s=>s.id==='cine-web');
+  const text=csv({'cine-web':{status:'connected',earnings:{status:'connected',provider:'stripe',amount:-0.45,currency:'USD',start:'2026-10-01',end:'2026-10-07'}}},[source],{start:'other',end:'other'});
+  expect(text).toContain('"2026-10-01","2026-10-07","connected","netPaymentActivity","-0.45","","USD"');
 });

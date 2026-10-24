@@ -23,6 +23,7 @@ export const METRICS = {
   paidMembers: { label: 'Paid memberships', detail: 'Active paid access · current', kinds: ['patreon'] },
   trialMembers: { label: 'Free trials', detail: 'Active trial access · current', kinds: ['patreon'] },
   declinedMembers: { label: 'Declined memberships', detail: 'Payment declined · current', kinds: ['patreon'] },
+  lifetimeSupportCents: { label: 'Lifetime member support', detail: 'Patreon payments · before fees', kinds: ['patreon'] },
   followers: { label: 'Combined audience', detail: 'YouTube subscribers + social followers', kinds: ['youtube', 'instagram', 'pinterest'] },
   netFollowers: { label: 'Net subscribers', detail: 'Gained minus lost · selected period', kinds: ['youtube', 'instagram', 'pinterest'] },
   views: { label: 'Content views', detail: 'YouTube + Instagram · selected period', kinds: ['youtube', 'instagram'] },
@@ -88,14 +89,22 @@ export function chartFraction(date, range) {
 }
 export const format = value => finite(value) ? new Intl.NumberFormat('en', { maximumFractionDigits: 0 }).format(value) : '—';
 export const compact = value => finite(value) ? new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(value) : '—';
+export function formatMoney(cents, currency) {
+  if (!Number.isSafeInteger(cents) || cents < 0 || !/^[A-Z]{3}$/.test(currency || '')) return '—';
+  return formatCurrency(cents / 100, currency);
+}
+export const formatCurrency = (amount, currency) => finite(amount) && typeof currency === 'string' && /^[A-Z]{3}$/.test(currency) ? new Intl.NumberFormat('en', { style: 'currency', currency, currencyDisplay: 'code', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount) : '—';
 export function csv(reports, sources, range) {
   const cell = value => `"${String(value ?? '').replace(/"/g, '""')}"`;
-  const rows = [['Project', 'Source', 'Account', 'Start date', 'End date', 'Status', 'Metric', 'Value', 'Refreshed at']];
+  const rows = [['Project', 'Source', 'Account', 'Start date', 'End date', 'Status', 'Metric', 'Value', 'Refreshed at', 'Currency']];
   for (const source of sources) {
     const report = reports[source.id];
     for (const [metric, value] of Object.entries(report?.metrics || {})) {
-      if (finite(value)) rows.push([PROJECTS.find(p => p.id === source.project).name, source.label, source.account, ['followers', 'lifetimeViews', 'publishedItems', 'patrons', 'paidMembers', 'trialMembers', 'declinedMembers'].includes(metric) ? '' : range.start, ['followers', 'lifetimeViews', 'publishedItems', 'patrons', 'paidMembers', 'trialMembers', 'declinedMembers'].includes(metric) ? '' : range.end, report.status, metric, value, report.fetchedAt]);
+      const snapshot = ['followers', 'lifetimeViews', 'publishedItems', 'patrons', 'paidMembers', 'trialMembers', 'declinedMembers', 'lifetimeSupportCents'].includes(metric);
+      if (finite(value)) rows.push([PROJECTS.find(p => p.id === source.project).name, source.label, source.account, snapshot ? '' : range.start, snapshot ? '' : range.end, report.status, metric, value, report.fetchedAt, metric === 'lifetimeSupportCents' ? report.currency : '']);
     }
+    const earnings=report?.earnings;
+    if (finite(earnings?.amount) && earnings.currency) rows.push([PROJECTS.find(p => p.id === source.project).name, source.label, source.account, earnings.start, earnings.end, earnings.status, earnings.provider === 'stripe' ? 'netPaymentActivity' : 'estimatedRevenue', earnings.amount, report.fetchedAt, earnings.currency]);
   }
   return rows.map(row => row.map(cell).join(',')).join('\r\n');
 }

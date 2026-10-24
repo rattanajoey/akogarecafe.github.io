@@ -79,12 +79,15 @@ test('project cards separate YouTube subscribers from Instagram while the overvi
 test('Patreon is separate from social audience and its snapshot filter never invents period growth', () => {
   const { container } = render(<Workspace reports={{
     'watch-youtube': {status:'connected',metrics:{followers:1990}},
-    'watch-patreon': {status:'connected',connectionMode:'automatic',metrics:{patrons:4,paidMembers:2,trialMembers:1,declinedMembers:0},previous:{paidMembers:100}},
+    'watch-patreon': {status:'connected',connectionMode:'automatic',currency:'USD',metrics:{patrons:4,paidMembers:2,trialMembers:1,declinedMembers:0,lifetimeSupportCents:1234},previous:{paidMembers:100}},
   }}/>);
   expect(container.querySelector('.studio-summary .studio-stat-value').textContent).toBe('≈1,990');
   const panel=screen.getByRole('region',{name:'Patreon membership'});
   expect(panel.textContent).toContain('Paid memberships2');
   expect(panel.textContent).toContain('separate from your social audience');
+  const earnings=screen.getByRole('region',{name:'Project earnings'});
+  expect(earnings.textContent).toMatch(/lifetime member supportUSD\s12\.34/);
+  expect(earnings.textContent).toContain('before fees');
   fireEvent.change(screen.getByLabelText('Filter by platform'),{target:{value:'patreon'}});
   expect(container.querySelectorAll('.studio-summary .studio-stat-value')[1].textContent).toBe('2');
   expect(container.querySelector('.studio-summary').textContent).not.toContain('vs previous');
@@ -93,4 +96,24 @@ test('Patreon is separate from social audience and its snapshot filter never inv
   expect(container.querySelectorAll('.studio-project-card')).toHaveLength(1);
   expect(container.querySelector('.studio-project-card').textContent).toContain('Akogare Watch Club');
   expect(screen.getByText('Patrons with access · current')).toBeTruthy();
+  fireEvent.change(screen.getByRole('combobox',{name:'Reporting period'}),{target:{value:'7'}});
+  expect(earnings.textContent).toMatch(/lifetime member supportUSD\s12\.34/);
+});
+
+
+test('earnings distinguish period revenue, lifetime support, missing access and currency', () => {
+  render(<Workspace reports={{
+    'cafe-youtube':{status:'connected',earnings:{status:'connected',amount:0,currency:'USD',start:'2026-10-01',end:'2026-10-02',previousAmount:1,note:'Estimated revenue'}},
+    'watch-patreon':{status:'connected',currency:'EUR',metrics:{lifetimeSupportCents:1234}},
+    'cine-web':{status:'connected',earnings:{status:'connected',provider:'stripe',amount:4.55,currency:'USD',start:'2026-10-01',end:'2026-10-07',previousAmount:8,note:'Account-level payment activity'}},
+  }}/>);
+  const earnings=screen.getByRole('region',{name:'Project earnings'});
+  expect(earnings.textContent).toMatch(/USD\s0\.00/);
+  expect(earnings.textContent).toMatch(/EUR\s12\.34/);
+  expect(earnings.textContent).toMatch(/USD\s4\.55/);
+  expect(earnings.textContent.match(/Stripe account · net payment activity/g)).toHaveLength(1);
+  expect(earnings.textContent).toContain('2026-10-01 — 2026-10-02');
+  expect(earnings.textContent).toContain('Lifetime · before fees');
+  expect(earnings.textContent).toContain('Unavailable');
+  expect(earnings.textContent).toContain('Read-only revenue reporting is not connected');
 });
