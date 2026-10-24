@@ -18,7 +18,7 @@ export const SOURCES = [
   { id: 'cine-youtube', project: 'cine', kind: 'youtube', label: 'YouTube', account: '@CineClubCafe', channelId: 'UCpilsdPRmwBxCTLxCZmBXDg', url: 'https://www.youtube.com/@CineClubCafe' },
 ];
 export const METRICS = {
-  followers: { label: 'Total audience', detail: 'Subscribers + followers · current totals', kinds: ['youtube', 'instagram', 'pinterest'] },
+  followers: { label: 'Combined audience', detail: 'YouTube subscribers + social followers', kinds: ['youtube', 'instagram', 'pinterest'] },
   netFollowers: { label: 'Net subscribers', detail: 'Gained minus lost · selected period', kinds: ['youtube', 'instagram', 'pinterest'] },
   views: { label: 'Content views', detail: 'YouTube + Instagram · selected period', kinds: ['youtube', 'instagram'] },
   lifetimeViews: { label: 'YouTube views', detail: 'Lifetime views · current channel totals', kinds: ['youtube'] },
@@ -35,6 +35,10 @@ export function coverage(sources, reports, metric) {
   const known = eligible.filter(s => finite(reports[s.id]?.metrics?.[metric]));
   return { value: sumKnown(known.map(s => reports[s.id].metrics[metric])), known: known.length, total: eligible.length };
 }
+export function audienceTotal(sources, reports) {
+  return { ...coverage(sources, reports, 'followers'), rounded: sources.some(source => source.kind === 'youtube' && finite(reports[source.id]?.metrics?.followers) && reports[source.id].metrics.followers >= 1000) };
+}
+export const formatAudience = total => `${finite(total.value) && total.rounded ? '≈' : ''}${format(total.value)}`;
 export function change(current, previous) {
   if (!finite(current) || !finite(previous) || previous === 0) return null;
   return ((current - previous) / previous) * 100;

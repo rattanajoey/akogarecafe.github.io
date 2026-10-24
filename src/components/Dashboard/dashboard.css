@@ -138,3 +138,5 @@
 .studio-project-card-foot button{margin:0;white-space:nowrap}
 @media(max-width:700px){.studio-project-grid{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:580px){.studio-project-card{padding:18px 18px 0}.studio-project-name{font-size:14px!important}.studio-project-numbers{gap:16px;padding:16px 0}.studio-project-metric>strong{font-size:25px}.studio-project-card-foot{margin: auto -18px 0;padding:12px 18px}}
+
+.studio-project-audience-detail{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0 12px;border-top:1px solid #f0f2e9;color:#5c6959;font-size:11px;line-height:18px}.studio-project-audience-detail strong{font-weight:500;font-variant-numeric:tabular-nums;color:#303c31}

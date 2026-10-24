@@ -57,3 +57,21 @@ test('summary changes show net subscribers and signed counts with explicit parti
   fireEvent.change(screen.getByRole('combobox',{name:'Reporting period'}),{target:{value:'1'}});
   expect(cards[2].textContent).toContain('vs previous day');
 });
+
+test('project cards separate YouTube subscribers from Instagram while the overview labels the combined count', () => {
+  const { container } = render(<Workspace reports={{
+    'cafe-youtube': { status:'connected', metrics:{followers:2630,netFollowers:6} },
+    'cafe-instagram': { status:'partial', metrics:{followers:79} },
+  }}/>);
+  const card = container.querySelector('.studio-project-card');
+  expect(card.querySelector('.studio-project-metric>strong').textContent).toBe('≈2,630');
+  expect(card.querySelector('.studio-project-metric-label').textContent).toBe('YouTube subscribers');
+  expect(card.querySelector('.studio-project-audience-detail').textContent).toBe('Instagram followers79');
+  expect(container.querySelector('.studio-summary .studio-stat').textContent).toContain('Combined audience≈2,709');
+  expect(screen.getByText('Subscribers · rounded')).toBeTruthy();
+  fireEvent.change(screen.getByLabelText('Filter by platform'),{target:{value:'instagram'}});
+  expect(card.querySelector('.studio-project-metric>strong').textContent).toBe('79');
+  expect(card.querySelector('.studio-project-metric-label').textContent).toBe('Instagram followers');
+  expect(card.querySelector('.studio-project-audience-detail')).toBeNull();
+  expect(container.querySelector('.studio-summary .studio-stat-label').textContent).toBe('Instagram followers');
+});

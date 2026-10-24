@@ -1,9 +1,21 @@
-import { coverage, dateRange, change, chartSeries, chartFraction, periodComparison, signed, csv, SOURCES } from './data';
+import { coverage, audienceTotal, formatAudience, dateRange, change, chartSeries, chartFraction, periodComparison, signed, csv, SOURCES } from './data';
 import { fetchGoogle } from './api';
 
 test('missing sources remain unknown and a real zero remains zero', () => {
   expect(coverage(SOURCES, {}, 'views')).toEqual({ value: null, known: 0, total: 5 });
   expect(coverage(SOURCES, { 'cafe-youtube': { metrics: { views: 0 } } }, 'views')).toEqual({ value: 0, known: 1, total: 5 });
+});
+
+test('audience counts distinguish mixed platforms, rounded subscribers, exact small counts and missing data', () => {
+  const sources = SOURCES.filter(s => s.project === 'cafe');
+  const reports = { 'cafe-youtube': { metrics: { followers: 2630 } }, 'cafe-instagram': { metrics: { followers: 79 } } };
+  expect(audienceTotal(sources, reports)).toMatchObject({ value: 2709, rounded: true });
+  expect(formatAudience(audienceTotal(sources.filter(s => s.kind === 'youtube'), reports))).toBe('≈2,630');
+  expect(formatAudience(audienceTotal(sources.filter(s => s.kind === 'instagram'), reports))).toBe('79');
+  reports['cafe-youtube'].metrics.followers = 0;
+  expect(formatAudience(audienceTotal(sources.filter(s => s.kind === 'youtube'), reports))).toBe('0');
+  reports['cafe-youtube'].metrics.followers = null;
+  expect(formatAudience(audienceTotal(sources.filter(s => s.kind === 'youtube'), reports))).toBe('—');
 });
 test('social views do not include lifetime views, Pinterest impressions or website traffic', () => {
   const reports = { 'cafe-youtube': { metrics: { views: 11, lifetimeViews: 900 } }, 'pindo-pinterest': { metrics: { views: 600, impressions: 1000 } }, 'pindo-web': { metrics: { views: 800, sessions: 90 } } };
