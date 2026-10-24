@@ -125,15 +125,29 @@ function reporter(config, dependencies = {}) {
     if (!report?.summary_metrics) throw new Error('Pinterest did not provide a complete report.');
     const parse=metrics=>({impressions:safeNumber(metrics.IMPRESSION),outboundClicks:safeNumber(metrics.OUTBOUND_CLICK),saves:safeNumber(metrics.SAVE)});
     const rows=report.daily_metrics||[];
-    if(dates.start===dates.end && rows.length && rows.every(row=>row.data_status!=='READY'))return{status:'connected',connectionState:'processing',metrics:{followers:safeNumber(profile.follower_count)},daily:[],note:'Pinterest has not finalized this day yet. Current followers are available; daily metrics stay unknown until processing finishes.'};
-    const result={status:'connected',metrics:{followers:safeNumber(profile.follower_count),...parse(report.summary_metrics)},daily:(report.daily_metrics||[]).filter(row=>row.data_status==='READY' && /^\d{4}-\d{2}-\d{2}$/.test(row.date)).map(row=>({date:row.date,...parse(row.metrics||{})})),note:'Organic activity on pins created or saved by @akogarecafestudio, in UTC. Pinterest impressions are separate from video views. Recent dates may still be processing.'};
+    const ready=(items,start,end)=>items.filter(row=>row.data_status==='READY' && /^\d{4}-\d{2}-\d{2}$/.test(row.date) && row.date>=start && row.date<=end).map(row=>({date:row.date,...parse(row.metrics||{})})).sort((a,b)=>a.date.localeCompare(b.date));
+    const daily=ready(rows,dates.start,dates.end);
+    if(!daily.length && (dates.start===dates.end || rows.length))return{status:'connected',connectionState:'processing',metrics:{followers:safeNumber(profile.follower_count)},daily:[],note:'Pinterest has not finalized reports for these dates yet. Current followers are available; daily metrics stay unknown until processing finishes.'};
+    const totals=items=>Object.fromEntries(['impressions','outboundClicks','saves'].map(key=>[key,items.every(row=>safeNumber(row[key])!==null)?items.reduce((sum,row)=>sum+row[key],0):null]));
+    const complete=(items,start,end)=>items.length===Math.round((Date.parse(end)-Date.parse(start))/86400000)+1 && new Set(items.map(row=>row.date)).size===items.length;
+    const result={status:'connected',metrics:{followers:safeNumber(profile.follower_count),...(daily.length?totals(daily):parse(report.summary_metrics))},daily,note:'Organic activity on pins created or saved by @akogarecafestudio, in UTC. Pinterest impressions are separate from video views. Only finalized daily metrics are included.'};
     const days=Math.round((Date.parse(dates.end)-Date.parse(dates.start))/86400000)+1;
     const shift=date=>new Date(Date.parse(date+'T00:00:00Z')-days*86400000).toISOString().slice(0,10);
-    // Pinterest only retains 90 days through this endpoint. Never compare a
-    // truncated previous period with a complete current period.
-    const previousStart=shift(dates.start);
-    if(previousStart>=range(90).start && rows.length===days && rows.every(row=>row.data_status==='READY')){
-      try{const previous=(await query(previousStart,shift(dates.end))).all;if(previous?.summary_metrics && previous.daily_metrics?.length===days && previous.daily_metrics.every(row=>row.data_status==='READY'))result.previous=parse(previous.summary_metrics);}catch{/* Current reports remain available without comparison history. */}
+    const through=daily.at(-1)?.date;
+    if(through){result.reportedThrough=through;result.note+=` Finalized reports are available through ${through}; ${daily.length} of ${days} selected days are included.`;}
+    // Shift the same finalized span back by one selected period. Do not invent
+    // a comparison when history has gaps or exceeds Pinterest's 90-day limit.
+    const previousStart=shift(dates.start),previousEnd=through?shift(through):null;
+    if(through && previousStart>=range(90).start && complete(daily,dates.start,through)){
+      try{
+        const previous=(await query(previousStart,previousEnd)).all;
+        const previousDaily=ready(previous?.daily_metrics||[],previousStart,previousEnd);
+        if(complete(previousDaily,previousStart,previousEnd)){
+          result.previous=totals(previousDaily);
+          result.comparison={start:dates.start,end:through,previousStart,previousEnd,matchedDays:through!==dates.end};
+          result.note+=' Changes compare the same finalized dates shifted back one selected period.';
+        }
+      }catch{/* Current reports remain available without comparison history. */}
     }
     return result;
   }

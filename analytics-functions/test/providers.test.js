@@ -157,6 +157,34 @@ test('one-day YouTube reports preserve unknown metrics until a day row exists, i
   }finally{global.fetch=originalFetch;}
 });
 
+test('Pinterest changes compare the same finalized dates and ignore unfinished estimates',async()=>{
+  const originalFetch=global.fetch,queries=[],dates=range(7);let forceProcessing=false;
+  const day=(date,offset)=>new Date(Date.parse(date+'T00:00:00Z')+offset*86400000).toISOString().slice(0,10);
+  global.fetch=async(url)=>{
+    const query=new URL(url);let body;
+    if(query.pathname==='/v5/user_account')body={username:'akogarecafestudio',follower_count:1};
+    else{
+      queries.push(query);const start=query.searchParams.get('start_date'),end=query.searchParams.get('end_date');
+      const current=start===dates.start;
+      const count=Math.round((Date.parse(end)-Date.parse(start))/86400000)+1;
+      body={all:{summary_metrics:{IMPRESSION:9999,OUTBOUND_CLICK:9999,SAVE:9999},daily_metrics:Array.from({length:count},(_,i)=>({date:day(start,i),data_status:forceProcessing||(current&&i===count-1)?'PROCESSING':'READY',metrics:{IMPRESSION:current?10:5,OUTBOUND_CLICK:0,SAVE:1}}))}};
+    }
+    return{ok:true,json:async()=>body};
+  };
+  try{
+    const report=(await reporter({pinterest:{access_token:'test-readonly'}}).sources(7))['pindo-pinterest'];
+    assert.equal(report.metrics.impressions,60);assert.equal(report.previous.impressions,30);assert.equal(report.metrics.outboundClicks,0);assert.equal(report.daily.length,6);
+    assert.equal(report.reportedThrough,day(dates.end,-1));assert.equal(report.comparison.matchedDays,true);
+    assert.equal(queries[1].searchParams.get('start_date'),day(dates.start,-7));assert.equal(queries[1].searchParams.get('end_date'),day(dates.end,-8));
+    forceProcessing=true;
+    const pending=(await reporter({pinterest:{access_token:'test-readonly'}}).sources(1))['pindo-pinterest'];
+    assert.equal(pending.connectionState,'processing');assert.equal(pending.metrics.outboundClicks,undefined);assert.equal(pending.metrics.followers,1);
+    forceProcessing=false;
+    const finalized=(await reporter({pinterest:{access_token:'test-readonly'}}).sources(1))['pindo-pinterest'];
+    assert.equal(finalized.metrics.outboundClicks,0);
+  }finally{global.fetch=originalFetch;}
+});
+
 test('one-day Analytics compares yesterday with the preceding completed day',async()=>{
   const{GoogleAuth}=require('google-auth-library');const originalGetClient=GoogleAuth.prototype.getClient,originalFetch=global.fetch,requests=[];
   GoogleAuth.prototype.getClient=async()=>({getAccessToken:async()=>({token:'test-google-token'})});
