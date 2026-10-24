@@ -47,22 +47,42 @@ function reporter(config) {
     if (!stats) throw new Error('YouTube could not find this channel.');
     const report = { status: 'partial', metrics: { followers: stats.hiddenSubscriberCount ? null : safeNumber(stats.subscriberCount), lifetimeViews: safeNumber(stats.viewCount), publishedItems: safeNumber(stats.videoCount) }, daily: [], note: 'Current channel totals are live. Connect YouTube Analytics for views, watch time and growth during the selected period. YouTube subscriber totals may be rounded.' };
     if (String(connection?.scope || '').split(' ').includes(SCOPES.youtube)) {
-      const params = new URLSearchParams({ ids: `channel==${CHANNELS[id]}`, startDate: dates.start, endDate: dates.end, dimensions: 'day', metrics: 'views,estimatedMinutesWatched,subscribersGained,subscribersLost,likes,comments', sort: 'day' });
-      let data;
-      try { data = await jsonRequest(`https://youtubeanalytics.googleapis.com/v2/reports?${params}`, token); }
+      const query = (start, end) => {
+        const params = new URLSearchParams({ ids: `channel==${CHANNELS[id]}`, startDate: start, endDate: end, dimensions: 'day', metrics: 'views,estimatedMinutesWatched,subscribersGained,subscribersLost,likes,comments', sort: 'day' });
+        return jsonRequest(`https://youtubeanalytics.googleapis.com/v2/reports?${params}`, token);
+      };
+      const parse = data => {
+        if (!Array.isArray(data.columnHeaders)) throw new Error('YouTube returned an invalid analytics report.');
+        const names = data.columnHeaders.map(h => h.name);
+        const rows = (data.rows || []).map(row => Object.fromEntries(names.map((name,i) => [name,row[i]])));
+        const sum = key => names.includes(key) && rows.every(row => safeNumber(row[key]) !== null) ? rows.reduce((n,row) => n + safeNumber(row[key]),0) : null;
+        const minutes = sum('estimatedMinutesWatched'), gained = sum('subscribersGained'), lost = sum('subscribersLost');
+        return { rows, metrics: { views:sum('views'),watchHours:minutes === null ? null : minutes/60,subscribersGained:gained,subscribersLost:lost,netFollowers:gained === null || lost === null ? null : gained-lost,likes:sum('likes'),comments:sum('comments') } };
+      };
+      let current;
+      try { current = parse(await query(dates.start, dates.end)); }
       catch { report.note = 'Current channel totals are live, but the period report could not be loaded. Check the channel reporting authorization; recent reports may still be processing.'; return report; }
-      if (!Array.isArray(data.columnHeaders)) throw new Error('YouTube returned an invalid analytics report.');
-      const names = data.columnHeaders.map(h => h.name);
-      const rows = (data.rows || []).map(row => Object.fromEntries(names.map((name,i) => [name,row[i]])));
-      if (dates.start === dates.end && !rows.length) {
+      if (dates.start === dates.end && !current.rows.length) {
         report.status = 'connected'; report.connectionState = 'processing';
         report.note = 'YouTube has not returned a report for this day yet. Daily reports can take 48–72 hours to process. Current channel totals are available; missing daily metrics stay unknown.';
         return report;
       }
-      const sum = key => rows.reduce((n,row) => n+(safeNumber(row[key]) || 0),0);
-      Object.assign(report.metrics,{ views:sum('views'),watchHours:sum('estimatedMinutesWatched')/60,subscribersGained:sum('subscribersGained'),subscribersLost:sum('subscribersLost'),likes:sum('likes'),comments:sum('comments') });
-      report.daily = rows.map(row => ({ date:row.day,views:safeNumber(row.views) }));
+      Object.assign(report.metrics,current.metrics);
+      report.daily = current.rows.map(row => ({ date:row.day,views:safeNumber(row.views) }));
       report.status = 'connected'; report.note = 'YouTube reporting uses Pacific time. Recent days may still be processing.';
+      const through = current.rows.map(row => row.day).filter(day => /^\d{4}-\d{2}-\d{2}$/.test(day) && day >= dates.start && day <= dates.end).sort().at(-1);
+      if (through) {
+        report.reportedThrough = through;
+        const days = Math.round((Date.parse(dates.end)-Date.parse(dates.start))/86400000)+1;
+        const shift = date => new Date(Date.parse(date+'T00:00:00Z')-days*86400000).toISOString().slice(0,10);
+        const comparison = {start:dates.start,end:through,previousStart:shift(dates.start),previousEnd:shift(through),matchedDays:through !== dates.end};
+        try {
+          const previous = parse(await query(comparison.previousStart, comparison.previousEnd));
+          // An empty response cannot prove whether the comparison history is available.
+          if (previous.rows.length) { report.previous = previous.metrics; report.comparison = comparison; }
+        } catch { /* Keep the current report when comparison history cannot be loaded. */ }
+        report.note += ` Reports are available through ${through}. Changes compare the same dates shifted back one selected period.`;
+      }
     }
     return report;
   }
@@ -137,13 +157,13 @@ function reporter(config) {
   return {sources};
 }
 async function accountCounts(auth, dates) {
-  let pageToken, registeredUsers=0, signedInUsers=0, pages=0;
+  let pageToken, registeredUsers=0, signedInUsers=0, newAccounts=0, creationDatesKnown=true, pages=0;
   do {
     const page=await auth.listUsers(1000,pageToken);
-    for(const user of page.users){registeredUsers++;const last=Date.parse(user.metadata?.lastSignInTime);if(last>=dates.startSeconds*1000&&last<dates.untilSeconds*1000)signedInUsers++;}
+    for(const user of page.users){registeredUsers++;const last=Date.parse(user.metadata?.lastSignInTime);if(last>=dates.startSeconds*1000&&last<dates.untilSeconds*1000)signedInUsers++;const created=Date.parse(user.metadata?.creationTime);if(!Number.isFinite(created))creationDatesKnown=false;else if(created>=dates.startSeconds*1000&&created<dates.untilSeconds*1000)newAccounts++;}
     pageToken=page.pageToken;pages++;
   }while(pageToken&&pages<20);
-  return {registeredUsers,signedInUsers,note:pageToken?'Limited to the first 20,000 accounts; counts are partial.':'Registered accounts are current totals. Sign-ins measure authentication activity, not all product usage.'};
+  return {registeredUsers,signedInUsers,newAccounts:creationDatesKnown&&!pageToken?newAccounts:null,note:pageToken?'Limited to the first 20,000 accounts; counts are partial.':'Registered accounts are current totals. Sign-ins measure authentication activity, not all product usage.'};
 }
 function allowed(data) { return data && [1,7,28,90].includes(data.days) && Object.keys(data).length===1; }
 module.exports={SOURCE_IDS,CHANNELS,range,safeNumber,reporter,accountCounts,allowed};

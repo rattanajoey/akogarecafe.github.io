@@ -88,21 +88,38 @@ export async function fetchGoogle(source, token, days, mapping = {}) {
     const info = await googleRequest(`https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${source.channelId}`, token);
     const stats = info.items?.[0]?.statistics;
     if (stats) result.metrics = { followers: stats.hiddenSubscriberCount ? null : Number(stats.subscriberCount), lifetimeViews: Number(stats.viewCount), publishedItems: Number(stats.videoCount) };
-    const query = async (start, end, daily) => {
-      const params = new URLSearchParams({ ids: `channel==${source.channelId}`, startDate: start, endDate: end, metrics: 'views,estimatedMinutesWatched,subscribersGained,subscribersLost,likes,comments', ...(daily ? { dimensions: 'day', sort: 'day' } : {}) });
+    const query = async (start, end) => {
+      const params = new URLSearchParams({ ids: `channel==${source.channelId}`, startDate: start, endDate: end, metrics: 'views,estimatedMinutesWatched,subscribersGained,subscribersLost,likes,comments', dimensions: 'day', sort: 'day' });
       return googleRequest(`https://youtubeanalytics.googleapis.com/v2/reports?${params}`, token);
     };
-    const [current, previous, daily] = await Promise.all([query(range.start, range.end, false), query(range.previousStart, range.previousEnd, false), query(range.start, range.end, true)]);
-    if (days === 1 && !current.rows?.length && !daily.rows?.length) {
+    const parse = data => {
+      if (!Array.isArray(data.columnHeaders)) throw new Error('YouTube returned an invalid analytics report.');
+      const names = data.columnHeaders.map(h => h.name);
+      const rows = (data.rows || []).map(row => Object.fromEntries(names.map((name, i) => [name, row[i]])));
+      const sum = key => names.includes(key) && rows.every(row => typeof row[key] === 'number' && Number.isFinite(row[key])) ? rows.reduce((n, row) => n + row[key], 0) : null;
+      const minutes = sum('estimatedMinutesWatched'), gained = sum('subscribersGained'), lost = sum('subscribersLost');
+      return { rows, metrics: { views: sum('views'), watchHours: minutes === null ? null : minutes / 60, subscribersGained: gained, subscribersLost: lost, netFollowers: gained === null || lost === null ? null : gained - lost, likes: sum('likes'), comments: sum('comments') } };
+    };
+    const current = parse(await query(range.start, range.end));
+    if (days === 1 && !current.rows.length) {
       result.connectionState = 'processing';
       result.note = 'YouTube has not returned a report for this day yet. Daily reports can take 48–72 hours to process. Current channel totals are available; missing daily metrics stay unknown.';
       return result;
     }
-    const parse = row => row ? { views: Number(row[0]), watchHours: Number(row[1]) / 60, subscribersGained: Number(row[2]), subscribersLost: Number(row[3]), likes: Number(row[4]), comments: Number(row[5]) } : { views: 0, watchHours: 0, subscribersGained: 0, subscribersLost: 0, likes: 0, comments: 0 };
-    Object.assign(result.metrics, parse(current.rows?.[0]));
-    result.previous = days === 1 && !previous.rows?.length ? {} : parse(previous.rows?.[0]);
-    result.daily = (daily.rows || []).map(row => ({ date: row[0], ...parse(row.slice(1)) }));
+    Object.assign(result.metrics, current.metrics);
+    result.daily = current.rows.map(row => ({ date: row.day, views: row.views }));
     result.note = 'YouTube reporting dates use Pacific time. Recent days may still be processing.';
+    const through = current.rows.map(row => row.day).filter(day => /^\d{4}-\d{2}-\d{2}$/.test(day) && day >= range.start && day <= range.end).sort().at(-1);
+    if (through) {
+      result.reportedThrough = through;
+      const shift = date => new Date(Date.parse(date + 'T00:00:00Z') - days * 86400000).toISOString().slice(0, 10);
+      const comparison = { start: range.start, end: through, previousStart: range.previousStart, previousEnd: shift(through), matchedDays: through !== range.end };
+      try {
+        const previous = parse(await query(comparison.previousStart, comparison.previousEnd));
+        if (previous.rows.length) { result.previous = previous.metrics; result.comparison = comparison; }
+      } catch { /* Current reporting remains usable without comparison history. */ }
+      result.note += ` Reports are available through ${through}. Changes compare the same dates shifted back one selected period.`;
+    }
     return result;
   }
   if (!/^\d+$/.test(mapping.propertyId || '') || !/^\d+$/.test(mapping.streamId || '')) throw new Error('Choose a property and its matching web or iOS stream first.');

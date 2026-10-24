@@ -150,3 +150,32 @@ test('one-day Analytics compares yesterday with the preceding completed day',asy
     assert.equal(report.metrics.sessions,3);assert.equal(report.previous.sessions,3);
   }finally{GoogleAuth.prototype.getClient=originalGetClient;global.fetch=originalFetch;}
 });
+
+
+test('YouTube net growth and prior totals use matching reported dates without rounded subscriber subtraction',async()=>{
+  const originalFetch=global.fetch,queries=[],dates=range(7);
+  const through=new Date(Date.parse(dates.end+'T00:00:00Z')-2*86400000).toISOString().slice(0,10);
+  let historyFails=false;
+  global.fetch=async(url)=>{
+    if(url.includes('/token'))return{ok:true,json:async()=>({access_token:'test-access'})};
+    if(url.includes('/channels?'))return{ok:true,json:async()=>({items:[{id:new URL(url).searchParams.get('id'),statistics:{subscriberCount:'1000',viewCount:'5000',videoCount:'3'}}]})};
+    const params=new URL(url).searchParams;queries.push(params);const current=params.get('startDate')===dates.start;
+    return{ok:current||!historyFails,status:403,json:async()=>({columnHeaders:['day','views','estimatedMinutesWatched','subscribersGained','subscribersLost','likes','comments'].map(name=>({name})),rows:[[current?through:params.get('endDate'),current?50:100,60,3,10,4,1]]})};
+  };
+  const config={googleReportingClient:{client_id:'test',client_secret:'test'},youtubeReporting:{'cafe-youtube':{channelId:'UCP77ij2ue_xEz2f5TmH0Rbw',refresh_token:'test-refresh',scope:'https://www.googleapis.com/auth/yt-analytics.readonly'}}};
+  try{
+    const report=(await reporter(config).sources(7))['cafe-youtube'];
+    assert.equal(report.metrics.netFollowers,-7);assert.equal(report.previous.views,100);assert.equal(report.comparison.matchedDays,true);
+    assert.equal(report.comparison.end,through);assert.equal(queries[1].get('endDate'),new Date(Date.parse(through+'T00:00:00Z')-7*86400000).toISOString().slice(0,10));
+    historyFails=true;
+    const retained=(await reporter(config).sources(7))['cafe-youtube'];
+    assert.equal(retained.metrics.views,50);assert.equal(retained.previous,undefined);assert.equal(retained.status,'connected');
+  }finally{global.fetch=originalFetch;}
+});
+
+test('new accounts are bounded by creation dates and missing history never becomes zero',async()=>{
+  const dates=range(1,new Date('2026-01-02T00:00:00Z'));
+  const auth={listUsers:async()=>({users:[{metadata:{creationTime:'2026-01-01T00:00:00Z'}},{metadata:{creationTime:'2026-01-01T23:59:59Z'}},{metadata:{creationTime:'2026-01-02T00:00:00Z'}}]})};
+  assert.equal((await accountCounts(auth,dates)).newAccounts,2);
+  assert.equal((await accountCounts({listUsers:async()=>({users:[{metadata:{}}]})},dates)).newAccounts,null);
+});

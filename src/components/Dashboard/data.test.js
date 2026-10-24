@@ -1,4 +1,4 @@
-import { coverage, dateRange, change, chartSeries, chartFraction, csv, SOURCES } from './data';
+import { coverage, dateRange, change, chartSeries, chartFraction, periodComparison, signed, csv, SOURCES } from './data';
 import { fetchGoogle } from './api';
 
 test('missing sources remain unknown and a real zero remains zero', () => {
@@ -71,7 +71,7 @@ test('one-day YouTube reports distinguish processing from an explicit zero and r
     const query = new URL(url); requests.push(query);
     return { ok: true, json: async () => url.includes('/channels?')
       ? { items: [{ statistics: { subscriberCount: '10', viewCount: '100', videoCount: '3' } }] }
-      : { rows: reported && query.searchParams.get('startDate') === dateRange(1).start
+      : { columnHeaders: ['day','views','estimatedMinutesWatched','subscribersGained','subscribersLost','likes','comments'].map(name => ({name})), rows: reported && query.searchParams.get('startDate') === dateRange(1).start
         ? [query.searchParams.has('dimensions') ? [dateRange(1).start, 0, 0, 0, 0, 0, 0] : [0, 0, 0, 0, 0, 0]] : [] } };
   });
   try {
@@ -80,12 +80,54 @@ test('one-day YouTube reports distinguish processing from an explicit zero and r
     expect(pending.metrics.views).toBeUndefined();
     expect(pending.metrics.followers).toBe(10);
     const periods = requests.filter(url => url.hostname === 'youtubeanalytics.googleapis.com').map(url => [url.searchParams.get('startDate'), url.searchParams.get('endDate')]);
-    expect(periods).toEqual([[dateRange(1).start, dateRange(1).end], [dateRange(1).previousStart, dateRange(1).previousEnd], [dateRange(1).start, dateRange(1).end]]);
+    expect(periods).toEqual([[dateRange(1).start, dateRange(1).end]]);
     reported = true;
     const zero = await fetchGoogle(SOURCES[0], 'test-token', 1);
     expect(zero.connectionState).toBeUndefined();
     expect(zero.metrics.views).toBe(0);
     expect(zero.previous).toEqual({});
     expect(zero.daily[0].views).toBe(0);
+  } finally { global.fetch = original; }
+});
+
+
+test('signed comparisons use the same known sources, exclude stale data and handle zero baselines', () => {
+  const sources = SOURCES.filter(s => s.kind === 'web');
+  const reports = {
+    'cafe-web': { metrics: { sessions: 10 }, previous: { sessions: 5 } },
+    'cine-web': { metrics: { sessions: 5 }, previous: { sessions: 10 } },
+    'pindo-web': { metrics: { sessions: 100 } },
+  };
+  expect(periodComparison(sources, reports, 'sessions')).toMatchObject({value:0,percent:0,known:2,total:3});
+  reports['cafe-web'].stale = true;
+  expect(periodComparison(sources, reports, 'sessions')).toMatchObject({value:-5,percent:-50,known:1,total:3});
+  reports['cine-web'] = { metrics: { sessions: 8 }, previous: { sessions: 0 } };
+  expect(periodComparison(sources, reports, 'sessions')).toMatchObject({value:8,percent:null});
+  reports['cine-web'].metrics.sessions = 0;
+  expect(periodComparison(sources, reports, 'sessions')).toMatchObject({value:0,percent:null});
+  delete reports['cine-web'].previous;
+  expect(periodComparison(sources, reports, 'sessions')).toMatchObject({value:null,percent:null,known:0});
+  expect(signed(8)).toBe('+8'); expect(signed(-8)).toBe('−8'); expect(signed(0)).toBe('0');
+});
+
+test('browser YouTube comparisons match reported dates and preserve current metrics on history failure', async () => {
+  const original = global.fetch, requests = [], range = dateRange(7);
+  const through = new Date(Date.parse(range.end+'T00:00:00Z')-2*86400000).toISOString().slice(0,10);
+  let historyFails = false;
+  global.fetch = async url => {
+    if(url.includes('/channels?')) return {ok:true,json:async()=>({items:[{statistics:{subscriberCount:'1000',viewCount:'5000',videoCount:'3'}}]})};
+    const params = new URL(url).searchParams;requests.push(params);
+    const current = params.get('startDate') === range.start;
+    return {ok:current || !historyFails,status:403,json:async()=>({columnHeaders:['day','views','estimatedMinutesWatched','subscribersGained','subscribersLost','likes','comments'].map(name=>({name})),rows:[[current?through:range.previousStart,current?50:100,60,10,3,4,1]]})};
+  };
+  try {
+    const report = await fetchGoogle(SOURCES[0], 'test', 7);
+    expect(report.metrics.netFollowers).toBe(7);
+    expect(report.previous.views).toBe(100);
+    expect(report.comparison).toMatchObject({start:range.start,end:through,previousStart:range.previousStart,matchedDays:true});
+    expect(requests[1].get('endDate')).toBe(new Date(Date.parse(through+'T00:00:00Z')-7*86400000).toISOString().slice(0,10));
+    historyFails = true;
+    const retained = await fetchGoogle(SOURCES[0], 'test', 7);
+    expect(retained.metrics.views).toBe(50);expect(retained.previous).toEqual({});
   } finally { global.fetch = original; }
 });

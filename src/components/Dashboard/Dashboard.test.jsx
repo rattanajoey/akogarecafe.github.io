@@ -32,3 +32,28 @@ test('an empty daily report shows a waiting state without requesting another con
   expect(screen.getByText('Waiting for daily reports')).toBeTruthy();
   expect(screen.queryByText('Connect a reporting source to see daily performance.')).toBeNull();
 });
+
+
+test('summary changes show net subscribers and signed counts with explicit partial coverage', () => {
+  const { container } = render(<Workspace reports={{
+    'cafe-youtube': {status:'connected',metrics:{followers:1000,netFollowers:10,views:50},previous:{views:100},comparison:{matchedDays:true}},
+    'watch-youtube': {status:'connected',metrics:{followers:2000,netFollowers:-3,views:0},previous:{views:0}},
+    'cafe-instagram': {status:'partial',metrics:{followers:69}},
+    'cafe-web': {status:'connected',metrics:{sessions:10},previous:{sessions:5}},
+    'cine-web': {status:'connected',metrics:{sessions:5},previous:{sessions:10}},
+    'pindo-web': {status:'connected',metrics:{sessions:100}},
+    'cine-ios': {status:'connected',metrics:{activeUsers:3},previous:{activeUsers:0}},
+  }}/>);
+  const cards = container.querySelectorAll('.studio-summary .studio-stat');
+  expect(cards[0].textContent).toContain('+7net subscribers this period');
+  expect(cards[0].textContent).toContain('2 of 6 sources with growth');
+  expect(cards[1].textContent).toContain('−50 (−50.0%)');
+  expect(cards[1].textContent).toContain('vs prior matched days');
+  expect(cards[1].textContent).toContain('2 of 5 sources compared');
+  expect(cards[2].textContent).toContain('0 (0.0%)');
+  expect(cards[2].textContent).toContain('2 of 3 sources compared');
+  expect(cards[3].textContent).toContain('+3');
+  expect(cards[3].textContent).not.toContain('Infinity');
+  fireEvent.change(screen.getByRole('combobox',{name:'Reporting period'}),{target:{value:'1'}});
+  expect(cards[2].textContent).toContain('vs previous day');
+});

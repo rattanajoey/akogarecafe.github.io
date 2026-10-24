@@ -19,6 +19,7 @@ export const SOURCES = [
 ];
 export const METRICS = {
   followers: { label: 'Total audience', detail: 'Subscribers + followers · current totals', kinds: ['youtube', 'instagram', 'pinterest'] },
+  netFollowers: { label: 'Net subscribers', detail: 'Gained minus lost · selected period', kinds: ['youtube', 'instagram', 'pinterest'] },
   views: { label: 'Content views', detail: 'YouTube + Instagram · selected period', kinds: ['youtube', 'instagram'] },
   lifetimeViews: { label: 'YouTube views', detail: 'Lifetime views · current channel totals', kinds: ['youtube'] },
   sessions: { label: 'Website sessions', detail: 'Website visits · selected period', kinds: ['web'] },
@@ -38,6 +39,14 @@ export function change(current, previous) {
   if (!finite(current) || !finite(previous) || previous === 0) return null;
   return ((current - previous) / previous) * 100;
 }
+export function periodComparison(sources, reports, metric) {
+  const eligible = sources.filter(source => (METRICS[metric]?.kinds || []).includes(source.kind) || !METRICS[metric]);
+  const comparable = eligible.filter(source => !reports[source.id]?.stale && reports[source.id]?.status !== 'error' && finite(reports[source.id]?.metrics?.[metric]) && finite(reports[source.id]?.previous?.[metric]));
+  const current = sumKnown(comparable.map(source => reports[source.id].metrics[metric]));
+  const previous = sumKnown(comparable.map(source => reports[source.id].previous[metric]));
+  return { value: finite(current) && finite(previous) ? current - previous : null, percent: change(current, previous), known: comparable.length, total: eligible.length, matchedDays: comparable.some(source => reports[source.id].comparison?.matchedDays), details: comparable.map(source => { const dates = reports[source.id].comparison; return dates ? `${source.account}: ${dates.start}–${dates.end} vs ${dates.previousStart}–${dates.previousEnd}` : source.account; }).join('; ') };
+}
+export const signed = value => finite(value) ? `${value > 0 ? '+' : value < 0 ? '−' : ''}${format(Math.abs(value))}` : '—';
 export function dateRange(days, now = new Date()) {
   // Completed calendar days, in the dashboard's explicit UTC reporting window.
   const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) - 86400000);
