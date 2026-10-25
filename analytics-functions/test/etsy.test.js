@@ -42,6 +42,16 @@ test('Etsy keeps sales usable when processing-fee or refund status is unavailabl
   assert.equal(result.metrics.salesAmount,15);assert.equal(result.metrics.processingFees,null);assert.equal(result.metrics.buyerRefunds,null);
 });
 
+test('Etsy processing fees preserve each reported currency instead of combining or silently converting',async()=>{
+  const result=await salesReport(config,dates,async url=>{
+    const u=new URL(url);
+    if(u.pathname.endsWith('/payments')){const receiptId=u.pathname.includes('/receipts/1/')?1:2;return{count:1,results:[{receipt_id:receiptId,shop_id:Number(SHOP_ID),posted_fees:receiptId===1?money(35):{amount:40,divisor:100,currency_code:'GBP'}}]};}
+    if(u.pathname.endsWith('/receipts'))return Number(u.searchParams.get('min_created'))===created-43200?{count:2,results:[receipt,{...receipt,receipt_id:2}]}:{count:0,results:[]};
+    return{shop_name:config.shopName,user_id:1,currency_code:'USD'};
+  });
+  assert.deepEqual(result.processingFeesByCurrency,{USD:0.35,GBP:0.4});assert.equal(result.metrics.processingFees,null);assert.equal(result.metrics.salesAmount,30);
+});
+
 test('Etsy authorization validates state, one-time claim, exact read scope and pinned owner before saving',async()=>{
   const state='approved-one-time-state',now=Date.now(),pending={...config,oauth:{redirectUri:REDIRECT,stateHash:crypto.createHash('sha256').update(state).digest('hex'),verifier:'private-pkce',expiresAt:now+60000}};
   let claimed=0,saved;

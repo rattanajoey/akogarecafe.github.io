@@ -36,7 +36,7 @@ async function salesReport(connection,dates,request){
         if(!body.results.length||page===19)throw Error('Incomplete orders');
       }
       if(seen.size!==expected)throw Error('Incomplete orders');
-      let processingFees=0,feesKnown=receipts.length<=50;
+      const feeUnits=new Map();let feesKnown=receipts.length<=50;
       // Only card-processing fees are represented by Payment.amount_fees.
       // Listing, advertising and other shop charges are not inferred from it.
       if(feesKnown)for(const receiptId of receipts){
@@ -45,15 +45,21 @@ async function salesReport(connection,dates,request){
           if(body.count!==1||body.results?.length!==1)throw Error();
           const payment=body.results[0];
           if(String(payment.shop_id)!==SHOP_ID||payment.receipt_id!==receiptId)throw Error();
-          const value=cents(payment.adjusted_fees??payment.posted_fees??payment.amount_fees);
-          if(!Number.isSafeInteger(processingFees+value))throw Error();processingFees+=value;
+          const value=payment.adjusted_fees??payment.posted_fees??payment.amount_fees;
+          if(!/^[A-Z]{3}$/.test(value?.currency_code)||!Number.isSafeInteger(value.amount)||value.amount<0||!Number.isSafeInteger(value.divisor)||value.divisor<=0||value.divisor>1000000)throw Error();
+          const previous=feeUnits.get(value.currency_code)||{amount:0,divisor:value.divisor};
+          if(previous.divisor!==value.divisor||!Number.isSafeInteger(previous.amount+value.amount))throw Error();
+          feeUnits.set(value.currency_code,{amount:previous.amount+value.amount,divisor:value.divisor});
         }catch{feesKnown=false;break;}
       }
-      return{orders,salesAmount:sales/100,buyerRefunds:refundsKnown?refunds/100:null,processingFees:feesKnown?processingFees/100:null,daily:[...daily].map(([date,salesAmount])=>({date,salesAmount}))};
+      const processingFeesByCurrency=feesKnown?Object.fromEntries([...feeUnits].map(([currency,value])=>[currency,value.amount/value.divisor])):null;
+      if(feesKnown&&!receipts.length)processingFeesByCurrency[currency]=0;
+      const processingFees=processingFeesByCurrency&&Object.keys(processingFeesByCurrency).length===1&&Object.hasOwn(processingFeesByCurrency,currency)?processingFeesByCurrency[currency]:null;
+      return{orders,salesAmount:sales/100,buyerRefunds:refundsKnown?refunds/100:null,processingFees,processingFeesByCurrency,daily:[...daily].map(([date,salesAmount])=>({date,salesAmount}))};
     }
-    const current=await total(dates.start,dates.end),{daily,...metrics}=current;
+    const current=await total(dates.start,dates.end),{daily,processingFeesByCurrency,...metrics}=current;
     const note='Item sales after discounts for paid orders placed in these UTC dates, before refunds and fees; excludes tax and shipping. Card-processing fees and confirmed buyer refunds are separate. Listing, advertising and other shop costs are not included; open Etsy for its complete profit and payment-account report.';
-    const result={status:'connected',currency,metrics,daily,note,earnings:{status:'connected',provider:'etsy',basis:'merchandiseSales',amount:metrics.salesAmount,currency,start:dates.start,end:dates.end,note}};
+    const result={status:'connected',currency,metrics,daily,note,...(processingFeesByCurrency?{processingFeesByCurrency}:{}),earnings:{status:'connected',provider:'etsy',basis:'merchandiseSales',amount:metrics.salesAmount,currency,start:dates.start,end:dates.end,note}};
     const days=Math.round((Date.parse(dates.end)-Date.parse(dates.start))/86400000)+1;
     const shift=date=>new Date(Date.parse(date+'T00:00:00Z')-days*86400000).toISOString().slice(0,10);
     try{

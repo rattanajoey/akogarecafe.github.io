@@ -114,6 +114,9 @@ export function csv(reports, sources, range) {
     for (const point of report?.audienceHistory?.daily || []) {
       if (finite(point.followers) && point.date >= range.start && point.date <= range.end) rows.push([PROJECTS.find(p => p.id === source.project).name, source.label, source.account, point.date, point.date, report.status, 'followersSnapshot', point.followers, point.at, '']);
     }
+    if (!finite(report?.metrics?.processingFees)) for (const [currency, amount] of Object.entries(report?.processingFeesByCurrency || {})) {
+      if (finite(amount) && /^[A-Z]{3}$/.test(currency)) rows.push([PROJECTS.find(p => p.id === source.project).name, source.label, source.account, range.start, range.end, report.status, 'processingFees', amount, report.fetchedAt, currency]);
+    }
   }
   return rows.map(row => row.map(cell).join(',')).join('\r\n');
 }

@@ -161,6 +161,9 @@ test('Etsy exports keep money currency and merchandise-sales basis separate from
   expect(output).toContain('"processingFees","0.6","","USD"');
   expect(output).toContain('"merchandiseSales","15","","USD"');
   expect(audienceTotal([source],{'etsy-shop':report}).total).toBe(0);
+  const mixed=csv({'etsy-shop':{...report,metrics:{...report.metrics,processingFees:null},processingFeesByCurrency:{USD:0.35,GBP:0.4}}},[source],{start:'2026-10-01',end:'2026-10-07'});
+  expect(mixed).toContain('"processingFees","0.35","","USD"');
+  expect(mixed).toContain('"processingFees","0.4","","GBP"');
 });
 
 test('daily history exports include actual recorded timestamps only within completed dates',()=>{

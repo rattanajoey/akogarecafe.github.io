@@ -90,6 +90,14 @@ test('Etsy project focuses on orders and clearly labelled sales without audience
   expect(container.querySelector('.studio-project-metric-label').textContent).toBe('Paid orders');
 });
 
+test('Etsy fee card shows reported currencies separately with no invented combined amount',()=>{
+  render(<Workspace reports={{'etsy-shop':{status:'connected',currency:'USD',metrics:{orders:2,processingFees:null},processingFeesByCurrency:{USD:0.35,GBP:0.4}}}}/>);
+  const shop=screen.getByRole('region',{name:'Etsy shop reporting'});
+  expect(shop.textContent).toMatch(/Card-processing feesUSD\s0\.35GBP\s0\.40/);
+  expect(shop.textContent).toContain('Reported currencies · no conversion');
+  expect(shop.textContent).not.toMatch(/USD\s0\.75/);
+});
+
 test('project cards separate YouTube subscribers from Instagram while the overview labels the combined count', () => {
   const { container } = render(<Workspace reports={{
     'cafe-youtube': { status:'connected', metrics:{followers:2630,netFollowers:6} },
