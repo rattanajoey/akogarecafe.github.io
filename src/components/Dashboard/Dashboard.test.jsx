@@ -58,6 +58,38 @@ test('summary changes show net subscribers and signed counts with explicit parti
   expect(cards[2].textContent).toContain('vs previous day');
 });
 
+test('daily snapshot history labels collection and partial observed spans without inventing period totals', () => {
+  const {container,rerender}=render(<Workspace reports={{'cafe-instagram':{status:'partial',metrics:{followers:12},audienceHistory:{state:'recording',startedAt:'2026-10-24T15:00:00Z'}}}}/>);
+  expect(screen.getAllByText('Recording daily history').length).toBeGreaterThan(0);
+  rerender(<Workspace reports={{'cafe-instagram':{status:'partial',metrics:{followers:12},audienceHistory:{state:'partial',change:{value:2,from:'2026-10-22',to:'2026-10-24',baselineAt:'2026-10-22T12:00:00Z',asOf:'2026-10-24T18:00:00Z',complete:false}}}}}/>);
+  expect(screen.getByText('followers · 2026-10-22–2026-10-24')).toBeTruthy();
+  expect(screen.getByText('Daily snapshots · partial period')).toBeTruthy();
+  expect(container.querySelector('.studio-summary .studio-stat').textContent).not.toContain('+2');
+});
+
+test('complete snapshot growth can join native growth with the correct audience label',()=>{
+  const{container}=render(<Workspace reports={{'cafe-youtube':{status:'connected',metrics:{followers:1000,netFollowers:8}},'cafe-instagram':{status:'partial',metrics:{followers:12,netFollowers:-2},audienceGrowth:{method:'daily-snapshot'}}}}/>);
+  const audience=container.querySelector('.studio-summary .studio-stat');
+  expect(audience.textContent).toContain('+6audience change this period');
+  expect(audience.textContent).toContain('2 of 6 sources with growth');
+  expect(audience.querySelector('.studio-change').title).toContain('Daily snapshots');
+});
+
+test('Etsy project focuses on orders and clearly labelled sales without audience or view cards',()=>{
+  const{container}=render(<Workspace reports={{'etsy-shop':{status:'connected',connectionMode:'automatic',currency:'USD',metrics:{orders:3,salesAmount:15.25,buyerRefunds:0,processingFees:null},previous:{orders:1},earnings:{status:'connected',provider:'etsy',amount:15.25,currency:'USD',start:'2026-10-01',end:'2026-10-24'}}}}/>);
+  expect(container.querySelector('.studio-summary .studio-stat-value').textContent).toBe('—');
+  fireEvent.change(screen.getByRole('combobox',{name:'Choose project'}),{target:{value:'shop'}});
+  const shop=screen.getByRole('region',{name:'Etsy shop reporting'});
+  expect(shop.textContent).toContain('Paid orders3');
+  expect(shop.textContent).toMatch(/Item salesUSD\s15\.25/);
+  expect(shop.textContent).toContain('Card-processing fees—');
+  expect(screen.queryByText('Combined audience')).toBeNull();
+  expect(screen.queryByRole('img',{name:/by project and date/})).toBeNull();
+  expect(screen.queryByText('Channel breakdown')).toBeNull();
+  expect(screen.getByRole('region',{name:'Project earnings'}).textContent).toContain('Etsy · item sales before refunds and fees');
+  expect(container.querySelector('.studio-project-metric-label').textContent).toBe('Paid orders');
+});
+
 test('project cards separate YouTube subscribers from Instagram while the overview labels the combined count', () => {
   const { container } = render(<Workspace reports={{
     'cafe-youtube': { status:'connected', metrics:{followers:2630,netFollowers:6} },

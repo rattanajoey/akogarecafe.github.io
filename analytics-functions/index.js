@@ -3,6 +3,7 @@ const functions=require('firebase-functions/v1');
 const admin=require('firebase-admin');
 const {range,reporter,accountCounts,allowed}=require('./providers');
 const {isWorkspaceMember}=require('./authorization');
+const {recordSnapshot,withAudienceHistory}=require('./audience-history');
 const app=admin.apps.find(a=>a.name==='[DEFAULT]')||admin.initializeApp();
 const cache=new Map();
 
@@ -27,7 +28,8 @@ exports.projectAnalytics=functions.runWith({secrets:['AKOGARE_ANALYTICS_CONNECTI
     await Promise.all(jobs.map(async([id,auth])=>{try{products[id]=await accountCounts(auth,range(data.days));}catch{products[id]={error:'Firebase account totals are currently unavailable.'};}}));
     return products;
   })();
-  const [sources,products]=await Promise.all([report.sources(data.days),productsPromise]);
+  const [currentSources,products]=await Promise.all([report.sources(data.days),productsPromise]);
+  const sources=await withAudienceHistory(currentSources,range(data.days),(id,observation)=>recordSnapshot(admin.firestore(app),id,observation));
   const value={sources,products,range:range(data.days),fetchedAt:new Date().toISOString()};
   cache.set(key,{at:Date.now(),value});
   return value;
@@ -36,3 +38,4 @@ exports.projectAnalytics=functions.runWith({secrets:['AKOGARE_ANALYTICS_CONNECTI
 // The one-time server handoff uses an expiring, creator-approved state and an
 // atomic replay claim. Its secret has no pending state after setup completes.
 exports.patreonReportingCallback=functions.runWith({secrets:['AKOGARE_PATREON_CONNECTION'],timeoutSeconds:60,memory:'256MB',maxInstances:1}).region('us-central1').https.onRequest(require('./patreon-callback').handler);
+exports.etsyReportingCallback=functions.runWith({secrets:['AKOGARE_ETSY_CONNECTION'],timeoutSeconds:60,memory:'256MB',maxInstances:1}).region('us-central1').https.onRequest(require('./etsy-callback').handler);

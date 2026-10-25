@@ -153,6 +153,23 @@ test('Patreon membership exports are snapshots and do not inflate social followe
   expect(text).toContain('"AkogareWatchClub","","","connected","paidMembers","2"');
 });
 
+test('Etsy exports keep money currency and merchandise-sales basis separate from audience metrics',()=>{
+  const source=SOURCES.find(s=>s.id==='etsy-shop');
+  const report={status:'connected',currency:'USD',metrics:{orders:2,salesAmount:15,processingFees:0.6},earnings:{status:'connected',provider:'etsy',amount:15,currency:'USD',start:'2026-10-01',end:'2026-10-07'}};
+  const output=csv({'etsy-shop':report},[source],{start:'2026-10-01',end:'2026-10-07'});
+  expect(output).toContain('"salesAmount","15","","USD"');
+  expect(output).toContain('"processingFees","0.6","","USD"');
+  expect(output).toContain('"merchandiseSales","15","","USD"');
+  expect(audienceTotal([source],{'etsy-shop':report}).total).toBe(0);
+});
+
+test('daily history exports include actual recorded timestamps only within completed dates',()=>{
+  const source=SOURCES.find(s=>s.id==='cafe-instagram');
+  const output=csv({'cafe-instagram':{status:'partial',metrics:{followers:12},audienceHistory:{daily:[{date:'2026-10-23',at:'2026-10-23T16:00:00Z',followers:11},{date:'2026-10-24',at:'2026-10-24T17:00:00Z',followers:12}]}}},[source],{start:'2026-10-23',end:'2026-10-23'});
+  expect(output).toContain('"followersSnapshot","11","2026-10-23T16:00:00Z"');
+  expect(output).not.toContain('"followersSnapshot","12"');
+});
+
 test('money keeps cents and currency explicit and exports lifetime support without period dates', () => {
   expect(formatMoney(0,'USD')).toMatch(/USD\s0\.00/);
   expect(formatMoney(1234,'EUR')).toMatch(/EUR\s12\.34/);

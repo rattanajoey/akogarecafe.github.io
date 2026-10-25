@@ -3,6 +3,7 @@ export const PROJECTS = [
   { id: 'watch', name: 'Akogare Watch Club', short: 'AW', category: 'Anime · Commentary', color: '#d5ccf0', chartColor: '#795aa0', url: 'https://www.youtube.com/channel/UC6MT4WM8saZSk4B4pt4aFwA' },
   { id: 'pindo', name: 'PinDo.', short: 'Pi', category: 'Create · Make · Share', color: '#f3d0ac', chartColor: '#aa622b', url: 'https://pindo.akogarecafe.com' },
   { id: 'cine', name: 'CineClub Cafe', short: 'CC', category: 'Films · Community', color: '#bfdae8', chartColor: '#377b8a', url: 'https://movieclub.akogarecafe.com' },
+  { id: 'shop', name: 'Akogare Cafe Studio', short: 'AS', category: 'Digital prints · Etsy', color: '#f5dfc5', chartColor: '#ac642b', url: 'https://www.etsy.com/shop/AkogareCafeStudio' },
 ];
 export const SOURCES = [
   { id: 'cafe-youtube', project: 'cafe', kind: 'youtube', label: 'YouTube', account: '@akogarecafe', channelId: 'UCP77ij2ue_xEz2f5TmH0Rbw', url: 'https://www.youtube.com/@akogarecafe' },
@@ -17,8 +18,13 @@ export const SOURCES = [
   { id: 'cine-web', project: 'cine', kind: 'web', label: 'Website', account: 'movieclub.akogarecafe.com', url: 'https://movieclub.akogarecafe.com' },
   { id: 'cine-ios', project: 'cine', kind: 'ios', label: 'iOS app', account: 'CineClub Cafe · iOS' },
   { id: 'cine-youtube', project: 'cine', kind: 'youtube', label: 'YouTube', account: '@CineClubCafe', channelId: 'UCpilsdPRmwBxCTLxCZmBXDg', url: 'https://www.youtube.com/@CineClubCafe' },
+  { id: 'etsy-shop', project: 'shop', kind: 'etsy', label: 'Etsy shop', account: 'AkogareCafeStudio', url: 'https://www.etsy.com/shop/AkogareCafeStudio' },
 ];
 export const METRICS = {
+  orders: { label: 'Paid orders', detail: 'Etsy · orders placed in period', kinds: ['etsy'] },
+  salesAmount: { label: 'Item sales', detail: 'After discounts · before refunds and fees', kinds: ['etsy'], unit: 'money' },
+  buyerRefunds: { label: 'Buyer refunds', detail: 'Confirmed refunds on these orders', kinds: ['etsy'], unit: 'money' },
+  processingFees: { label: 'Card-processing fees', detail: 'Other Etsy shop costs excluded', kinds: ['etsy'], unit: 'money' },
   patrons: { label: 'Patrons with access', detail: 'Patreon · current API total', kinds: ['patreon'] },
   paidMembers: { label: 'Paid memberships', detail: 'Active paid access · current', kinds: ['patreon'] },
   trialMembers: { label: 'Free trials', detail: 'Active trial access · current', kinds: ['patreon'] },
@@ -101,10 +107,13 @@ export function csv(reports, sources, range) {
     const report = reports[source.id];
     for (const [metric, value] of Object.entries(report?.metrics || {})) {
       const snapshot = ['followers', 'lifetimeViews', 'publishedItems', 'patrons', 'paidMembers', 'trialMembers', 'declinedMembers', 'lifetimeSupportCents'].includes(metric);
-      if (finite(value)) rows.push([PROJECTS.find(p => p.id === source.project).name, source.label, source.account, snapshot ? '' : range.start, snapshot ? '' : range.end, report.status, metric, value, report.fetchedAt, metric === 'lifetimeSupportCents' ? report.currency : '']);
+      if (finite(value)) rows.push([PROJECTS.find(p => p.id === source.project).name, source.label, source.account, snapshot ? '' : range.start, snapshot ? '' : range.end, report.status, metric, value, report.fetchedAt, metric === 'lifetimeSupportCents' || METRICS[metric]?.unit === 'money' ? report.currency : '']);
     }
     const earnings=report?.earnings;
-    if (finite(earnings?.amount) && earnings.currency) rows.push([PROJECTS.find(p => p.id === source.project).name, source.label, source.account, earnings.start, earnings.end, earnings.status, earnings.provider === 'stripe' ? 'netPaymentActivity' : 'estimatedRevenue', earnings.amount, report.fetchedAt, earnings.currency]);
+    if (finite(earnings?.amount) && earnings.currency) rows.push([PROJECTS.find(p => p.id === source.project).name, source.label, source.account, earnings.start, earnings.end, earnings.status, earnings.provider === 'stripe' ? 'netPaymentActivity' : earnings.provider === 'etsy' ? 'merchandiseSales' : 'estimatedRevenue', earnings.amount, report.fetchedAt, earnings.currency]);
+    for (const point of report?.audienceHistory?.daily || []) {
+      if (finite(point.followers) && point.date >= range.start && point.date <= range.end) rows.push([PROJECTS.find(p => p.id === source.project).name, source.label, source.account, point.date, point.date, report.status, 'followersSnapshot', point.followers, point.at, '']);
+    }
   }
   return rows.map(row => row.map(cell).join(',')).join('\r\n');
 }
