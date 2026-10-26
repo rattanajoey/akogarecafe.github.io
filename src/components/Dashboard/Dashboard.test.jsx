@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { DashboardWorkspace } from './Dashboard';
 import { dateRange } from './data';
+import { loadUsdRate } from './currency';
+jest.mock('./currency', () => ({ loadUsdRate: jest.fn() }));
+beforeEach(() => loadUsdRate.mockResolvedValue({ rate: 1.3368, date: '2026-10-23', source: 'ECB' }));
 
 jest.mock('react-router-dom', () => ({ Link: ({ to, ...props }) => <a href={to} {...props} /> }));
 
@@ -90,11 +93,13 @@ test('Etsy project focuses on orders and clearly labelled sales without audience
   expect(container.querySelector('.studio-project-metric-label').textContent).toBe('Paid orders');
 });
 
-test('Etsy fee card shows reported currencies separately with no invented combined amount',()=>{
+test('Etsy fee card preserves the original currencies and shows a dated USD estimate beside foreign fees',async()=>{
   render(<Workspace reports={{'etsy-shop':{status:'connected',currency:'USD',metrics:{orders:2,processingFees:null},processingFeesByCurrency:{USD:0.35,GBP:0.4}}}}/>);
   const shop=screen.getByRole('region',{name:'Etsy shop reporting'});
   expect(shop.textContent).toMatch(/Card-processing feesUSD\s0\.35GBP\s0\.40/);
-  expect(shop.textContent).toContain('Reported currencies · no conversion');
+  await waitFor(() => expect(shop.textContent).toMatch(/GBP\s0\.40≈ USD\s0\.53/));
+  expect(shop.textContent).toContain('Rate 2026-10-23');
+  expect(shop.textContent).toContain('Original fees · USD estimates');
   expect(shop.textContent).not.toMatch(/USD\s0\.75/);
 });
 
@@ -183,4 +188,14 @@ test('X belongs to Cafe, keeps YouTube separate, and shows a dated manual snapsh
   expect(panel.textContent).toContain('Checked 2026-10-26 (UTC)');
   expect(panel.textContent).toContain('Followers21');
   expect(panel.textContent).not.toContain('0 impressions');
+});
+
+
+test('an unavailable exchange rate retains the original Etsy fee without a fabricated USD equivalent',async()=>{
+  loadUsdRate.mockResolvedValue(null);
+  render(<Workspace reports={{'etsy-shop':{status:'connected',currency:'USD',metrics:{orders:1,processingFees:null},processingFeesByCurrency:{GBP:0.65}}}}/>);
+  const shop=screen.getByRole('region',{name:'Etsy shop reporting'});
+  await waitFor(()=>expect(shop.textContent).toContain('USD estimate unavailable'));
+  expect(shop.textContent).toMatch(/GBP\s0\.65/);
+  expect(shop.textContent).not.toContain('≈ USD');
 });

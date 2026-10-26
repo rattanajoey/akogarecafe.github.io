@@ -3,6 +3,7 @@ import { Dialog, DialogTitle, DialogContent } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { PROJECTS, SOURCES, METRICS, coverage, audienceTotal, formatAudience, dateRange, chartSeries, chartFraction, format, formatMoney, formatCurrency, compact, csv, finite, periodComparison, signed, sumKnown } from './data';
 import { loadWorkspace, googleConsent, completeGoogleConsent, listProperties, listStreams, fetchGoogle } from './api';
+import { loadUsdRate } from './currency';
 import './dashboard.css';
 
 function Icon({ name, size = 20, ...props }) {
@@ -60,9 +61,32 @@ function EarningsPanel({ sources, reports }) {
   return <section className="studio-panel studio-earnings" aria-label="Project earnings"><div className="studio-panel-head"><div><h2>Earnings</h2><p>Each source keeps its own currency and reporting period.</p></div></div><div className="studio-earnings-scroll"><table><thead><tr><th>PROJECT / SOURCE</th><th>AMOUNT</th><th>PERIOD</th><th>REPORT</th></tr></thead><tbody>{rows.map(row => <tr key={row.id}><td><strong>{row.project}</strong><small>{row.label}</small></td><td className="studio-earnings-amount">{row.value}{row.delta && <small>{row.delta}</small>}</td><td>{row.period}</td><td><strong>{row.status}</strong><small>{row.note}</small></td></tr>)}</tbody></table></div></section>;
 }
 
+function FeeAmount({ amount, currency }) {
+  const [reference, setReference] = useState(undefined);
+  useEffect(() => {
+    let active = true;
+    setReference(undefined);
+    if (currency !== 'USD' && finite(amount)) loadUsdRate(currency).then(value => active && setReference(value));
+    return () => { active = false; };
+  }, [currency, amount]);
+  const estimate = reference && finite(amount * reference.rate) ? formatCurrency(amount * reference.rate, 'USD') : null;
+  return <span className="studio-money-row"><span>{formatCurrency(amount, currency)}</span>{currency !== 'USD' && <span className="studio-fx-pair"><span className="studio-usd-estimate" title={reference ? `1 ${currency} = ${reference.rate} USD · ECB reference rate ${reference.date}. Estimated value; Etsy’s actual conversion may differ.` : undefined}>{estimate ? `≈ ${estimate}` : reference === undefined ? 'Converting…' : 'USD estimate unavailable'}</span>{estimate && <small className="studio-fx-date">Rate {reference.date}</small>}</span>}</span>;
+}
+
 function ShopPanel({source,report,onConnect,days}){
   if(!source)return null;
-  return <section className="studio-panel studio-shop" aria-label="Etsy shop reporting"><div className="studio-panel-head"><div><h2>AkogareCafeStudio · Etsy</h2><p>Orders and sales · last {days === 1 ? 'completed day' : `${days} completed days`}</p></div><button className="studio-connect-button" onClick={()=>onConnect(source)}>Details<Icon name="arrow" size={13}/></button></div><div className="studio-shop-grid">{['orders','salesAmount','buyerRefunds','processingFees'].map(key=><div key={key}><span>{METRICS[key].label}</span><strong>{key === 'processingFees' && report?.processingFeesByCurrency ? Object.entries(report.processingFeesByCurrency).map(([currency,amount])=><span key={currency}>{formatCurrency(amount,currency)}</span>) : METRICS[key].unit === 'money' ? formatCurrency(report?.metrics?.[key],report?.currency) : format(report?.metrics?.[key])}</strong><small>{key === 'processingFees' && Object.keys(report?.processingFeesByCurrency||{}).length > 1 ? 'Reported currencies · no conversion' : METRICS[key].detail}</small>{key === 'orders' && <PeriodChange sources={[source]} reports={{[source.id]:report}} metric={key} days={days}/>}</div>)}</div><p className="studio-shop-note"><span className={`studio-status ${sourceState(report)||'unavailable'}`}><i/>{statusLabel(report)}</span> {report?.note||'Connect read-only shop reports to see sales, paid orders and available fee data.'}</p><a className="studio-membership-link" href="https://www.etsy.com/your/shops/me/finances/payment-account" target="_blank" rel="noreferrer">Open Etsy’s full payment account ↗</a></section>;
+  const foreignFees = Object.keys(report?.processingFeesByCurrency || {}).some(currency => currency !== 'USD');
+  return <section className="studio-panel studio-shop" aria-label="Etsy shop reporting">
+    <div className="studio-panel-head"><div><h2>AkogareCafeStudio · Etsy</h2><p>Orders and sales · last {days === 1 ? 'completed day' : `${days} completed days`}</p></div><button className="studio-connect-button" onClick={()=>onConnect(source)}>Details<Icon name="arrow" size={13}/></button></div>
+    <div className="studio-shop-grid">{['orders','salesAmount','buyerRefunds','processingFees'].map(key=><div key={key}>
+      <span>{METRICS[key].label}</span>
+      <strong>{key === 'processingFees' && report?.processingFeesByCurrency ? Object.entries(report.processingFeesByCurrency).map(([currency,amount])=><FeeAmount key={currency} currency={currency} amount={amount}/>) : METRICS[key].unit === 'money' ? formatCurrency(report?.metrics?.[key],report?.currency) : format(report?.metrics?.[key])}</strong>
+      <small>{key === 'processingFees' && foreignFees ? 'Original fees · USD estimates' : METRICS[key].detail}</small>
+      {key === 'orders' && <PeriodChange sources={[source]} reports={{[source.id]:report}} metric={key} days={days}/>}
+    </div>)}</div>
+    <p className="studio-shop-note"><span className={`studio-status ${sourceState(report)||'unavailable'}`}><i/>{statusLabel(report)}</span> {report?.note||'Connect read-only shop reports to see sales, paid orders and available fee data.'}</p>
+    <a className="studio-membership-link" href="https://www.etsy.com/your/shops/me/finances/payment-account" target="_blank" rel="noreferrer">Open Etsy’s full payment account ↗</a>
+  </section>;
 }
 
 function NumberChange({ value, percent, label, detail, coverageLabel, compact = false }) {
