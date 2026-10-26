@@ -1,6 +1,6 @@
 'use strict';
 
-const SOURCE_IDS = ['cafe-youtube','cafe-instagram','cafe-web','watch-youtube','watch-instagram','watch-patreon','pindo-web','pindo-ios','pindo-pinterest','cine-web','cine-ios','cine-youtube','etsy-shop'];
+const SOURCE_IDS = ['cafe-youtube','cafe-instagram','cafe-x','cafe-web','watch-youtube','watch-instagram','watch-patreon','pindo-web','pindo-ios','pindo-pinterest','cine-web','cine-ios','cine-youtube','etsy-shop'];
 const CHANNELS = { 'cafe-youtube': 'UCP77ij2ue_xEz2f5TmH0Rbw', 'watch-youtube': 'UC6MT4WM8saZSk4B4pt4aFwA', 'cine-youtube': 'UCpilsdPRmwBxCTLxCZmBXDg' };
 const INSTAGRAM_IDS = { 'cafe-instagram': '17841443596200565', 'watch-instagram': '28974337878870504' };
 const SCOPES = { youtube: 'https://www.googleapis.com/auth/yt-analytics.readonly' };
@@ -189,12 +189,12 @@ function reporter(config, dependencies = {}) {
     return Object.fromEntries(await Promise.all(SOURCE_IDS.map(async id=>{
       let result;
       try {
-        result=CHANNELS[id]?await youtube(id,dates):INSTAGRAM_IDS[id]?await instagram(id,dates):id==='pindo-pinterest'?await pinterest(dates):id==='watch-patreon'?await patreon():id==='etsy-shop'?await etsy(dates):config.ga4?.[id]?await ga4(id,dates,days):unavailable(id.endsWith('-ios')?'Connect the matching iOS stream in Google Analytics for app activity. App Store download reports require App Store Connect reporting access.':'Connect the matching web stream in Google Analytics for traffic and visitors.');
+        result=CHANNELS[id]?await youtube(id,dates):INSTAGRAM_IDS[id]?await instagram(id,dates):id==='cafe-x'?await require('./x-report').report(config.xReporting):id==='pindo-pinterest'?await pinterest(dates):id==='watch-patreon'?await patreon():id==='etsy-shop'?await etsy(dates):config.ga4?.[id]?await ga4(id,dates,days):unavailable(id.endsWith('-ios')?'Connect the matching iOS stream in Google Analytics for app activity. App Store download reports require App Store Connect reporting access.':'Connect the matching web stream in Google Analytics for traffic and visitors.');
       } catch(e) { result={status:'error',metrics:{},daily:[],error:e.message,note:'The source could not be refreshed. Other sources remain available.'}; }
       if(CHANNELS[id])result.earnings=await require('./youtube-earnings').earningsReport(youtubeConnection(id),CHANNELS[id],dates,()=>youtubeToken(id),jsonRequest);
       if(id==='cine-web'&&config.stripeReporting?.connectionSecret==='AKOGARE_STRIPE_REPORTING_CONNECTION'){try{const connection=await(dependencies.stripeConnection||require('./stripe-connection').getConnection)();result.earnings=await require('./stripe-report').earningsReport(connection,dates,jsonRequest);}catch{result.earnings={status:'unavailable',provider:'stripe',note:'The read-only Stripe reporting connection is unavailable.'};}}
       const automatic = ['connected','partial'].includes(result.status) && (CHANNELS[id] ? Boolean(config.youtubeReporting?.[id]) : id==='pindo-pinterest' ? config.pinterest?.connectionSecret==='AKOGARE_PINTEREST_CONNECTION' : id==='watch-patreon' ? config.patreon?.connectionSecret==='AKOGARE_PATREON_CONNECTION' : id==='etsy-shop' ? config.etsyReporting?.connectionSecret==='AKOGARE_ETSY_CONNECTION' : Boolean(config.ga4?.[id] && config.ga4OAuth?.refresh_token));
-      return [id,{...result,...(automatic ? {connectionMode:'automatic'} : {}),fetchedAt:new Date().toISOString()}];
+      return [id,{...result,...(automatic ? {connectionMode:'automatic'} : {}),fetchedAt:result.fetchedAt||new Date().toISOString()}];
     })));
   }
   return {sources};

@@ -1,6 +1,6 @@
 'use strict';
 
-const TRACKED=new Set(['cafe-youtube','watch-youtube','cine-youtube','cafe-instagram','watch-instagram','pindo-pinterest']);
+const TRACKED=new Set(['cafe-youtube','watch-youtube','cine-youtube','cafe-instagram','watch-instagram','pindo-pinterest','cafe-x']);
 const KEEP_DAYS=400,DAY=86400000;
 const validPoint=point=>Number.isSafeInteger(point?.followers)&&point.followers>=0&&Number.isFinite(Date.parse(point.at));
 const dayOf=at=>new Date(at).toISOString().slice(0,10);

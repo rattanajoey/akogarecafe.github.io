@@ -46,7 +46,7 @@ test('summary changes show net subscribers and signed counts with explicit parti
   }}/>);
   const cards = container.querySelectorAll('.studio-summary .studio-stat');
   expect(cards[0].textContent).toContain('+7net subscribers this period');
-  expect(cards[0].textContent).toContain('2 of 6 sources with growth');
+  expect(cards[0].textContent).toContain('2 of 7 sources with growth');
   expect(cards[1].textContent).toContain('−50 (−50.0%)');
   expect(cards[1].textContent).toContain('vs prior matched days');
   expect(cards[1].textContent).toContain('2 of 5 sources compared');
@@ -71,7 +71,7 @@ test('complete snapshot growth can join native growth with the correct audience 
   const{container}=render(<Workspace reports={{'cafe-youtube':{status:'connected',metrics:{followers:1000,netFollowers:8}},'cafe-instagram':{status:'partial',metrics:{followers:12,netFollowers:-2},audienceGrowth:{method:'daily-snapshot'}}}}/>);
   const audience=container.querySelector('.studio-summary .studio-stat');
   expect(audience.textContent).toContain('+6audience change this period');
-  expect(audience.textContent).toContain('2 of 6 sources with growth');
+  expect(audience.textContent).toContain('2 of 7 sources with growth');
   expect(audience.querySelector('.studio-change').title).toContain('Daily snapshots');
 });
 
@@ -156,4 +156,31 @@ test('earnings distinguish period revenue, lifetime support, missing access and 
   expect(earnings.textContent).toContain('Lifetime · before fees');
   expect(earnings.textContent).toContain('Unavailable');
   expect(earnings.textContent).toContain('Read-only revenue reporting is not connected');
+});
+
+
+test('X belongs to Cafe, keeps YouTube separate, and shows a dated manual snapshot across periods',()=>{
+  const x={status:'partial',connectionState:'snapshot',connectionMode:'manual',fetchedAt:'2026-10-26T03:05:55.818Z',metrics:{followers:21,publishedItems:134},daily:[]};
+  const{container}=render(<Workspace reports={{'cafe-x':x,'cafe-youtube':{status:'connected',metrics:{followers:2600}}}}/>);
+  const card=container.querySelector('.studio-project-card');
+  expect(card.querySelector('.studio-project-metric>strong').textContent).toBe('≈2,600');
+  expect(card.textContent).toContain('X followers · snapshot21');
+  expect(container.querySelectorAll('.studio-project-card')[1].textContent).not.toContain('X followers');
+  const panel=screen.getByRole('region',{name:'X account snapshot'});
+  expect(panel.textContent).toContain('@AkogareCafe_JR');
+  expect(panel.textContent).toContain('Checked 2026-10-26 (UTC)');
+  expect(panel.textContent).toContain('Total posts134');
+  expect(panel.textContent).toContain('Automatic X reports are off');
+  expect(panel.textContent).toContain('Growth needs another profile check');
+  fireEvent.change(screen.getByLabelText('Filter by platform'),{target:{value:'x'}});
+  expect(container.querySelectorAll('.studio-project-card')).toHaveLength(1);
+  expect(container.querySelector('.studio-project-card').textContent).toContain('Akogare Cafe');
+  expect(screen.getByText('0 of 1 sources connected')).toBeTruthy();
+  expect(screen.getByText('Followers · checked 2026-10-26')).toBeTruthy();
+  expect(container.querySelector('.studio-chart')).toBeNull();
+  expect(container.querySelector('.studio-summary')).toBeNull();
+  fireEvent.change(screen.getByRole('combobox',{name:'Reporting period'}),{target:{value:'7'}});
+  expect(panel.textContent).toContain('Checked 2026-10-26 (UTC)');
+  expect(panel.textContent).toContain('Followers21');
+  expect(panel.textContent).not.toContain('0 impressions');
 });

@@ -8,6 +8,7 @@ export const PROJECTS = [
 export const SOURCES = [
   { id: 'cafe-youtube', project: 'cafe', kind: 'youtube', label: 'YouTube', account: '@akogarecafe', channelId: 'UCP77ij2ue_xEz2f5TmH0Rbw', url: 'https://www.youtube.com/@akogarecafe' },
   { id: 'cafe-instagram', project: 'cafe', kind: 'instagram', label: 'Instagram', account: '@akogarecafe', url: 'https://www.instagram.com/akogarecafe/' },
+  { id: 'cafe-x', project: 'cafe', kind: 'x', label: 'X', account: '@AkogareCafe_JR', url: 'https://x.com/AkogareCafe_JR' },
   { id: 'cafe-web', project: 'cafe', kind: 'web', label: 'Website', account: 'akogarecafe.com', url: 'https://akogarecafe.com' },
   { id: 'watch-youtube', project: 'watch', kind: 'youtube', label: 'YouTube', account: '@akogarewatchclub', channelId: 'UC6MT4WM8saZSk4B4pt4aFwA', url: 'https://www.youtube.com/channel/UC6MT4WM8saZSk4B4pt4aFwA' },
   { id: 'watch-patreon', project: 'watch', kind: 'patreon', label: 'Patreon', account: 'AkogareWatchClub', url: 'https://www.patreon.com/c/AkogareWatchClub' },
@@ -30,8 +31,8 @@ export const METRICS = {
   trialMembers: { label: 'Free trials', detail: 'Active trial access · current', kinds: ['patreon'] },
   declinedMembers: { label: 'Declined memberships', detail: 'Payment declined · current', kinds: ['patreon'] },
   lifetimeSupportCents: { label: 'Lifetime member support', detail: 'Patreon payments · before fees', kinds: ['patreon'] },
-  followers: { label: 'Combined audience', detail: 'YouTube subscribers + social followers', kinds: ['youtube', 'instagram', 'pinterest'] },
-  netFollowers: { label: 'Net subscribers', detail: 'Gained minus lost · selected period', kinds: ['youtube', 'instagram', 'pinterest'] },
+  followers: { label: 'Combined audience', detail: 'YouTube subscribers + social followers', kinds: ['youtube', 'instagram', 'pinterest', 'x'] },
+  netFollowers: { label: 'Net subscribers', detail: 'Gained minus lost · selected period', kinds: ['youtube', 'instagram', 'pinterest', 'x'] },
   views: { label: 'Content views', detail: 'YouTube + Instagram · selected period', kinds: ['youtube', 'instagram'] },
   impressions: { label: 'Pinterest impressions', detail: 'Organic Pinterest activity · selected period', kinds: ['pinterest'] },
   lifetimeViews: { label: 'YouTube views', detail: 'Lifetime views · current channel totals', kinds: ['youtube'] },
