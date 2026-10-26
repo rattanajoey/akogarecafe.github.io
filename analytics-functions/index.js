@@ -1,11 +1,10 @@
 'use strict';
 const functions=require('firebase-functions/v1');
 const admin=require('firebase-admin');
-const {range,reporter,accountCounts,allowed}=require('./providers');
+const {allowed}=require('./providers');
 const {isWorkspaceMember}=require('./authorization');
-const {recordSnapshot,withAudienceHistory}=require('./audience-history');
 const app=admin.apps.find(a=>a.name==='[DEFAULT]')||admin.initializeApp();
-const cache=new Map();
+const reports=require('./report-service').createReportService(admin,app);
 
 exports.projectAnalytics=functions.runWith({secrets:['AKOGARE_ANALYTICS_CONNECTIONS'],timeoutSeconds:60,memory:'512MB',maxInstances:3}).region('us-central1').https.onCall(async(data,context)=>{
   if(!context.auth)throw new functions.https.HttpsError('unauthenticated','Sign in to your Akogare workspace first.');
@@ -15,25 +14,12 @@ exports.projectAnalytics=functions.runWith({secrets:['AKOGARE_ANALYTICS_CONNECTI
   if(!authorized)throw new functions.https.HttpsError('permission-denied','This account has not been invited to the analytics workspace. Sign out and use your Akogare admin account.');
   // Authorization precedes all cached data access. Only this approved workspace
   // audience shares these reports. Provider tokens never leave the server.
-  const key=`${data.days}:${range(data.days).end}`;
-  const hit=cache.get(key);if(hit&&Date.now()-hit.at<300000)return hit.value;
-  const report=reporter(config);
-  const productsPromise=(async()=>{
-    const products={};
-    const jobs=[['cine',admin.auth(app)]];
-    if(config.pindoServiceAccount){
-      const pindo=admin.apps.find(a=>a.name==='dashboard-pindo')||admin.initializeApp({credential:admin.credential.cert(config.pindoServiceAccount),projectId:'pindo-patterns-7a4c9f'},'dashboard-pindo');
-      jobs.push(['pindo',admin.auth(pindo)]);
-    }
-    await Promise.all(jobs.map(async([id,auth])=>{try{products[id]=await accountCounts(auth,range(data.days));}catch{products[id]={error:'Firebase account totals are currently unavailable.'};}}));
-    return products;
-  })();
-  const [currentSources,products]=await Promise.all([report.sources(data.days),productsPromise]);
-  const sources=await withAudienceHistory(currentSources,range(data.days),(id,observation)=>recordSnapshot(admin.firestore(app),id,observation));
-  const value={sources,products,range:range(data.days),fetchedAt:new Date().toISOString()};
-  cache.set(key,{at:Date.now(),value});
-  return value;
+  return reports(config,data.days);
 });
+
+// A separate capability cannot sign in to Firebase or any provider. It grants
+// only this aggregate endpoint. Its hash/kill switch is read afresh on each call.
+exports.codotAnalytics=functions.runWith({secrets:['AKOGARE_ANALYTICS_CONNECTIONS'],timeoutSeconds:60,memory:'512MB',maxInstances:1}).region('us-central1').https.onRequest(require('./codot-reader').handler({reports}));
 
 // The one-time server handoff uses an expiring, creator-approved state and an
 // atomic replay claim. Its secret has no pending state after setup completes.

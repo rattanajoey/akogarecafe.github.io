@@ -5,7 +5,7 @@ const {isWorkspaceMember} = require('../authorization');
 const config = {allowedEmails: ['owner@gmail.com']};
 const legacy = {uid: 'owner', token: {email: 'owner@gmail.com', email_verified: false,
   firebase: {sign_in_provider: 'google.com', identities: {'google.com': ['google-owner']}}}};
-const owner = {disabled: false, providerData: [{providerId: 'google.com', uid: 'google-owner', email: 'owner@gmail.com'}]};
+const owner = {disabled: false, email:'owner@gmail.com', providerData: [{providerId: 'google.com', uid: 'google-owner', email: 'owner@gmail.com'}]};
 
 test('legacy owner requires matching authenticated Google identity and invited Gmail address', async () => {
   assert.equal(await isWorkspaceMember(legacy, config, async () => owner), true);
@@ -17,8 +17,19 @@ test('legacy owner requires matching authenticated Google identity and invited G
 });
 
 test('verified invited accounts and trusted viewer claims retain access', async () => {
-  const noLookup = () => { throw new Error('Unexpected identity lookup'); };
-  assert.equal(await isWorkspaceMember({token: {email: 'OWNER@gmail.com', email_verified: true}}, config, noLookup), true);
-  assert.equal(await isWorkspaceMember({token: {email: 'reader@example.com', email_verified: true, dashboardViewer: true}}, config, noLookup), true);
-  assert.equal(await isWorkspaceMember({token: {email: 'reader@example.com', email_verified: false, dashboardViewer: true}}, config, noLookup), false);
+  assert.equal(await isWorkspaceMember({uid:'owner',token: {email: 'OWNER@gmail.com', email_verified: true}}, config, async()=>owner), true);
+  const reader={email:'reader@example.com',customClaims:{dashboardViewer:true}};
+  const auth={uid:'reader',token: {email: 'reader@example.com', email_verified: true, dashboardViewer: true}};
+  assert.equal(await isWorkspaceMember(auth, config, async()=>reader), true);
+  assert.equal(await isWorkspaceMember({...auth,token:{...auth.token,email_verified:false}}, config, async()=>reader), false);
+  assert.equal(await isWorkspaceMember(auth, config, async()=>({...reader,customClaims:{}})), false);
+  assert.equal(await isWorkspaceMember(auth, config, async()=>({...reader,disabled:true})), false);
+});
+
+test('verified tokens respect live disable, identity changes and session revocation',async()=>{
+  const auth={uid:'owner',token:{email:'owner@gmail.com',email_verified:true,auth_time:1760000000}};
+  assert.equal(await isWorkspaceMember(auth,config,async()=>({...owner,disabled:true})),false);
+  assert.equal(await isWorkspaceMember(auth,config,async()=>({...owner,email:'changed@gmail.com'})),false);
+  assert.equal(await isWorkspaceMember(auth,config,async()=>({...owner,tokensValidAfterTime:new Date(1760000001000).toISOString()})),false);
+  assert.equal(await isWorkspaceMember(auth,config,async()=>({...owner,tokensValidAfterTime:new Date(1760000000000).toISOString()})),true);
 });

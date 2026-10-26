@@ -98,3 +98,15 @@ Stripe amounts are account-level net payment activity: payment and refund balanc
 Only the verified account identity and aggregate follower/post snapshot are saved under `xReporting` in the existing private dashboard configuration. Runtime validation pins the identity, nonnegative integer counts and original observation timestamp. Period changes and refreshes preserve that timestamp and never fabricate zero impressions, engagement or revenue. The dated snapshot is not counted as an automatically connected source. Cafe cards retain YouTube subscribers as the main audience and show X followers separately; an X filter shows only Cafe and removes unavailable period charts. CSV snapshot rows retain the original check date without assigning a selected-period date range.
 
 X is included in the private audience-history store, but the saved manual observation can create only its original UTC date. Repeated refreshes cannot populate later dates or imply that X was checked again. Future manual profile checks can supply another genuine dated observation; no background X collection is configured.
+
+## Codot read-only monitoring
+
+The independently revocable `codotAnalytics` reader exposes only aggregate
+reports for 1, 7 and 28 completed days. Its dedicated capability cannot sign in
+to Firebase or the connected providers. A local daily heartbeat checks reports
+in Dashboard GPT at 10:00 Asia/Shanghai and reviews trends on Mondays; Codot can
+review this chat and its private report files. See [Codot monitoring](codot-monitoring.md)
+for coverage, Keychain storage, immediate revocation, privacy and local-running
+requirements. This machine reader is separate from the browser's Firebase
+authentication. Browser authorization now checks the live user record before
+every response, including cache hits.
