@@ -40,6 +40,15 @@ export const METRICS = {
   activeUsers: { label: 'App active users', detail: 'iOS activity · selected period', kinds: ['ios'] },
 };
 export const finite = value => typeof value === 'number' && Number.isFinite(value);
+export function formatReportPeriod(start, end) {
+  const valid = date => /^\d{4}-\d{2}-\d{2}$/.test(date || '') && Number.isFinite(Date.parse(date)) && new Date(date).toISOString().slice(0, 10) === date;
+  if (!valid(start) || !valid(end) || end < start) return 'Selected period';
+  const formatDate = (date, options) => new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', ...options }).format(new Date(date));
+  const full = date => formatDate(date, { day: 'numeric', month: 'short', year: 'numeric' });
+  if (start === end) return full(start);
+  if (start.slice(0, 7) === end.slice(0, 7)) return `${Number(start.slice(8))}–${full(end)}`;
+  return `${formatDate(start, { day: 'numeric', month: 'short', ...(start.slice(0, 4) !== end.slice(0, 4) ? { year: 'numeric' } : {}) })} – ${full(end)}`;
+}
 export function sumKnown(values) {
   const known = values.filter(finite);
   return known.length ? known.reduce((a, b) => a + b, 0) : null;

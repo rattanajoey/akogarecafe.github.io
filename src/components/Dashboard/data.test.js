@@ -1,5 +1,13 @@
-import { coverage, audienceTotal, formatAudience, formatMoney, dateRange, change, chartSeries, chartFraction, periodComparison, signed, csv, SOURCES } from './data';
+import { coverage, audienceTotal, formatAudience, formatMoney, formatReportPeriod, dateRange, change, chartSeries, chartFraction, periodComparison, signed, csv, SOURCES } from './data';
 import { fetchGoogle } from './api';
+
+test('compact reporting dates retain exact month and year boundaries',()=>{
+  expect(formatReportPeriod('2026-10-01','2026-10-24')).toBe('1–24 Oct 2026');
+  expect(formatReportPeriod('2026-09-28','2026-10-25')).toBe('28 Sept – 25 Oct 2026');
+  expect(formatReportPeriod('2025-12-28','2026-01-24')).toBe('28 Dec 2025 – 24 Jan 2026');
+  expect(formatReportPeriod('2026-10-24','2026-10-24')).toBe('24 Oct 2026');
+  expect(formatReportPeriod('2026-02-30','2026-03-01')).toBe('Selected period');
+});
 
 test('missing sources remain unknown and a real zero remains zero', () => {
   expect(coverage(SOURCES, {}, 'views')).toEqual({ value: null, known: 0, total: 5 });

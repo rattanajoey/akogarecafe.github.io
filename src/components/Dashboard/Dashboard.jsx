@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Dialog, DialogTitle, DialogContent } from '@mui/material';
 import { Link } from 'react-router-dom';
-import { PROJECTS, SOURCES, METRICS, coverage, audienceTotal, formatAudience, dateRange, chartSeries, chartFraction, format, formatMoney, formatCurrency, compact, csv, finite, periodComparison, signed, sumKnown } from './data';
+import { PROJECTS, SOURCES, METRICS, coverage, audienceTotal, formatAudience, dateRange, chartSeries, chartFraction, format, formatMoney, formatCurrency, formatReportPeriod, compact, csv, finite, periodComparison, signed, sumKnown } from './data';
 import { loadWorkspace, googleConsent, completeGoogleConsent, listProperties, listStreams, fetchGoogle } from './api';
-import { loadUsdRate } from './currency';
+import { loadUsdRate, summarizeFees } from './currency';
 import './dashboard.css';
 
 function Icon({ name, size = 20, ...props }) {
@@ -42,6 +42,10 @@ const signInError = err => ({
   'auth/account-exists-with-different-credential': 'This account uses another sign-in method. Use your existing email login.',
 }[err.code] || `Sign-in could not finish (${err.code || 'unknown error'}). Please try again.`);
 
+function ReportNote({ children, label = 'How this is calculated' }) {
+  return <details className="studio-report-note"><summary>{label}</summary><p>{children}</p></details>;
+}
+
 function EarningsPanel({ sources, reports }) {
   const rows = sources.filter(s => ['youtube', 'patreon', 'etsy'].includes(s.kind)).map(source => {
     const report = reports[source.id];
@@ -58,34 +62,68 @@ function EarningsPanel({ sources, reports }) {
   }
   if (sources.some(s => s.project === 'pindo' && ['web', 'ios'].includes(s.kind))) rows.push({ id: 'pindo-sales', project: 'PinDo.', label: 'Website and app sales', value: '—', period: 'Selected period', status: 'Unavailable', note: 'No sales reporting connection is configured.' });
   if (!rows.length) return null;
-  return <section className="studio-panel studio-earnings" aria-label="Project earnings"><div className="studio-panel-head"><div><h2>Earnings</h2><p>Each source keeps its own currency and reporting period.</p></div></div><div className="studio-earnings-scroll"><table><thead><tr><th>PROJECT / SOURCE</th><th>AMOUNT</th><th>PERIOD</th><th>REPORT</th></tr></thead><tbody>{rows.map(row => <tr key={row.id}><td><strong>{row.project}</strong><small>{row.label}</small></td><td className="studio-earnings-amount">{row.value}{row.delta && <small>{row.delta}</small>}</td><td>{row.period}</td><td><strong>{row.status}</strong><small>{row.note}</small></td></tr>)}</tbody></table></div></section>;
+  return <section className="studio-panel studio-earnings" aria-label="Project earnings">
+    <div className="studio-panel-head"><div><h2>Earnings</h2><p>Amounts keep their own currency and reporting basis.</p></div></div>
+    <div className="studio-earnings-scroll"><table aria-label="Earnings by project"><thead><tr><th>PROJECT / SOURCE</th><th>AMOUNT</th><th>PERIOD</th><th>REPORT</th></tr></thead><tbody>{rows.map(row => {
+      const dates = row.period.split(' — ');
+      return <tr key={row.id}>
+        <td><strong>{row.project}</strong><small>{row.label}</small></td>
+        <td className="studio-earnings-amount">{row.value}{row.delta && <small className={`studio-earnings-delta ${row.delta.startsWith('+') ? 'is-positive' : row.delta.startsWith('-') ? 'is-negative' : 'is-flat'}`}>{row.delta}</small>}</td>
+        <td className="studio-earnings-period" title={row.period}>{dates.length === 2 ? formatReportPeriod(...dates) : row.period}</td>
+        <td><span className={`studio-status ${row.status === 'Reporting' ? 'connected' : row.status === 'Processing' ? 'processing' : 'unavailable'}`}><i/>{row.status}</span>{row.status === 'Reporting' ? <ReportNote>{row.note}</ReportNote> : <small>{row.note}</small>}</td>
+      </tr>;
+    })}</tbody></table></div>
+  </section>;
 }
 
-function FeeAmount({ amount, currency }) {
-  const [reference, setReference] = useState(undefined);
+function useFeeSummary(fees) {
+  const key = Object.keys(fees || {}).filter(currency => currency !== 'USD' && /^[A-Z]{3}$/.test(currency) && finite(fees[currency]) && fees[currency] > 0).sort().join('|');
+  const [references, setReferences] = useState({ key: null, values: {} });
   useEffect(() => {
+    if (!key) return undefined;
     let active = true;
-    setReference(undefined);
-    if (currency !== 'USD' && finite(amount)) loadUsdRate(currency).then(value => active && setReference(value));
-    return () => { active = false; };
-  }, [currency, amount]);
-  const estimate = reference && finite(amount * reference.rate) ? formatCurrency(amount * reference.rate, 'USD') : null;
-  return <span className="studio-money-row"><span>{formatCurrency(amount, currency)}</span>{currency !== 'USD' && <span className="studio-fx-pair"><span className="studio-usd-estimate" title={reference ? `1 ${currency} = ${reference.rate} USD · ECB reference rate ${reference.date}. Estimated value; Etsy’s actual conversion may differ.` : undefined}>{estimate ? `≈ ${estimate}` : reference === undefined ? 'Converting…' : 'USD estimate unavailable'}</span>{estimate && <small className="studio-fx-date">Rate {reference.date}</small>}</span>}</span>;
+    const currencies = key.split('|');
+    const refresh = () => Promise.all(currencies.map(async currency => [currency, await loadUsdRate(currency).catch(() => null)]))
+      .then(values => active && setReferences({ key, values: Object.fromEntries(values) }));
+    refresh();
+    const timer = currencies.length ? setInterval(refresh, 6 * 60 * 60 * 1000) : null;
+    return () => { active = false; if (timer) clearInterval(timer); };
+  }, [key]);
+  return summarizeFees(fees, references.key === key ? references.values : {});
+}
+
+function FeeBreakdown({ summary }) {
+  if (!summary || (summary.rows.length === 1 && summary.rows[0].currency === 'USD')) return null;
+  const dates = [...new Set(summary.rows.map(row => row.reference?.date).filter(Boolean))];
+  const datedRates = dates.length === 1 ? formatReportPeriod(dates[0], dates[0]) : summary.rows.filter(row => row.reference).map(row => `${row.currency}: ${formatReportPeriod(row.reference.date, row.reference.date)}`).join(' · ');
+  return <details className="studio-fee-details" aria-label="Etsy fee breakdown">
+    <summary><span>Fee breakdown</span><small>{summary.rows.length} {summary.rows.length === 1 ? 'currency' : 'currencies'}</small></summary>
+    <div className="studio-fee-breakdown"><table aria-label="Original Etsy fees and USD equivalents"><thead><tr><th>ORIGINAL FEE</th><th>USD EQUIVALENT</th></tr></thead><tbody>{summary.rows.map(row => <tr key={row.currency}><td>{formatCurrency(row.amount, row.currency)}</td><td title={row.reference ? `1 ${row.currency} = ${row.reference.rate} USD · ${row.reference.date}` : undefined}>{finite(row.usd) ? `${row.currency !== 'USD' && row.amount > 0 ? '≈ ' : ''}${formatCurrency(row.usd, 'USD')}` : summary.pending ? 'Converting…' : 'Unavailable'}</td></tr>)}</tbody></table>
+      <p>{datedRates && <>ECB reference rates · {datedRates}. </>}{summary.pending ? 'Loading reference rates.' : !finite(summary.total) ? 'USD estimate unavailable for some fees. Original amounts are shown above.' : 'USD conversions are estimates; Etsy’s actual conversion may differ.'} Other Etsy shop costs are excluded.</p>
+    </div>
+  </details>;
 }
 
 function ShopPanel({source,report,onConnect,days}){
+  const fees = report?.processingFeesByCurrency || (finite(report?.metrics?.processingFees) && report?.currency ? { [report.currency]: report.metrics.processingFees } : null);
+  const feeSummary = useFeeSummary(fees);
   if(!source)return null;
-  const foreignFees = Object.keys(report?.processingFeesByCurrency || {}).some(currency => currency !== 'USD');
+  const previousSales = report?.previous?.salesAmount;
+  const salesDelta = finite(report?.metrics?.salesAmount) && finite(previousSales) ? report.metrics.salesAmount - previousSales : null;
   return <section className="studio-panel studio-shop" aria-label="Etsy shop reporting">
     <div className="studio-panel-head"><div><h2>AkogareCafeStudio · Etsy</h2><p>Orders and sales · last {days === 1 ? 'completed day' : `${days} completed days`}</p></div><button className="studio-connect-button" onClick={()=>onConnect(source)}>Details<Icon name="arrow" size={13}/></button></div>
-    <div className="studio-shop-grid">{['orders','salesAmount','buyerRefunds','processingFees'].map(key=><div key={key}>
+    <div className="studio-shop-grid">{['orders','salesAmount','buyerRefunds'].map(key=><div key={key}>
       <span>{METRICS[key].label}</span>
-      <strong>{key === 'processingFees' && report?.processingFeesByCurrency ? Object.entries(report.processingFeesByCurrency).map(([currency,amount])=><FeeAmount key={currency} currency={currency} amount={amount}/>) : METRICS[key].unit === 'money' ? formatCurrency(report?.metrics?.[key],report?.currency) : format(report?.metrics?.[key])}</strong>
-      <small>{key === 'processingFees' && foreignFees ? 'Original fees · USD estimates' : METRICS[key].detail}</small>
+      <strong>{METRICS[key].unit === 'money' ? formatCurrency(report?.metrics?.[key],report?.currency) : format(report?.metrics?.[key])}</strong>
+      <small>{METRICS[key].detail}</small>
       {key === 'orders' && <PeriodChange sources={[source]} reports={{[source.id]:report}} metric={key} days={days}/>}
-    </div>)}</div>
-    <p className="studio-shop-note"><span className={`studio-status ${sourceState(report)||'unavailable'}`}><i/>{statusLabel(report)}</span> {report?.note||'Connect read-only shop reports to see sales, paid orders and available fee data.'}</p>
+      {key === 'salesAmount' && finite(salesDelta) && <div className="studio-change"><span className={`studio-change-number ${salesDelta > 0 ? 'is-positive' : salesDelta < 0 ? 'is-negative' : 'is-flat'}`}>{salesDelta > 0 ? '+' : ''}{formatCurrency(salesDelta, report.currency)}</span><span className="studio-change-label">vs previous {days === 1 ? 'day' : `${days} days`}</span></div>}
+    </div>)}<div className="studio-shop-fees"><span>Card-processing fees</span><strong>{finite(feeSummary?.total) ? `${feeSummary.approximate ? '≈ ' : ''}${formatCurrency(feeSummary.total, 'USD')}` : '—'}</strong><small>{feeSummary ? feeSummary.pending ? 'Calculating USD estimate…' : finite(feeSummary.total) ? feeSummary.approximate ? 'Estimated total in USD' : 'Reported in USD' : 'USD estimate unavailable' : 'Fee report unavailable'}</small></div></div>
+    <FeeBreakdown summary={feeSummary}/>
+    <div className="studio-shop-foot"><p className="studio-shop-note"><span className={`studio-status ${sourceState(report)||'unavailable'}`}><i/>{statusLabel(report)}</span> {report?.status === 'connected' && !report.stale ? 'Item sales exclude tax and shipping, before refunds and fees.' : report?.note||'Connect read-only shop reports to see sales, paid orders and available fee data.'}</p>
+    {report?.note && report.status === 'connected' && <ReportNote label="What’s included">{report.note}</ReportNote>}
     <a className="studio-membership-link" href="https://www.etsy.com/your/shops/me/finances/payment-account" target="_blank" rel="noreferrer">Open Etsy’s full payment account ↗</a>
+    </div>
   </section>;
 }
 
@@ -193,10 +231,10 @@ export function DashboardWorkspace({ user, reports, products, busy, error, days,
           })}</div>}
           {!membershipOnly && !shopOnly && !xOnly && <section className="studio-panel studio-activity"><div className="studio-panel-head"><div><h2>Across the studio</h2><p>{days === 1 ? range.end : `${range.start} — ${range.end}`} <span>· {days === 1 ? 'completed day' : 'completed days'}</span></p></div><select aria-label="Chart metric" value={activeMetric} onChange={e => setMetric(e.target.value)}><option value="views">Content views</option><option value="sessions">Website sessions</option><option value="activeUsers">App active users</option><option value="impressions">Pinterest impressions</option></select></div><ActivityChart sources={sources} reports={reports} metric={activeMetric} range={range}/><div className="studio-chart-legend">{projects.filter(p => sources.some(s => s.project === p.id && METRICS[activeMetric].kinds.includes(s.kind))).map(p => <span key={p.id}><i style={{ background: p.chartColor }}/>{p.name}</span>)}<small>{activeMetric === 'activeUsers' ? 'Daily users · not additive across days' : activeMetric === 'impressions' ? 'Pinterest impressions · UTC' : 'Source reporting timezones may differ'}</small></div></section>}
           <XPanel source={xSource} report={reports[xSource?.id]} onConnect={onConnect}/>
-          <EarningsPanel sources={sources} reports={reports}/>
+          {!shopOnly && <EarningsPanel sources={sources} reports={reports}/>}
           <ShopPanel source={shopSource} report={reports[shopSource?.id]} onConnect={onConnect} days={days}/>
-          {membershipSource && <section className="studio-panel studio-memberships" aria-label="Patreon membership"><div className="studio-panel-head"><div><h2>Watch Club · Patreon</h2><p>Current membership totals · separate from your social audience</p></div><button className="studio-connect-button" onClick={() => onConnect(membershipSource)}>{reports[membershipSource.id]?.connectionMode === 'automatic' ? 'Details' : 'Connect Patreon'}<Icon name="arrow" size={13}/></button></div>{!membershipOnly && <div className="studio-membership-grid">{['patrons', 'paidMembers', 'trialMembers', 'declinedMembers'].map(key => <div key={key}><span>{METRICS[key].label}</span><strong>{format(reports[membershipSource.id]?.metrics?.[key])}</strong></div>)}</div>}<p className="studio-membership-note"><span className={`studio-status ${sourceState(reports[membershipSource.id]) || 'unavailable'}`}><i/>{statusLabel(reports[membershipSource.id])}</span> {reports[membershipSource.id]?.note || 'Connect the Watch Club creator account for automatic read-only membership reports.'}</p><a className="studio-membership-link" href={membershipSource.url} target="_blank" rel="noreferrer">Open Akogare Watch Club on Patreon ↗</a></section>}
-          <section className="studio-project-section"><div className="studio-section-head"><div><h2>Your projects <span>{projects.length.toString().padStart(2, '0')}</span></h2><p>{xOnly ? 'Dated profile snapshot · independent of selected period.' : membershipOnly ? 'Current membership totals.' : <>Current totals · changes for the {days === 1 ? 'last completed day' : `last ${days} days`}.</>}</p></div>{project !== 'all' && <button className="studio-text-button" onClick={() => pickProject('all')}>All projects <Icon name="arrow" size={16}/></button>}</div><div className="studio-project-grid">{projects.map(p => {
+          {membershipSource && <section className="studio-panel studio-memberships" aria-label="Patreon membership"><div className="studio-panel-head"><div><h2>Watch Club · Patreon</h2><p>Current membership totals · separate from your social audience</p></div><button className="studio-connect-button" onClick={() => onConnect(membershipSource)}>{reports[membershipSource.id]?.connectionMode === 'automatic' ? 'Details' : 'Connect Patreon'}<Icon name="arrow" size={13}/></button></div>{!membershipOnly && <div className="studio-membership-grid">{['patrons', 'paidMembers', 'trialMembers', 'declinedMembers'].map(key => <div key={key}><span>{METRICS[key].label}</span><strong>{format(reports[membershipSource.id]?.metrics?.[key])}</strong></div>)}</div>}<p className="studio-membership-note"><span className={`studio-status ${sourceState(reports[membershipSource.id]) || 'unavailable'}`}><i/>{statusLabel(reports[membershipSource.id])}</span> {isReporting(reports[membershipSource.id]) ? 'Membership counts are current, independent of the selected dates.' : reports[membershipSource.id]?.note || 'Connect the Watch Club creator account for automatic read-only membership reports.'}</p>{isReporting(reports[membershipSource.id]) && reports[membershipSource.id]?.note && <ReportNote label="About these counts">{reports[membershipSource.id].note}</ReportNote>}<a className="studio-membership-link" href={membershipSource.url} target="_blank" rel="noreferrer">Open Akogare Watch Club on Patreon ↗</a></section>}
+          {!shopOnly && <section className="studio-project-section"><div className="studio-section-head"><div><h2>Your projects <span>{projects.length.toString().padStart(2, '0')}</span></h2><p>{xOnly ? 'Dated profile snapshot · independent of selected period.' : membershipOnly ? 'Current membership totals.' : <>Current totals · changes for the {days === 1 ? 'last completed day' : `last ${days} days`}.</>}</p></div>{project !== 'all' && <button className="studio-text-button" onClick={() => pickProject('all')}>All projects <Icon name="arrow" size={16}/></button>}</div><div className="studio-project-grid">{projects.map(p => {
             const own = sources.filter(s => s.project === p.id);
             const c = own.filter(s => isReporting(reports[s.id])).length;
             const youtubeSources = own.filter(s => s.kind === 'youtube');
@@ -214,7 +252,7 @@ export function DashboardWorkspace({ user, reports, products, busy, error, days,
               <div className="studio-project-metric"><strong>{shopProject ? format(reports['etsy-shop']?.metrics?.orders) : membershipOnly ? format(reports['watch-patreon']?.metrics?.paidMembers) : productProject ? format(product?.registeredUsers) : formatAudience(audience)}</strong><span className="studio-project-metric-label">{shopProject ? 'Paid orders' : membershipOnly ? 'Paid memberships' : productProject ? 'Registered accounts' : youtubeSources.length ? 'YouTube subscribers' : instagramSources.length ? 'Instagram followers' : xOnly ? 'X followers · snapshot' : 'Current audience'}</span><div className="studio-project-metric-change">{shopProject ? <PeriodChange compact sources={own} reports={reports} metric="orders" days={days}/> : membershipOnly ? null : productProject ? <NumberChange compact value={product?.newAccounts} label="new accounts"/> : <AudienceChange compact sources={audienceSources} reports={reports}/>}</div></div>
               <div className="studio-project-metric"><strong>{shopProject ? formatCurrency(reports['etsy-shop']?.metrics?.salesAmount,reports['etsy-shop']?.currency) : format(xOnly ? reports[xSource.id]?.metrics?.publishedItems : membershipOnly ? reports['watch-patreon']?.metrics?.patrons : productProject ? sessions.value : views.known ? views.value : lifetime)}</strong><span className="studio-project-metric-label">{shopProject ? 'Item sales · before fees' : xOnly ? 'Total posts · snapshot' : membershipOnly ? 'Patrons with access' : productProject ? 'Website sessions' : views.known ? 'Content views' : 'Lifetime views'}</span><div className="studio-project-metric-change">{!membershipOnly && !shopProject && (productProject || views.known > 0) && <PeriodChange compact sources={own} reports={reports} metric={productProject ? 'sessions' : 'views'} days={days}/>}</div></div>
             </div>{!xOnly && own.some(s => s.kind === 'x') && finite(reports['cafe-x']?.metrics?.followers) && <div className="studio-project-audience-detail"><span>X followers · snapshot</span><strong>{format(reports['cafe-x']?.metrics?.followers)}</strong></div>}{!membershipOnly && own.some(s => s.kind === 'patreon') && <div className="studio-project-audience-detail"><span>Patreon paid memberships</span><strong>{format(reports['watch-patreon']?.metrics?.paidMembers)}</strong></div>}{!productProject && youtubeSources.length > 0 && instagramSources.length > 0 && <div className="studio-project-audience-detail"><span>Instagram followers</span><strong>{format(instagram.value)}</strong></div>}<div className="studio-project-card-foot"><span className={`studio-status-dot ${c ? 'on' : ''}`}/>{c} / {own.length} sources connected<button onClick={() => { setProject(p.id); setPage('connections'); }}>Manage <Icon name="arrow" size={13}/></button></div></article>;
-          })}</div></section>
+          })}</div></section>}
         </> : <div className="studio-connection-intro"><Icon name="link" size={22}/><div><strong>{SOURCES.filter(s => isReporting(reports[s.id])).length} / {SOURCES.length} sources connected</strong><p>Counts are current snapshots. Views and traffic use the selected reporting period. Limited access means only some metrics are available.</p></div></div>}
         {page === 'connections' && <XPanel source={xSource} report={reports[xSource?.id]} onConnect={onConnect}/>}
         {page === 'connections' && <ShopPanel source={shopSource} report={reports[shopSource?.id]} onConnect={onConnect} days={days}/>}

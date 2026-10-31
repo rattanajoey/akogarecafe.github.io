@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { DashboardWorkspace } from './Dashboard';
 import { dateRange } from './data';
 import { loadUsdRate } from './currency';
-jest.mock('./currency', () => ({ loadUsdRate: jest.fn() }));
+jest.mock('./currency', () => ({ ...jest.requireActual('./currency'), loadUsdRate: jest.fn() }));
 beforeEach(() => loadUsdRate.mockResolvedValue({ rate: 1.3368, date: '2026-10-23', source: 'ECB' }));
 
 jest.mock('react-router-dom', () => ({ Link: ({ to, ...props }) => <a href={to} {...props} /> }));
@@ -89,17 +89,21 @@ test('Etsy project focuses on orders and clearly labelled sales without audience
   expect(screen.queryByText('Combined audience')).toBeNull();
   expect(screen.queryByRole('img',{name:/by project and date/})).toBeNull();
   expect(screen.queryByText('Channel breakdown')).toBeNull();
-  expect(screen.getByRole('region',{name:'Project earnings'}).textContent).toContain('Etsy · item sales before refunds and fees');
-  expect(container.querySelector('.studio-project-metric-label').textContent).toBe('Paid orders');
+  expect(screen.queryByRole('region',{name:'Project earnings'})).toBeNull();
+  expect(container.querySelector('.studio-project-section')).toBeNull();
 });
 
-test('Etsy fee card preserves the original currencies and shows a dated USD estimate beside foreign fees',async()=>{
+test('Etsy fee card shows one complete USD estimate with original currencies in a compact breakdown',async()=>{
   render(<Workspace reports={{'etsy-shop':{status:'connected',currency:'USD',metrics:{orders:2,processingFees:null},processingFeesByCurrency:{USD:0.35,GBP:0.4}}}}/>);
   const shop=screen.getByRole('region',{name:'Etsy shop reporting'});
-  expect(shop.textContent).toMatch(/Card-processing feesUSD\s0\.35GBP\s0\.40/);
-  await waitFor(() => expect(shop.textContent).toMatch(/GBP\s0\.40≈ USD\s0\.53/));
-  expect(shop.textContent).toContain('Rate 2026-10-23');
-  expect(shop.textContent).toContain('Original fees · USD estimates');
+  await waitFor(() => expect(shop.querySelector('.studio-shop-fees strong').textContent).toMatch(/≈ USD\s0\.88/));
+  const breakdown=shop.querySelector('.studio-fee-details');
+  expect(breakdown.open).toBe(false);
+  fireEvent.click(screen.getByText('Fee breakdown'));
+  expect(breakdown.open).toBe(true);
+  expect(breakdown.textContent).toMatch(/USD\s0\.35USD\s0\.35GBP\s0\.40≈ USD\s0\.53/);
+  expect(breakdown.textContent).toContain('ECB reference rates · 23 Oct 2026');
+  expect(breakdown.textContent).toContain('2 currencies');
   expect(shop.textContent).not.toMatch(/USD\s0\.75/);
 });
 
@@ -157,7 +161,8 @@ test('earnings distinguish period revenue, lifetime support, missing access and 
   expect(earnings.textContent).toMatch(/EUR\s12\.34/);
   expect(earnings.textContent).toMatch(/USD\s4\.55/);
   expect(earnings.textContent.match(/Stripe account · net payment activity/g)).toHaveLength(1);
-  expect(earnings.textContent).toContain('2026-10-01 — 2026-10-02');
+  expect(earnings.textContent).toContain('1–2 Oct 2026');
+  expect(earnings.querySelector('[title="2026-10-01 — 2026-10-02"]')).toBeTruthy();
   expect(earnings.textContent).toContain('Lifetime · before fees');
   expect(earnings.textContent).toContain('Unavailable');
   expect(earnings.textContent).toContain('Read-only revenue reporting is not connected');
@@ -198,4 +203,27 @@ test('an unavailable exchange rate retains the original Etsy fee without a fabri
   await waitFor(()=>expect(shop.textContent).toContain('USD estimate unavailable'));
   expect(shop.textContent).toMatch(/GBP\s0\.65/);
   expect(shop.textContent).not.toContain('≈ USD');
+  expect(shop.querySelector('.studio-shop-fees strong').textContent).toBe('—');
+});
+
+test('Etsy never shows a partial fee conversion as its total, and USD-only zero is a known zero',async()=>{
+  loadUsdRate.mockImplementation(async currency=>currency==='GBP'?null:{rate:1.1,date:'2026-10-23'});
+  const {rerender}=render(<Workspace reports={{'etsy-shop':{status:'connected',currency:'USD',metrics:{orders:3},processingFeesByCurrency:{USD:0.48,GBP:0.65,EUR:0.64}}}}/>);
+  const shop=screen.getByRole('region',{name:'Etsy shop reporting'});
+  await waitFor(()=>expect(shop.textContent).toContain('USD estimate unavailable'));
+  expect(shop.querySelector('.studio-shop-fees strong').textContent).toBe('—');
+  expect(shop.querySelector('.studio-fee-details').textContent).toContain('3 currencies');
+  rerender(<Workspace reports={{'etsy-shop':{status:'connected',currency:'USD',metrics:{orders:0,processingFees:0},processingFeesByCurrency:{USD:0}}}}/>);
+  expect(shop.querySelector('.studio-shop-fees strong').textContent).toMatch(/USD\s0\.00/);
+  expect(shop.querySelector('.studio-fee-details')).toBeNull();
+});
+
+test('earnings keep calculation notes in an accessible disclosure while showing status and short dates',()=>{
+  render(<Workspace reports={{'cafe-youtube':{status:'connected',earnings:{status:'connected',amount:5.5,currency:'USD',start:'2026-10-01',end:'2026-10-24',note:'Estimates may be adjusted.'}}}}/>);
+  const earnings=screen.getByRole('region',{name:'Project earnings'});
+  const detail=earnings.querySelector('details');
+  expect(detail.open).toBe(false);
+  fireEvent.click(detail.querySelector('summary'));
+  expect(detail.open).toBe(true);
+  expect(detail.textContent).toContain('Estimates may be adjusted.');
 });
