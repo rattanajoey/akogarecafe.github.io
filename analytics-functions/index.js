@@ -5,16 +5,18 @@ const {allowed}=require('./providers');
 const {isWorkspaceMember}=require('./authorization');
 const app=admin.apps.find(a=>a.name==='[DEFAULT]')||admin.initializeApp();
 const reports=require('./report-service').createReportService(admin,app);
+const lifetimeReports=require('./lifetime-service').createLifetimeService();
 
 exports.projectAnalytics=functions.runWith({secrets:['AKOGARE_ANALYTICS_CONNECTIONS'],timeoutSeconds:60,memory:'512MB',maxInstances:3}).region('us-central1').https.onCall(async(data,context)=>{
   if(!context.auth)throw new functions.https.HttpsError('unauthenticated','Sign in to your Akogare workspace first.');
-  if(!allowed(data))throw new functions.https.HttpsError('invalid-argument','Choose a supported reporting period: 1, 7, 28 or 90 days.');
+  const lifetime=data?.lifetime===true&&Object.keys(data).length===1;
+  if(!lifetime&&!allowed(data))throw new functions.https.HttpsError('invalid-argument','Choose a supported reporting period or lifetime earnings.');
   let config;try{config=JSON.parse(process.env.AKOGARE_ANALYTICS_CONNECTIONS||'');}catch{throw new functions.https.HttpsError('failed-precondition','The private analytics connection is not configured.');}
   const authorized=await isWorkspaceMember(context.auth,config,uid=>admin.auth(app).getUser(uid));
   if(!authorized)throw new functions.https.HttpsError('permission-denied','This account has not been invited to the analytics workspace. Sign out and use your Akogare admin account.');
   // Authorization precedes all cached data access. Only this approved workspace
   // audience shares these reports. Provider tokens never leave the server.
-  return reports(config,data.days);
+  return lifetime?lifetimeReports(config):reports(config,data.days);
 });
 
 // A separate capability cannot sign in to Firebase or any provider. It grants

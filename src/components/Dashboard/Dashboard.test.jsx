@@ -8,9 +8,9 @@ beforeEach(() => loadUsdRate.mockResolvedValue({ rate: 1.3368, date: '2026-10-23
 
 jest.mock('react-router-dom', () => ({ Link: ({ to, ...props }) => <a href={to} {...props} /> }));
 
-function Workspace({ reports }) {
+function Workspace({ reports, lifetime = null }) {
   const [days, setDays] = useState(28);
-  return <DashboardWorkspace user={{ displayName: 'Studio' }} reports={reports} products={null} busy={false} error="" days={days} setDays={setDays} onRefresh={() => {}} onLogin={() => {}} onLogout={() => {}} onConnect={() => {}} />;
+  return <DashboardWorkspace user={{ displayName: 'Studio' }} reports={reports} lifetime={lifetime} products={null} busy={false} error="" days={days} setDays={setDays} onRefresh={() => {}} onLogin={() => {}} onLogout={() => {}} onConnect={() => {}} />;
 }
 
 test('Last 1 day selects yesterday, explains processing and centers a single reported point', () => {
@@ -135,7 +135,7 @@ test('Patreon is separate from social audience and its snapshot filter never inv
   expect(panel.textContent).toContain('Paid memberships2');
   expect(panel.textContent).toContain('separate from your social audience');
   const earnings=screen.getByRole('region',{name:'Project earnings'});
-  expect(earnings.textContent).toMatch(/lifetime member supportUSD\s12\.34/);
+  expect(earnings.textContent).toContain('Lifetime only');
   expect(earnings.textContent).toContain('before fees');
   fireEvent.change(screen.getByLabelText('Filter by platform'),{target:{value:'patreon'}});
   expect(container.querySelectorAll('.studio-summary .studio-stat-value')[1].textContent).toBe('2');
@@ -146,7 +146,7 @@ test('Patreon is separate from social audience and its snapshot filter never inv
   expect(container.querySelector('.studio-project-card').textContent).toContain('Akogare Watch Club');
   expect(screen.getByText('Patrons with access · current')).toBeTruthy();
   fireEvent.change(screen.getByRole('combobox',{name:'Reporting period'}),{target:{value:'7'}});
-  expect(earnings.textContent).toMatch(/lifetime member supportUSD\s12\.34/);
+  expect(earnings.textContent).toContain('Lifetime only');
 });
 
 
@@ -158,12 +158,12 @@ test('earnings distinguish period revenue, lifetime support, missing access and 
   }}/>);
   const earnings=screen.getByRole('region',{name:'Project earnings'});
   expect(earnings.textContent).toMatch(/USD\s0\.00/);
-  expect(earnings.textContent).toMatch(/EUR\s12\.34/);
+  expect(earnings.textContent).toContain('Lifetime only');
   expect(earnings.textContent).toMatch(/USD\s4\.55/);
   expect(earnings.textContent.match(/Stripe account · net payment activity/g)).toHaveLength(1);
   expect(earnings.textContent).toContain('1–2 Oct 2026');
   expect(earnings.querySelector('[title="2026-10-01 — 2026-10-02"]')).toBeTruthy();
-  expect(earnings.textContent).toContain('Lifetime · before fees');
+  expect(earnings.textContent).toContain('Lifetime only');
   expect(earnings.textContent).toContain('Unavailable');
   expect(earnings.textContent).toContain('Read-only revenue reporting is not connected');
 });
@@ -228,40 +228,29 @@ test('earnings keep calculation notes in an accessible disclosure while showing 
   expect(detail.textContent).toContain('Estimates may be adjusted.');
 });
 
-test('earnings headline adds the selected period once, explains its basis and follows project filters', () => {
-  const range = dateRange(28);
-  const income = amount => ({ status: 'connected', earnings: { status: 'connected', amount, currency: 'USD', ...range } });
-  render(<Workspace reports={{
-    'cafe-youtube': income(5.25), 'watch-youtube': income(10.25), 'cine-youtube': income(0),
-    'cine-web': income(2), 'etsy-shop': income(7.5),
-    'watch-patreon': { status: 'connected', currency: 'USD', metrics: { lifetimeSupportCents: 999999 } },
-  }}/>);
-  const total = screen.getByRole('region', { name: 'Total reported earnings' });
-  expect(total.querySelector('.studio-income-value').textContent).toMatch(/USD\s25\.00/);
-  expect(total.textContent).toContain('Partial total · 5 reporting sources');
-  expect(total.textContent).toContain('Before refunds and fees');
-  expect(total.textContent).toContain('Patreon lifetime support is excluded');
-  expect(total.textContent).toContain('not profit');
-  fireEvent.change(screen.getByRole('combobox', { name: 'Choose project' }), { target: { value: 'cafe' } });
-  expect(total.querySelector('.studio-income-value').textContent).toMatch(/USD\s5\.25/);
-  expect(total.textContent).toContain('Reported total · 1 reporting source');
-  expect(total.textContent).not.toContain('Etsy');
-  fireEvent.change(screen.getByRole('combobox', { name: 'Reporting period' }), { target: { value: '7' } });
-  expect(total.querySelector('.studio-income-value').textContent).toBe('—');
-  expect(total.textContent).toContain('Awaiting period reports');
-});
 
-test('earnings headline identifies processing, keeps different currencies separate and excludes stale values', () => {
-  const range = dateRange(28);
-  const through = new Date(Date.parse(range.end + 'T00:00:00Z') - 2 * 86400000).toISOString().slice(0, 10);
-  render(<Workspace reports={{
-    'cafe-youtube': { status: 'connected', earnings: { status: 'connected', amount: 12.5, currency: 'USD', ...range, end: through } },
-    'watch-youtube': { status: 'connected', earnings: { status: 'connected', amount: 7, currency: 'EUR', ...range } },
-    'cine-web': { status: 'connected', stale: true, earnings: { status: 'connected', amount: 500, currency: 'USD', ...range } },
-  }}/>);
-  const total = screen.getByRole('region', { name: 'Total reported earnings' });
-  expect(total.querySelector('.studio-income-value').textContent).toMatch(/EUR\s7\.00USD\s12\.50/);
-  expect(total.textContent).toContain('Reporting dates vary by channel');
-  expect(total.textContent).toContain('currencies are kept separate');
-  expect(total.textContent).not.toContain('500');
+const lifetimeReport = (amount, currency = 'USD', extra = {}) => ({ status: 'connected', amount, currency, lifetime: true, complete: true, ...extra });
+test('lifetime total is inside Earnings, shows per-source lifetime values and survives date changes', () => {
+  const lifetime = { sources: { 'cafe-youtube': lifetimeReport(500), 'etsy-shop': lifetimeReport(20), 'watch-patreon': lifetimeReport(10), 'cine-sales': lifetimeReport(0) } };
+  render(<Workspace reports={{ 'cafe-youtube': { status: 'connected', earnings: { status: 'connected', amount: 5, currency: 'USD', start: '2026-10-01', end: '2026-10-24' } } }} lifetime={lifetime}/>);
+  const earnings = screen.getByRole('region', { name: 'Project earnings' });
+  const total = screen.getByLabelText('Lifetime earnings total');
+  expect(earnings.contains(total)).toBe(true);
+  expect(total.querySelector('.studio-lifetime-value').textContent).toMatch(/USD\s530\.00/);
+  expect(total.textContent).toContain('independent of the date selector');
+  expect(earnings.querySelector('.studio-lifetime-amount').textContent).toMatch(/USD\s500\.00/);
+  expect(screen.queryByRole('region', { name: 'Total reported earnings' })).toBeNull();
+  fireEvent.change(screen.getByRole('combobox', { name: 'Reporting period' }), { target: { value: '1' } });
+  expect(total.querySelector('.studio-lifetime-value').textContent).toMatch(/USD\s530\.00/);
+  fireEvent.change(screen.getByRole('combobox', { name: 'Choose project' }), { target: { value: 'cafe' } });
+  expect(total.querySelector('.studio-lifetime-value').textContent).toMatch(/USD\s500\.00/);
+});
+test('unavailable lifetime is unknown and Etsy retains its own lifetime figure in the shop view', () => {
+  const { rerender } = render(<Workspace reports={{}}/>);
+  expect(screen.getByLabelText('Lifetime earnings total').querySelector('.studio-lifetime-value').textContent).toBe('—');
+  rerender(<Workspace reports={{}} lifetime={{ sources: { 'etsy-shop': lifetimeReport(75.25, 'USD', { end: '2026-10-31' }) } }}/>);
+  fireEvent.change(screen.getByRole('combobox', { name: 'Choose project' }), { target: { value: 'shop' } });
+  const shop = screen.getByRole('region', { name: 'Etsy shop reporting' });
+  expect(shop.querySelector('.studio-shop-lifetime').textContent).toMatch(/USD\s75\.25/);
+  expect(shop.querySelector('.studio-shop-lifetime').textContent).toContain('Through 31 Oct 2026');
 });

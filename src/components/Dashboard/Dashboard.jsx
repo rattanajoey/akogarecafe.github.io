@@ -2,9 +2,9 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Dialog, DialogTitle, DialogContent } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { PROJECTS, SOURCES, METRICS, coverage, audienceTotal, formatAudience, dateRange, chartSeries, chartFraction, format, formatMoney, formatCurrency, formatReportPeriod, compact, csv, finite, periodComparison, signed, sumKnown } from './data';
-import { loadWorkspace, googleConsent, completeGoogleConsent, listProperties, listStreams, fetchGoogle } from './api';
+import { loadWorkspace, loadLifetimeEarnings, googleConsent, completeGoogleConsent, listProperties, listStreams, fetchGoogle } from './api';
 import { loadUsdRate, summarizeFees } from './currency';
-import { summarizeEarnings } from './earnings';
+import { summarizeLifetimeEarnings } from './earnings';
 import './dashboard.css';
 
 function Icon({ name, size = 20, ...props }) {
@@ -47,41 +47,15 @@ function ReportNote({ children, label = 'How this is calculated' }) {
   return <details className="studio-report-note"><summary>{label}</summary><p>{children}</p></details>;
 }
 
-function EarningsSummary({ sources, reports, range, days }) {
-  const summary = summarizeEarnings(sources, reports, range);
-  if (!summary.expected) return null;
-  const labels = {
-    youtube: ['YouTube', 'Estimated revenue'],
-    etsy: ['Etsy', 'Before refunds and fees'],
-    stripe: ['Stripe', 'After transaction fees'],
-    app: ['PinDo sales', 'Not connected'],
-  };
-  const amounts = totals => totals.length ? totals.map(total => <span key={total.currency}>{formatCurrency(total.amount, total.currency)}</span>) : <span>—</span>;
-  return <section className="studio-panel studio-income-summary" aria-label="Total reported earnings">
-    <div className="studio-income-main">
-      <h2>Total reported earnings</h2>
-      <p>Last {days === 1 ? 'completed day' : `${days} completed days`} · {formatReportPeriod(range.start, range.end)}</p>
-      <div className="studio-income-value">{amounts(summary.totals)}</div>
-      <small>{summary.known ? `${summary.partial ? 'Partial total' : 'Reported total'} · ${summary.known} reporting ${summary.known === 1 ? 'source' : 'sources'}` : 'Awaiting period reports · missing amounts stay unknown'}</small>
-    </div>
-    <div className="studio-income-providers" aria-label="What makes up the total">{summary.providers.map(provider => <div key={provider.kind}>
-      <span>{labels[provider.kind][0]}</span>
-      <strong>{amounts(provider.totals)}</strong>
-      <small>{provider.known ? labels[provider.kind][1] : 'Period report unavailable'}{provider.known > 0 && provider.known < provider.expected && ` · ${provider.known}/${provider.expected} sources`}</small>
-      {provider.delayed && <small>{provider.through ? `Through ${formatReportPeriod(provider.through, provider.through)}` : 'Reporting dates vary by channel'}</small>}
-    </div>)}</div>
-    <p className="studio-income-note">Combined reported amounts, not profit. {summary.lifetimeExcluded && 'Patreon lifetime support is excluded. '}Missing reports are excluded{summary.totals.length > 1 ? '; currencies are kept separate' : ''}.</p>
-  </section>;
-}
-
-function EarningsPanel({ sources, reports }) {
+function EarningsPanel({ sources, reports, lifetime, lifetimeBusy, lifetimeError }) {
+  const summary = summarizeLifetimeEarnings(sources, lifetime);
   const rows = sources.filter(s => ['youtube', 'patreon', 'etsy'].includes(s.kind)).map(source => {
     const report = reports[source.id];
     const lifetime = source.kind === 'patreon';
     const income = report?.earnings;
     const known = lifetime ? finite(report?.metrics?.lifetimeSupportCents) && Boolean(report?.currency) : finite(income?.amount) && Boolean(income?.currency);
     const project = PROJECTS.find(p => p.id === source.project);
-    return { id: source.id, project: project.name, label: lifetime ? 'Patreon · lifetime member support' : source.kind === 'etsy' ? 'Etsy · item sales before refunds and fees' : 'YouTube · estimated revenue', value: lifetime ? formatMoney(report?.metrics?.lifetimeSupportCents, report?.currency) : formatCurrency(income?.amount, income?.currency), period: lifetime ? 'Lifetime · before fees' : income?.start && income?.end ? `${income.start} — ${income.end}` : 'Selected period', status: known ? 'Reporting' : income?.status === 'processing' ? 'Processing' : 'Unavailable', note: lifetime ? 'Member payments reported by Patreon, before fees. Net earnings and payouts stay in Patreon.' : income?.note || report?.note || 'Read-only revenue reporting is not connected.', delta: !lifetime && finite(income?.amount) && finite(income?.previousAmount) ? `${income.amount - income.previousAmount > 0 ? '+' : ''}${formatCurrency(income.amount - income.previousAmount, income.currency)} vs matched dates` : null };
+    return { id: source.id, project: project.name, label: lifetime ? 'Patreon · lifetime member support' : source.kind === 'etsy' ? 'Etsy · item sales before refunds and fees' : 'YouTube · estimated revenue', value: lifetime ? '—' : formatCurrency(income?.amount, income?.currency), period: lifetime ? 'Lifetime only' : income?.start && income?.end ? `${income.start} — ${income.end}` : 'Selected period', status: known ? 'Reporting' : income?.status === 'processing' ? 'Processing' : 'Unavailable', note: lifetime ? 'Member payments reported by Patreon, before fees. Net earnings and payouts stay in Patreon.' : income?.note || report?.note || 'Read-only revenue reporting is not connected.', delta: !lifetime && finite(income?.amount) && finite(income?.previousAmount) ? `${income.amount - income.previousAmount > 0 ? '+' : ''}${formatCurrency(income.amount - income.previousAmount, income.currency)} vs matched dates` : null };
   });
   if (sources.some(s => s.project === 'cine' && ['web', 'ios'].includes(s.kind))) {
     const income=reports['cine-web']?.earnings;
@@ -91,12 +65,19 @@ function EarningsPanel({ sources, reports }) {
   if (sources.some(s => s.project === 'pindo' && ['web', 'ios'].includes(s.kind))) rows.push({ id: 'pindo-sales', project: 'PinDo.', label: 'Website and app sales', value: '—', period: 'Selected period', status: 'Unavailable', note: 'No sales reporting connection is configured.' });
   if (!rows.length) return null;
   return <section className="studio-panel studio-earnings" aria-label="Project earnings">
-    <div className="studio-panel-head"><div><h2>Earnings by source</h2><p>Amounts keep their own currency and reporting basis.</p></div></div>
-    <div className="studio-earnings-scroll"><table aria-label="Earnings by project"><thead><tr><th>PROJECT / SOURCE</th><th>AMOUNT</th><th>PERIOD</th><th>REPORT</th></tr></thead><tbody>{rows.map(row => {
+    <div className="studio-panel-head"><div><h2>Earnings</h2><p>Selected-period reports and lifetime totals, side by side.</p></div></div>
+    <div className="studio-lifetime-total" aria-label="Lifetime earnings total">
+      <div><span>Lifetime reported total</span><div className="studio-lifetime-value">{summary.totals.length ? summary.totals.map(total => <strong key={total.currency}>{formatCurrency(total.amount, total.currency)}</strong>) : <strong>—</strong>}</div><small>{summary.known ? `${summary.known < summary.expected ? 'Partial total' : 'Reported total'} · ${summary.known} of ${summary.expected} sources reporting` : lifetimeBusy ? 'Loading lifetime reports…' : 'Lifetime reports unavailable'}</small></div>
+      <p>All available history · independent of the date selector.<br/>YouTube estimates, Etsy sales before refunds/fees, Stripe net payment activity and Patreon support before fees. Not profit.{summary.totals.length > 1 && ' Currencies are kept separate.'}{lifetimeError && <span className="studio-lifetime-error">{lifetimeError}</span>}</p>
+    </div>
+    <div className="studio-earnings-scroll"><table aria-label="Earnings by project"><thead><tr><th>PROJECT / SOURCE</th><th>SELECTED PERIOD</th><th>LIFETIME TOTAL</th><th>PERIOD</th><th>REPORT</th></tr></thead><tbody>{rows.map(row => {
       const dates = row.period.split(' — ');
+      const history = summary.rows.find(entry => entry.id === row.id);
+      const allTime = history?.report;
       return <tr key={row.id}>
         <td><strong>{row.project}</strong><small>{row.label}</small></td>
         <td className="studio-earnings-amount">{row.value}{row.delta && <small className={`studio-earnings-delta ${row.delta.startsWith('+') ? 'is-positive' : row.delta.startsWith('-') ? 'is-negative' : 'is-flat'}`}>{row.delta}</small>}</td>
+        <td className="studio-earnings-amount studio-lifetime-amount">{history?.known ? formatCurrency(history.amount, history.currency) : '—'}<small>{history?.known ? allTime.end ? `Through ${formatReportPeriod(allTime.end, allTime.end)}` : allTime.basis === 'memberLifetimeSupport' ? 'Lifetime · before fees' : 'Reported lifetime estimate' : lifetimeBusy ? 'Loading…' : allTime?.status === 'processing' ? 'Processing' : 'Lifetime unavailable'}</small>{allTime?.note && <ReportNote label="About this lifetime total">{allTime.note}</ReportNote>}</td>
         <td className="studio-earnings-period" title={row.period}>{dates.length === 2 ? formatReportPeriod(...dates) : row.period}</td>
         <td><span className={`studio-status ${row.status === 'Reporting' ? 'connected' : row.status === 'Processing' ? 'processing' : 'unavailable'}`}><i/>{row.status}</span>{row.status === 'Reporting' ? <ReportNote>{row.note}</ReportNote> : <small>{row.note}</small>}</td>
       </tr>;
@@ -132,12 +113,13 @@ function FeeBreakdown({ summary }) {
   </details>;
 }
 
-function ShopPanel({source,report,onConnect,days}){
+function ShopPanel({source,report,onConnect,days,lifetime,lifetimeBusy}){
   const fees = report?.processingFeesByCurrency || (finite(report?.metrics?.processingFees) && report?.currency ? { [report.currency]: report.metrics.processingFees } : null);
   const feeSummary = useFeeSummary(fees);
   if(!source)return null;
   const previousSales = report?.previous?.salesAmount;
   const salesDelta = finite(report?.metrics?.salesAmount) && finite(previousSales) ? report.metrics.salesAmount - previousSales : null;
+  const allTime = summarizeLifetimeEarnings([source], lifetime).rows[0];
   return <section className="studio-panel studio-shop" aria-label="Etsy shop reporting">
     <div className="studio-panel-head"><div><h2>AkogareCafeStudio · Etsy</h2><p>Orders and sales · last {days === 1 ? 'completed day' : `${days} completed days`}</p></div><button className="studio-connect-button" onClick={()=>onConnect(source)}>Details<Icon name="arrow" size={13}/></button></div>
     <div className="studio-shop-grid">{['orders','salesAmount','buyerRefunds'].map(key=><div key={key}>
@@ -147,6 +129,7 @@ function ShopPanel({source,report,onConnect,days}){
       {key === 'orders' && <PeriodChange sources={[source]} reports={{[source.id]:report}} metric={key} days={days}/>}
       {key === 'salesAmount' && finite(salesDelta) && <div className="studio-change"><span className={`studio-change-number ${salesDelta > 0 ? 'is-positive' : salesDelta < 0 ? 'is-negative' : 'is-flat'}`}>{salesDelta > 0 ? '+' : ''}{formatCurrency(salesDelta, report.currency)}</span><span className="studio-change-label">vs previous {days === 1 ? 'day' : `${days} days`}</span></div>}
     </div>)}<div className="studio-shop-fees"><span>Card-processing fees</span><strong>{finite(feeSummary?.total) ? `${feeSummary.approximate ? '≈ ' : ''}${formatCurrency(feeSummary.total, 'USD')}` : '—'}</strong><small>{feeSummary ? feeSummary.pending ? 'Calculating USD estimate…' : finite(feeSummary.total) ? feeSummary.approximate ? 'Estimated total in USD' : 'Reported in USD' : 'USD estimate unavailable' : 'Fee report unavailable'}</small></div></div>
+    <div className="studio-shop-lifetime"><span>Lifetime item sales<small>All paid orders · before refunds and fees</small></span><strong>{allTime?.known ? formatCurrency(allTime.amount,allTime.currency) : '—'}</strong><small>{allTime?.known && allTime.report.end ? `Through ${formatReportPeriod(allTime.report.end,allTime.report.end)}` : lifetimeBusy ? 'Loading lifetime report…' : 'Lifetime report unavailable'}</small></div>
     <FeeBreakdown summary={feeSummary}/>
     <div className="studio-shop-foot"><p className="studio-shop-note"><span className={`studio-status ${sourceState(report)||'unavailable'}`}><i/>{statusLabel(report)}</span> {report?.status === 'connected' && !report.stale ? 'Item sales exclude tax and shipping, before refunds and fees.' : report?.note||'Connect read-only shop reports to see sales, paid orders and available fee data.'}</p>
     {report?.note && report.status === 'connected' && <ReportNote label="What’s included">{report.note}</ReportNote>}
@@ -205,7 +188,7 @@ function ActivityChart({ sources, reports, metric, range }) {
   </div>;
 }
 
-export function DashboardWorkspace({ user, reports, products, busy, error, days, setDays, onRefresh, onLogin, onLogout, onConnect, lastUpdated }) {
+export function DashboardWorkspace({ user, reports, products, busy, error, days, setDays, onRefresh, onLogin, onLogout, onConnect, lastUpdated, lifetime = null, lifetimeBusy = false, lifetimeError = '' }) {
   const [page, setPage] = useState('overview');
   const [project, setProject] = useState('all');
   const [metric, setMetric] = useState(null);
@@ -257,11 +240,10 @@ export function DashboardWorkspace({ user, reports, products, busy, error, days,
             const c = key === 'followers' ? audienceTotal(sources, reports) : coverage(sources, reports, key);
             return <article className="studio-stat" key={key}><div className="studio-stat-label">{m.label}<Icon name={membershipOnly ? 'patreon' : ['people', 'youtube', 'web', 'ios'][i]} size={17}/></div><div className="studio-stat-value">{key === 'followers' ? formatAudience(c) : format(c.value)}</div><div className="studio-stat-description">{m.detail}</div>{key === 'followers' ? <AudienceChange sources={sources} reports={reports}/> : key !== 'lifetimeViews' && !membershipOnly ? <PeriodChange sources={sources} reports={reports} metric={key} days={days}/> : null}<div className="studio-coverage"><span style={{ width: `${c.total ? c.known / c.total * 100 : 0}%` }}/></div><div className="studio-stat-foot">{c.total ? `${c.known} of ${c.total} sources reporting${c.known && c.known < c.total ? ' · partial total' : ''}` : 'No sources in this filter'}</div></article>;
           })}</div>}
-          {!shopOnly && !xOnly && <EarningsSummary sources={sources} reports={reports} range={range} days={days}/>}
           {!membershipOnly && !shopOnly && !xOnly && <section className="studio-panel studio-activity"><div className="studio-panel-head"><div><h2>Across the studio</h2><p>{days === 1 ? range.end : `${range.start} — ${range.end}`} <span>· {days === 1 ? 'completed day' : 'completed days'}</span></p></div><select aria-label="Chart metric" value={activeMetric} onChange={e => setMetric(e.target.value)}><option value="views">Content views</option><option value="sessions">Website sessions</option><option value="activeUsers">App active users</option><option value="impressions">Pinterest impressions</option></select></div><ActivityChart sources={sources} reports={reports} metric={activeMetric} range={range}/><div className="studio-chart-legend">{projects.filter(p => sources.some(s => s.project === p.id && METRICS[activeMetric].kinds.includes(s.kind))).map(p => <span key={p.id}><i style={{ background: p.chartColor }}/>{p.name}</span>)}<small>{activeMetric === 'activeUsers' ? 'Daily users · not additive across days' : activeMetric === 'impressions' ? 'Pinterest impressions · UTC' : 'Source reporting timezones may differ'}</small></div></section>}
           <XPanel source={xSource} report={reports[xSource?.id]} onConnect={onConnect}/>
-          {!shopOnly && <EarningsPanel sources={sources} reports={reports}/>}
-          <ShopPanel source={shopSource} report={reports[shopSource?.id]} onConnect={onConnect} days={days}/>
+          {!shopOnly && <EarningsPanel sources={sources} reports={reports} lifetime={lifetime} lifetimeBusy={lifetimeBusy} lifetimeError={lifetimeError}/>}
+          <ShopPanel source={shopSource} report={reports[shopSource?.id]} onConnect={onConnect} days={days} lifetime={lifetime} lifetimeBusy={lifetimeBusy}/>
           {membershipSource && <section className="studio-panel studio-memberships" aria-label="Patreon membership"><div className="studio-panel-head"><div><h2>Watch Club · Patreon</h2><p>Current membership totals · separate from your social audience</p></div><button className="studio-connect-button" onClick={() => onConnect(membershipSource)}>{reports[membershipSource.id]?.connectionMode === 'automatic' ? 'Details' : 'Connect Patreon'}<Icon name="arrow" size={13}/></button></div>{!membershipOnly && <div className="studio-membership-grid">{['patrons', 'paidMembers', 'trialMembers', 'declinedMembers'].map(key => <div key={key}><span>{METRICS[key].label}</span><strong>{format(reports[membershipSource.id]?.metrics?.[key])}</strong></div>)}</div>}<p className="studio-membership-note"><span className={`studio-status ${sourceState(reports[membershipSource.id]) || 'unavailable'}`}><i/>{statusLabel(reports[membershipSource.id])}</span> {isReporting(reports[membershipSource.id]) ? 'Membership counts are current, independent of the selected dates.' : reports[membershipSource.id]?.note || 'Connect the Watch Club creator account for automatic read-only membership reports.'}</p>{isReporting(reports[membershipSource.id]) && reports[membershipSource.id]?.note && <ReportNote label="About these counts">{reports[membershipSource.id].note}</ReportNote>}<a className="studio-membership-link" href={membershipSource.url} target="_blank" rel="noreferrer">Open Akogare Watch Club on Patreon ↗</a></section>}
           {!shopOnly && <section className="studio-project-section"><div className="studio-section-head"><div><h2>Your projects <span>{projects.length.toString().padStart(2, '0')}</span></h2><p>{xOnly ? 'Dated profile snapshot · independent of selected period.' : membershipOnly ? 'Current membership totals.' : <>Current totals · changes for the {days === 1 ? 'last completed day' : `last ${days} days`}.</>}</p></div>{project !== 'all' && <button className="studio-text-button" onClick={() => pickProject('all')}>All projects <Icon name="arrow" size={16}/></button>}</div><div className="studio-project-grid">{projects.map(p => {
             const own = sources.filter(s => s.project === p.id);
@@ -284,7 +266,7 @@ export function DashboardWorkspace({ user, reports, products, busy, error, days,
           })}</div></section>}
         </> : <div className="studio-connection-intro"><Icon name="link" size={22}/><div><strong>{SOURCES.filter(s => isReporting(reports[s.id])).length} / {SOURCES.length} sources connected</strong><p>Counts are current snapshots. Views and traffic use the selected reporting period. Limited access means only some metrics are available.</p></div></div>}
         {page === 'connections' && <XPanel source={xSource} report={reports[xSource?.id]} onConnect={onConnect}/>}
-        {page === 'connections' && <ShopPanel source={shopSource} report={reports[shopSource?.id]} onConnect={onConnect} days={days}/>}
+        {page === 'connections' && <ShopPanel source={shopSource} report={reports[shopSource?.id]} onConnect={onConnect} days={days} lifetime={lifetime} lifetimeBusy={lifetimeBusy}/>}
         {channelSources.length > 0 && <section className="studio-panel studio-sources"><div className="studio-panel-head"><div><h2>{page === 'connections' ? 'Your connected world' : 'Channel breakdown'}</h2><p>{connected} of {channelSources.length} sources connected{lastUpdated && ` · Refreshed ${new Date(lastUpdated).toLocaleTimeString('en', { hour: 'numeric', minute: '2-digit' })}`}</p></div><label className="studio-source-filter"><span className="studio-sr-only">Filter by platform</span><select value={platform} onChange={e => setPlatform(e.target.value)}><option value="all">All platforms</option><option value="youtube">YouTube</option><option value="instagram">Instagram</option><option value="x">X</option><option value="web">Website</option><option value="ios">iOS</option><option value="pinterest">Pinterest</option><option value="patreon">Patreon</option></select></label></div>
           <div className="studio-table-wrap"><table><thead><tr><th>PROJECT / CHANNEL</th><th>AUDIENCE <small>latest snapshot</small></th><th>CONTENT VIEWS <small>period / lifetime</small></th><th>ACTIVITY <small>period / current</small></th><th>CONNECTION</th><th><span className="studio-sr-only">Actions</span></th></tr></thead><tbody>{channelSources.map(s => {
             const r = reports[s.id]; const p = PROJECTS.find(p => p.id === s.project);
@@ -307,6 +289,9 @@ export default function Dashboard() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [lifetime, setLifetime] = useState(null);
+  const [lifetimeBusy, setLifetimeBusy] = useState(false);
+  const [lifetimeError, setLifetimeError] = useState('');
   const [loginOpen, setLoginOpen] = useState(false);
   const [loginBusy, setLoginBusy] = useState(false);
   const [email, setEmail] = useState('');
@@ -323,13 +308,17 @@ export default function Dashboard() {
   const generation = useRef(0);
   const identity = useRef(null);
   const request = useRef(null);
-  const cancelRequests = useCallback(() => { generation.current++; request.current?.abort(); }, []);
+  const lifetimeRequest = useRef(null);
+  const lifetimeVersion = useRef(0);
+  const cancelLifetime = useCallback(() => { lifetimeVersion.current++; lifetimeRequest.current?.abort(); }, []);
+  const cancelRequests = useCallback(() => { generation.current++; request.current?.abort(); lifetimeVersion.current++; lifetimeRequest.current?.abort(); }, []);
   useEffect(() => {
     let unsubscribe, mounted = true;
     import('../../config/firebase').then(async ({ auth }) => {
       const { onAuthStateChanged, getRedirectResult, signInWithRedirect, GoogleAuthProvider } = await import('firebase/auth');
       if (!mounted) return;
       unsubscribe = onAuthStateChanged(auth, next => {
+        lifetimeVersion.current++; lifetimeRequest.current?.abort(); setLifetime(null); setLifetimeError(''); setLifetimeBusy(false);
         generation.current++; request.current?.abort(); sessions.current = {}; analyticsToken.current = null; identity.current = next?.uid || null;
         setReports({}); setProducts(null); setLastUpdated(null); setSource(null); setSourceToken(null); setProperties([]); setStreams([]); setError(''); setUser(next);
       });
@@ -388,6 +377,26 @@ export default function Dashboard() {
       setError(err.message); setReports(old => Object.fromEntries(Object.entries(old).map(([id, r]) => [id, { ...r, stale: true }])));
     } finally { if (version === generation.current) setBusy(false); }
   }, [user, days]);
+  const refreshLifetime = useCallback(async () => {
+    if (!user) return;
+    const version = ++lifetimeVersion.current;
+    lifetimeRequest.current?.abort();
+    const controller = new AbortController(); lifetimeRequest.current = controller;
+    setLifetimeBusy(true); setLifetimeError('');
+    try {
+      const data = await loadLifetimeEarnings(user, controller.signal);
+      if (version === lifetimeVersion.current) setLifetime(data);
+    } catch (err) {
+      if (version !== lifetimeVersion.current || err.name === 'AbortError') return;
+      setLifetime(old => old ? { ...old, stale: true } : null);
+      setLifetimeError('Lifetime reports could not refresh. Use Refresh to retry.');
+    } finally { if (version === lifetimeVersion.current) setLifetimeBusy(false); }
+  }, [user]);
+  useEffect(() => {
+    setLifetime(null); setLifetimeError(''); refreshLifetime();
+    const timer = setInterval(() => { if (document.visibilityState === 'visible') refreshLifetime(); }, 6 * 60 * 60 * 1000);
+    return () => { cancelLifetime(); clearInterval(timer); };
+  }, [refreshLifetime, cancelLifetime]);
   useEffect(() => { setReports({}); setProducts(null); setLastUpdated(null); refresh(); }, [refresh]);
   useEffect(() => { const interval = setInterval(() => { if (document.visibilityState === 'visible') refresh(); }, 300000); return () => clearInterval(interval); }, [refresh]);
   const login = async (event, google = false) => {
@@ -440,7 +449,7 @@ export default function Dashboard() {
     catch (err) { setSourceError(err.message); } finally { setSourceBusy(false); }
   };
   const sourceReport = source && reports[source.id];
-  return <><DashboardWorkspace user={user} reports={reports} products={products} busy={busy} error={error} days={days} setDays={setDays} onRefresh={refresh} onLogin={() => { setError(''); setLoginOpen(true); }} onLogout={logout} onConnect={connect} lastUpdated={lastUpdated}/>
+  return <><DashboardWorkspace user={user} reports={reports} products={products} busy={busy} error={error} days={days} setDays={setDays} onRefresh={() => { refresh(); refreshLifetime(); }} onLogin={() => { setError(''); setLoginOpen(true); }} onLogout={logout} onConnect={connect} lastUpdated={lastUpdated} lifetime={lifetime} lifetimeBusy={lifetimeBusy} lifetimeError={lifetimeError}/>
     <Dialog open={loginOpen} onClose={() => !loginBusy && setLoginOpen(false)} maxWidth="xs" fullWidth classes={{ paper: 'studio-dialog' }}><DialogTitle><span className="studio-dialog-title">Welcome to your studio<button className="studio-icon-button" onClick={() => setLoginOpen(false)} aria-label="Close sign-in"><Icon name="close"/></button></span></DialogTitle><DialogContent><p className="studio-dialog-description">Use your Akogare admin account. Reports are available only to approved workspace members.</p><button className="studio-primary studio-full" disabled={loginBusy} onClick={e => login(e, true)}>Continue with Google</button><div className="studio-or">or use your existing email login</div><form onSubmit={login} className="studio-form"><label>Email<input type="email" autoComplete="username" required value={email} onChange={e => setEmail(e.target.value)}/></label><label>Password<input type="password" autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)}/></label>{error && <p role="alert" className="studio-form-error">{error}</p>}<button className="studio-primary studio-full" disabled={loginBusy}>{loginBusy ? 'Signing in…' : 'Sign in to workspace'}</button></form></DialogContent></Dialog>
     <Dialog open={Boolean(source)} onClose={() => !sourceBusy && setSource(null)} maxWidth="sm" fullWidth classes={{ paper: 'studio-dialog' }}><DialogTitle><span className="studio-dialog-title">{source?.label} · {source?.account}<button className="studio-icon-button" onClick={() => setSource(null)} aria-label="Close source details"><Icon name="close"/></button></span></DialogTitle><DialogContent>
       {['collecting', 'pending-review', 'processing'].includes(sourceState(sourceReport)) && <div className="studio-dialog-state"><span className={`studio-status ${sourceState(sourceReport)}`}><i/>{statusLabel(sourceReport)}</span></div>}

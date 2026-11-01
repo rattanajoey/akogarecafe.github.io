@@ -1,41 +1,19 @@
 import { finite } from './data';
 
-const currencyCode = value => /^[A-Z]{3}$/.test(value || '');
-
-// Only period amounts belong in this total. Keep original currencies and bases;
-// Patreon lifetime support and duplicate web/iOS Stripe income must not join it.
-export function summarizeEarnings(sources, reports, range) {
+// Lifetime reports are independent of the selected period. Keep currencies and
+// accounting bases labelled, and count shared website/iOS payments only once.
+export function summarizeLifetimeEarnings(sources, lifetime) {
   const selected = [...new Map(sources.map(source => [source.id, source])).values()];
-  const entries = selected.filter(source => ['youtube', 'etsy'].includes(source.kind))
-    .map(source => ({ id: source.id, kind: source.kind, report: reports[source.id] }));
-  if (selected.some(source => source.project === 'cine' && ['web', 'ios'].includes(source.kind))) {
-    entries.push({ id: 'cine-sales', kind: 'stripe', report: reports['cine-web'] });
-  }
-  if (selected.some(source => source.project === 'pindo' && ['web', 'ios'].includes(source.kind))) {
-    entries.push({ id: 'pindo-sales', kind: 'app', report: null });
-  }
-  const periodEntries = entries.map(entry => {
-    const { report } = entry, income = report?.earnings;
-    const inRange = income?.start === range.start && /^\d{4}-\d{2}-\d{2}$/.test(income?.end || '') && income.end >= income.start && income.end <= range.end;
-    const known = !report?.stale && ['connected', 'partial'].includes(report?.status) && ['connected', 'partial'].includes(income?.status) && finite(income?.amount) && currencyCode(income?.currency) && inRange;
-    return { ...entry, known, amount: known ? income.amount : null, currency: known ? income.currency : null, end: known ? income.end : null };
+  const entries = selected.filter(source => ['youtube', 'etsy', 'patreon'].includes(source.kind)).map(source => ({ id: source.id, kind: source.kind }));
+  if (selected.some(source => source.project === 'cine' && ['web', 'ios'].includes(source.kind))) entries.push({ id: 'cine-sales', kind: 'stripe' });
+  if (selected.some(source => source.project === 'pindo' && ['web', 'ios'].includes(source.kind))) entries.push({ id: 'pindo-sales', kind: 'app' });
+  const rows = entries.map(entry => {
+    const report = lifetime?.sources?.[entry.id];
+    const known = !lifetime?.stale && report?.status === 'connected' && report.complete === true && report.lifetime === true && finite(report.amount) && /^[A-Z]{3}$/.test(report.currency || '');
+    return { ...entry, report, known, amount: known ? report.amount : null, currency: known ? report.currency : null };
   });
-  const totalsFor = rows => [...rows.filter(row => row.known).reduce((totals, row) => {
-    totals.set(row.currency, (totals.get(row.currency) || 0) + row.amount);
-    return totals;
-  }, new Map())].sort(([a], [b]) => a.localeCompare(b)).map(([currency, amount]) => ({ currency, amount }));
-  const known = periodEntries.filter(entry => entry.known).length;
-  const lifetimeExcluded = selected.some(source => source.kind === 'patreon');
-  const delayed = periodEntries.some(entry => entry.known && entry.end < range.end);
-  return {
-    totals: totalsFor(periodEntries), known, expected: periodEntries.length,
-    partial: known < periodEntries.length || lifetimeExcluded || delayed,
-    lifetimeExcluded,
-    providers: ['youtube', 'etsy', 'stripe', 'app'].flatMap(kind => {
-      const rows = periodEntries.filter(entry => entry.kind === kind);
-      if (!rows.length) return [];
-      const ends = [...new Set(rows.filter(row => row.known).map(row => row.end))];
-      return [{ kind, totals: totalsFor(rows), known: rows.filter(row => row.known).length, expected: rows.length, through: ends.length === 1 ? ends[0] : null, delayed: rows.some(row => row.known && row.end < range.end) }];
-    }),
-  };
+  const amounts = new Map();
+  for (const row of rows.filter(row => row.known)) amounts.set(row.currency, (amounts.get(row.currency) || 0) + row.amount);
+  const totals = [...amounts].sort(([a], [b]) => a.localeCompare(b)).map(([currency, amount]) => ({ currency, amount }));
+  return { rows, totals, known: rows.filter(row => row.known).length, expected: rows.length };
 }

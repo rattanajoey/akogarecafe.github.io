@@ -224,17 +224,31 @@
 }
 @media(max-width:360px){.studio-shop-grid>div>strong{font-size:20px;letter-spacing:-.7px}}
 
-.studio-income-summary{display:grid;grid-template-columns:minmax(240px,1fr) minmax(0,1.6fr);gap:24px 32px;padding:26px;margin-bottom:28px;background:#f8faf4;border-color:#dce5d1}
-.studio-income-main{min-width:0}
-.studio-income-main h2{margin:0;font-size:14px}
-.studio-income-main>p{font-size:11px;color:#5c6959;line-height:1.7;margin:8px 0 16px}
-.studio-income-value{display:flex;flex-direction:column;gap:8px;font-size:clamp(28px,3vw,40px);font-weight:500;letter-spacing:-1px;line-height:1.2;font-variant-numeric:tabular-nums;color:#2e492c;overflow-wrap:anywhere}
-.studio-income-main>small{display:block;font-size:11px;color:#5c6959;line-height:1.7;margin-top:10px}
-.studio-income-providers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 24px;border-left:1px solid #dfe7d6;padding-left:30px;align-content:center}
-.studio-income-providers>div{min-width:0}
-.studio-income-providers>div>span{display:block;font-size:12px;color:#3f5137}
-.studio-income-providers strong{display:flex;flex-direction:column;gap:5px;margin:7px 0;font-size:21px;font-weight:500;letter-spacing:-.4px;font-variant-numeric:tabular-nums;color:#2f432c;overflow-wrap:anywhere}
-.studio-income-providers small{display:block;font-size:10px;line-height:1.7;color:#5c6959}
-.studio-income-note{grid-column:1/-1;font-size:11px;color:#5c6959;line-height:1.8;border-top:1px solid #dfe7d6;padding-top:14px;margin:0}
-@media(max-width:1050px){.studio-income-summary{grid-template-columns:minmax(0,1fr);gap:24px;padding:22px}.studio-income-providers{border-left:0;border-top:1px solid #dfe7d6;padding:20px 0 0;grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:580px){.studio-income-summary{padding:20px 16px;gap:20px;margin-bottom:20px}.studio-income-value{font-size:34px}.studio-income-providers{gap:20px 14px}.studio-income-providers strong{font-size:20px}.studio-income-main>p{font-size:10px}.studio-income-note{font-size:10px}}
+/* Lifetime values belong beside period reports, not in the date-filtered cards. */
+.studio-lifetime-total{display:grid;grid-template-columns:minmax(210px,1fr) minmax(0,1.8fr);align-items:center;gap:24px;padding:22px 24px;background:#f8faf4;border-block:1px solid #e3e9dc}
+.studio-lifetime-total>div>span{font-size:12px;color:#435a39}
+.studio-lifetime-value{display:flex;flex-direction:column;gap:6px;margin:10px 0;font-size:32px;letter-spacing:-.8px;line-height:1.2;font-variant-numeric:tabular-nums;color:#2d472a}
+.studio-lifetime-value strong{font-weight:500;overflow-wrap:anywhere}
+.studio-lifetime-total small,.studio-lifetime-total p{font-size:11px;line-height:1.8;color:#5c6959;margin:0}
+.studio-lifetime-error{display:block;margin-top:8px;color:#924531}
+.studio-earnings th:nth-child(1){width:24%}.studio-earnings th:nth-child(2){width:19%}.studio-earnings th:nth-child(3){width:20%}.studio-earnings th:nth-child(4){width:18%}.studio-earnings th:nth-child(5){width:19%}
+.studio-earnings td.studio-lifetime-amount{color:#365334}
+.studio-earnings td.studio-earnings-amount{font-size:19px}
+.studio-lifetime-amount .studio-report-note{white-space:normal;font-size:10px;letter-spacing:0}
+.studio-lifetime-amount .studio-report-note>p{font-size:11px}
+.studio-shop-lifetime{display:flex;align-items:center;gap:12px 24px;flex-wrap:wrap;margin:0 24px 20px;padding:15px 0;border-top:1px solid #e3e8dd;color:#435a39;font-size:12px}
+.studio-shop-lifetime>span{flex:1;min-width:160px}.studio-shop-lifetime small{display:block;font-size:10px;line-height:1.8;color:#5c6959}.studio-shop-lifetime strong{font-size:23px;letter-spacing:-.5px;font-weight:500;font-variant-numeric:tabular-nums}
+@media(max-width:1050px){
+  .studio-earnings tbody>tr{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 18px}
+  .studio-earnings td:nth-child(1){grid-column:1/-1;grid-row:1}
+  .studio-earnings td:nth-child(2){grid-column:1;grid-row:2;text-align:left}
+  .studio-earnings td:nth-child(3){grid-column:2;grid-row:2;text-align:left}
+  .studio-earnings td:nth-child(4){grid-column:1/-1;grid-row:3;display:block;margin:0}
+  .studio-earnings td:nth-child(5){grid-column:1/-1;grid-row:4;display:flex;align-items:baseline;gap:8px 14px;flex-wrap:wrap}
+  .studio-earnings td:nth-child(5) .studio-report-note{margin:0;flex:1;min-width:160px}
+  .studio-earnings td:nth-child(5) .studio-report-note[open]{flex-basis:100%}
+  .studio-earnings td:nth-child(2)::before,.studio-earnings td:nth-child(3)::before{display:block;font-size:10px;color:#637158;margin:0 0 8px;letter-spacing:0}
+  .studio-earnings td:nth-child(2)::before{content:'Selected period'}.studio-earnings td:nth-child(3)::before{content:'Lifetime total'}
+  .studio-earnings td.studio-earnings-amount{font-size:clamp(16px,3vw,20px);white-space:normal;overflow-wrap:anywhere}
+}
+@media(max-width:580px){.studio-lifetime-total{grid-template-columns:minmax(0,1fr);padding:20px 16px;gap:16px}.studio-lifetime-value{font-size:32px}.studio-lifetime-total p{font-size:10px}.studio-shop-lifetime{margin:0 16px 18px}}

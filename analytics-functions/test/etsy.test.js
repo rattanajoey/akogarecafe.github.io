@@ -33,6 +33,21 @@ test('Etsy preserves a verified empty period and rejects partial or mixed-curren
   assert.equal((await salesReport({...config,scope:'transactions_r transactions_w'},dates,request)).status,'unavailable');
 });
 
+test('Etsy lifetime covers all paid-order history, skips fee details and returns no period comparison',async()=>{
+  let receiptCalls=0;
+  const result=await salesReport(config,{start:'2000-01-01',end:'2026-10-31'},async url=>{
+    const u=new URL(url);
+    if(u.pathname.endsWith('/receipts')){
+      receiptCalls++;assert.equal(u.searchParams.get('min_created'),'946684800');
+      return{count:2,results:[{...receipt,receipt_id:2,created_timestamp:Date.parse('2016-01-01T00:00:00Z')/1000},receipt]};
+    }
+    assert(!u.pathname.endsWith('/payments'));
+    return{shop_name:config.shopName,user_id:1,currency_code:'USD'};
+  },{lifetime:true});
+  assert.equal(result.earnings.amount,30);assert.equal(result.earnings.lifetime,true);assert.equal(result.earnings.complete,true);
+  assert.equal(result.earnings.previousAmount,undefined);assert.equal(receiptCalls,1);
+});
+
 test('Etsy keeps sales usable when processing-fee or refund status is unavailable',async()=>{
   const result=await salesReport(config,dates,async url=>{
     const u=new URL(url);if(u.pathname.endsWith('/payments'))throw Error('unavailable');

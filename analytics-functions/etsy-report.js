@@ -2,7 +2,7 @@
 const{SHOP,approvedScope,headers}=require('./etsy-connection');
 const SHOP_ID='54363020';
 const missing=()=>({status:'unavailable',metrics:{},daily:[],note:'Connect the approved Etsy seller app with transaction-read access for AkogareCafeStudio.'});
-async function salesReport(connection,dates,request){
+async function salesReport(connection,dates,request,options={}){
   if(connection?.shopName!==SHOP||String(connection.shopId)!==SHOP_ID||!approvedScope(connection.scope))return missing();
   try{
     const get=(path,params={})=>request('https://openapi.etsy.com/v3/application/'+path+'?'+new URLSearchParams(params),connection.access_token,{headers:headers(connection)});
@@ -36,7 +36,7 @@ async function salesReport(connection,dates,request){
         if(!body.results.length||page===19)throw Error('Incomplete orders');
       }
       if(seen.size!==expected)throw Error('Incomplete orders');
-      const feeUnits=new Map();let feesKnown=receipts.length<=50;
+      const feeUnits=new Map();let feesKnown=!options.lifetime&&receipts.length<=50;
       // Only card-processing fees are represented by Payment.amount_fees.
       // Listing, advertising and other shop charges are not inferred from it.
       if(feesKnown)for(const receiptId of receipts){
@@ -60,6 +60,7 @@ async function salesReport(connection,dates,request){
     const current=await total(dates.start,dates.end),{daily,processingFeesByCurrency,...metrics}=current;
     const note='Item sales after discounts for paid orders placed in these UTC dates, before refunds and fees; excludes tax and shipping. Card-processing fees and confirmed buyer refunds are separate. Listing, advertising and other shop costs are not included; open Etsy for its complete profit and payment-account report.';
     const result={status:'connected',currency,metrics,daily,note,...(processingFeesByCurrency?{processingFeesByCurrency}:{}),earnings:{status:'connected',provider:'etsy',basis:'merchandiseSales',amount:metrics.salesAmount,currency,start:dates.start,end:dates.end,note}};
+    if(options.lifetime){Object.assign(result.earnings,{lifetime:true,complete:true});return result;}
     const days=Math.round((Date.parse(dates.end)-Date.parse(dates.start))/86400000)+1;
     const shift=date=>new Date(Date.parse(date+'T00:00:00Z')-days*86400000).toISOString().slice(0,10);
     try{

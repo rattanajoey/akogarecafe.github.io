@@ -197,7 +197,30 @@ function reporter(config, dependencies = {}) {
       return [id,{...result,...(automatic ? {connectionMode:'automatic'} : {}),fetchedAt:result.fetchedAt||new Date().toISOString()}];
     })));
   }
-  return {sources};
+  async function lifetimeEarnings(){
+    const end=range(1).end,dates={start:'2000-01-01',end};
+    const jobs=Object.entries(CHANNELS).map(([id,channelId])=>[id,()=>require('./youtube-earnings').lifetimeReport(youtubeConnection(id),channelId,end,()=>youtubeToken(id),jsonRequest)]);
+    jobs.push(['etsy-shop',async()=>{
+      if(config.etsyReporting?.connectionSecret!=='AKOGARE_ETSY_CONNECTION')return{status:'unavailable',note:'Etsy sales reporting is not connected.'};
+      const connection=await(dependencies.etsyConnection||require('./etsy-connection').getConnection)();
+      const report=await require('./etsy-report').salesReport(connection,dates,jsonRequest,{lifetime:true});
+      return report.earnings||{status:'unavailable',note:report.note};
+    }],['cine-sales',async()=>{
+      if(config.stripeReporting?.connectionSecret!=='AKOGARE_STRIPE_REPORTING_CONNECTION')return{status:'unavailable',note:'Stripe reporting is not connected.'};
+      const connection=await(dependencies.stripeConnection||require('./stripe-connection').getConnection)();
+      return require('./stripe-report').earningsReport(connection,dates,jsonRequest,{lifetime:true});
+    }],['watch-patreon',async()=>{
+      const report=await patreon(),amount=report.metrics?.lifetimeSupportCents;
+      if(!Number.isSafeInteger(amount)||amount<0||!/^[A-Z]{3}$/.test(report.currency||''))return{status:'unavailable',note:'Patreon did not provide complete lifetime support totals.'};
+      return{status:'connected',amount:amount/100,currency:report.currency,lifetime:true,complete:true,basis:'memberLifetimeSupport',note:'Lifetime member support reported by Patreon, before fees. Includes the members returned by Patreon; this is not net earnings or a payout balance.'};
+    }]);
+    const values=await Promise.all(jobs.map(async([id,run])=>{
+      let result;try{result=await run();}catch{result={status:'unavailable',note:'Lifetime reporting could not be refreshed. Missing amounts stay unknown.'};}
+      return[id,{...result,fetchedAt:new Date().toISOString()}];
+    }));
+    return{sources:Object.fromEntries(values),fetchedAt:new Date().toISOString()};
+  }
+  return {sources,lifetimeEarnings};
 }
 async function accountCounts(auth, dates) {
   let pageToken, registeredUsers=0, signedInUsers=0, newAccounts=0, creationDatesKnown=true, pages=0;

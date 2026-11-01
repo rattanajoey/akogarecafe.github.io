@@ -2,10 +2,16 @@ import { dateRange } from './data';
 
 export const ENDPOINT = 'https://us-central1-ac-movie-club.cloudfunctions.net/projectAnalytics';
 export async function loadWorkspace(user, days, signal) {
+  return dashboardRequest(user, { days }, signal);
+}
+export async function loadLifetimeEarnings(user, signal) {
+  return dashboardRequest(user, { lifetime: true }, signal);
+}
+async function dashboardRequest(user, data, signal) {
   const token = await user.getIdToken();
   const response = await fetch(ENDPOINT, {
     method: 'POST', signal, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ data: { days } }), cache: 'no-store',
+    body: JSON.stringify({ data }), cache: 'no-store',
   });
   const body = await response.json();
   if (!response.ok || body.error) throw new Error(body.error?.message || 'The analytics service could not be reached. Please retry.');

@@ -22,6 +22,16 @@ test('Stripe verifies the exact product and live restricted connection before re
  const extra=async url=>url.includes('/products?')?{data:[...products.data,{id:'another-product',livemode:true}],has_more:false}:request(url);
  assert.equal((await earningsReport(connection,dates,extra)).amount,undefined);
 });
+test('Stripe lifetime uses a complete ledger from before Stripe existed and skips period comparisons',async()=>{
+ const ledgerCalls=[];
+ const result=await earningsReport(connection,{start:'2000-01-01',end:'2026-10-31'},async url=>{
+  if(url.includes('/products?'))return products;if(url.includes('/balance?'))return{livemode:true};
+  ledgerCalls.push(new URL(url));return{data:[],has_more:false};
+ },{lifetime:true});
+ assert.equal(result.amount,0);assert.equal(result.lifetime,true);assert.equal(result.complete,true);
+ assert.equal(ledgerCalls.length,1);assert.equal(ledgerCalls[0].searchParams.get('created[gte]'),'946684800');
+ assert.equal(result.previousAmount,undefined);
+});
 test('Stripe suppresses incomplete or invalid ledgers instead of displaying partial money',async()=>{
  for(const mode of ['duplicate','currency','invalid','empty-page']){
   const result=await earningsReport(connection,dates,async url=>{

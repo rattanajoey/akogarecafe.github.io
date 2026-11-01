@@ -1,4 +1,4 @@
-import { googleConsent, completeGoogleConsent } from './api';
+import { googleConsent, completeGoogleConsent, loadLifetimeEarnings } from './api';
 import * as appSdk from 'firebase/app';
 import * as authSdk from 'firebase/auth';
 
@@ -24,6 +24,19 @@ beforeEach(() => {
   authSdk.getAuth.mockImplementation(app => ({ app }));
   authSdk.GoogleAuthProvider.mockImplementation(() => ({ setCustomParameters: jest.fn(), addScope: jest.fn() }));
   authSdk.GoogleAuthProvider.credentialFromResult.mockReturnValue({ accessToken: 'test-access-token' });
+});
+
+test('lifetime earnings use the existing authenticated reader without a selected-period parameter',async()=>{
+  const original=global.fetch;
+  global.fetch=jest.fn(async()=>({ok:true,json:async()=>({result:{sources:{},fetchedAt:'now'}})}));
+  try{
+    const user={getIdToken:jest.fn(async()=>'private-session')};
+    await loadLifetimeEarnings(user);
+    const [url,options]=global.fetch.mock.calls[0];
+    expect(url).toBe('https://us-central1-ac-movie-club.cloudfunctions.net/projectAnalytics');
+    expect(JSON.parse(options.body)).toEqual({data:{lifetime:true}});
+    expect(options.headers.Authorization).toBe('Bearer private-session');
+  }finally{global.fetch=original;}
 });
 
 test('reporting redirects use a separate tab-session auth instance and read-only scopes', async () => {

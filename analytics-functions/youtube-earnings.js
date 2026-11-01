@@ -34,4 +34,29 @@ async function earningsReport(connection,channelId,dates,getToken,request){
     return result;
   }catch{return{status:'unavailable',note:'YouTube revenue is unavailable. Check revenue permission and channel monetization; activity reports remain separate.'};}
 }
-module.exports={earningsReport,MONETARY_SCOPE};
+async function lifetimeReport(connection,channelId,end,getToken,request){
+  if(!String(connection?.scope||'').split(/\s+/).includes(MONETARY_SCOPE)||connection.channelId!==channelId)return{status:'unavailable',note:'The matching read-only YouTube revenue connection is required.'};
+  try{
+    const token=await getToken();
+    const info=await request('https://www.googleapis.com/youtube/v3/channels?'+new URLSearchParams({part:'snippet',id:channelId}),token);
+    const published=info.items?.find(item=>item.id===channelId)?.snippet?.publishedAt;
+    if(typeof published!=='string'||!Number.isFinite(Date.parse(published)))throw Error('Channel creation unavailable');
+    const start=new Date(published).toISOString().slice(0,10);
+    if(start>end)throw Error('Channel has no completed reporting day');
+    const base={ids:'channel=='+channelId,startDate:start,endDate:end,metrics:'estimatedRevenue',currency:'USD'};
+    // Find the last returned revenue day, then request one aggregate row for
+    // the entire channel history. Never sum a truncated page of daily rows.
+    const latest=await request('https://youtubeanalytics.googleapis.com/v2/reports?'+new URLSearchParams({...base,dimensions:'day',sort:'-day',maxResults:'1'}),token);
+    const names=latest.columnHeaders?.map(header=>header.name),day=names?.indexOf('day'),value=names?.indexOf('estimatedRevenue');
+    if(day<0||value<0||!Array.isArray(latest.rows)||latest.rows.length>1)throw Error('Invalid daily report');
+    const through=latest.rows.length?latest.rows[0][day]:null;
+    if(through!==null&&(!/^\d{4}-\d{2}-\d{2}$/.test(through)||through<start||through>end||typeof latest.rows[0][value]!=='number'||!Number.isFinite(latest.rows[0][value])))throw Error('Invalid reporting day');
+    const body=await request('https://youtubeanalytics.googleapis.com/v2/reports?'+new URLSearchParams({...base,endDate:through||end}),token);
+    const index=body.columnHeaders?.findIndex(header=>header.name==='estimatedRevenue');
+    const amount=body.rows?.[0]?.[index];
+    if(index>=0&&Array.isArray(body.rows)&&!body.rows.length)return{status:'processing',note:'YouTube has not returned lifetime revenue for this channel. Missing reports stay unknown.'};
+    if(index<0||body.rows?.length!==1||typeof amount!=='number'||!Number.isFinite(amount))throw Error('Invalid lifetime total');
+    return{status:'connected',amount,currency:'USD',start,...(through?{end:through}:{}),requestedThrough:end,lifetime:true,complete:true,basis:'estimatedRevenue',note:`Estimated YouTube revenue since channel creation. ${through?'Through the latest returned revenue day.':'YouTube returned an aggregate without dated revenue rows; the finalized-through date is unavailable and recent days may be processing.'} Estimates may be adjusted; this is not an AdSense payout balance.`};
+  }catch{return{status:'unavailable',note:'Lifetime YouTube revenue could not be verified. Period reports remain separate; missing lifetime earnings stay unknown.'};}
+}
+module.exports={earningsReport,lifetimeReport,MONETARY_SCOPE};

@@ -1,7 +1,7 @@
 'use strict';
 const ACCOUNT='acct_1U62rMKfAn48i1AY',PRODUCT='prod_V9685GoM7cS2SY';
 const PAYMENT_TYPES=new Set(['charge','payment','refund','payment_refund','payment_failure_refund','payment_reversal','refund_failure']);
-async function earningsReport(connection,dates,request){
+async function earningsReport(connection,dates,request,options={}){
   try{
     if(connection.accountId!==ACCOUNT||connection.productId!==PRODUCT||connection.currency!=='USD'||!String(connection.apiKey||'').startsWith('rk_live_'))throw new Error('Connection mismatch');
     const get=(path,params={})=>request('https://api.stripe.com/v1/'+path+'?'+new URLSearchParams(params),connection.apiKey,{headers:{'Stripe-Version':'2026-07-29.dahlia'}});
@@ -29,6 +29,7 @@ async function earningsReport(connection,dates,request){
     };
     const current=await total(dates.start,dates.end);
     const result={status:'connected',...current,currency:'USD',start:dates.start,end:dates.end,provider:'stripe',note:'Stripe account payments minus refunds and transaction fees, by completed UTC dates. The verified product catalog contains only CineClub Cafe Regular; this is an account-level report. Payouts and other account adjustments are excluded; this is payment activity, not business profit. Website and iOS memberships paid on the website are counted once.'};
+    if(options.lifetime)return{...result,lifetime:true,complete:true,basis:'netPaymentActivity'};
     const days=Math.round((Date.parse(dates.end)-Date.parse(dates.start))/86400000)+1;
     const shift=date=>new Date(Date.parse(date+'T00:00:00Z')-days*86400000).toISOString().slice(0,10);
     try{const previous=await total(shift(dates.start),shift(dates.end));Object.assign(result,{previousAmount:previous.amount,previousStart:shift(dates.start),previousEnd:shift(dates.end)});}catch{ /* Preserve current earnings if comparison history cannot be read. */ }
