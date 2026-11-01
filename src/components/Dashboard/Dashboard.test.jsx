@@ -227,3 +227,41 @@ test('earnings keep calculation notes in an accessible disclosure while showing 
   expect(detail.open).toBe(true);
   expect(detail.textContent).toContain('Estimates may be adjusted.');
 });
+
+test('earnings headline adds the selected period once, explains its basis and follows project filters', () => {
+  const range = dateRange(28);
+  const income = amount => ({ status: 'connected', earnings: { status: 'connected', amount, currency: 'USD', ...range } });
+  render(<Workspace reports={{
+    'cafe-youtube': income(5.25), 'watch-youtube': income(10.25), 'cine-youtube': income(0),
+    'cine-web': income(2), 'etsy-shop': income(7.5),
+    'watch-patreon': { status: 'connected', currency: 'USD', metrics: { lifetimeSupportCents: 999999 } },
+  }}/>);
+  const total = screen.getByRole('region', { name: 'Total reported earnings' });
+  expect(total.querySelector('.studio-income-value').textContent).toMatch(/USD\s25\.00/);
+  expect(total.textContent).toContain('Partial total · 5 reporting sources');
+  expect(total.textContent).toContain('Before refunds and fees');
+  expect(total.textContent).toContain('Patreon lifetime support is excluded');
+  expect(total.textContent).toContain('not profit');
+  fireEvent.change(screen.getByRole('combobox', { name: 'Choose project' }), { target: { value: 'cafe' } });
+  expect(total.querySelector('.studio-income-value').textContent).toMatch(/USD\s5\.25/);
+  expect(total.textContent).toContain('Reported total · 1 reporting source');
+  expect(total.textContent).not.toContain('Etsy');
+  fireEvent.change(screen.getByRole('combobox', { name: 'Reporting period' }), { target: { value: '7' } });
+  expect(total.querySelector('.studio-income-value').textContent).toBe('—');
+  expect(total.textContent).toContain('Awaiting period reports');
+});
+
+test('earnings headline identifies processing, keeps different currencies separate and excludes stale values', () => {
+  const range = dateRange(28);
+  const through = new Date(Date.parse(range.end + 'T00:00:00Z') - 2 * 86400000).toISOString().slice(0, 10);
+  render(<Workspace reports={{
+    'cafe-youtube': { status: 'connected', earnings: { status: 'connected', amount: 12.5, currency: 'USD', ...range, end: through } },
+    'watch-youtube': { status: 'connected', earnings: { status: 'connected', amount: 7, currency: 'EUR', ...range } },
+    'cine-web': { status: 'connected', stale: true, earnings: { status: 'connected', amount: 500, currency: 'USD', ...range } },
+  }}/>);
+  const total = screen.getByRole('region', { name: 'Total reported earnings' });
+  expect(total.querySelector('.studio-income-value').textContent).toMatch(/EUR\s7\.00USD\s12\.50/);
+  expect(total.textContent).toContain('Reporting dates vary by channel');
+  expect(total.textContent).toContain('currencies are kept separate');
+  expect(total.textContent).not.toContain('500');
+});

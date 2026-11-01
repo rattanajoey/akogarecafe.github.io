@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { PROJECTS, SOURCES, METRICS, coverage, audienceTotal, formatAudience, dateRange, chartSeries, chartFraction, format, formatMoney, formatCurrency, formatReportPeriod, compact, csv, finite, periodComparison, signed, sumKnown } from './data';
 import { loadWorkspace, googleConsent, completeGoogleConsent, listProperties, listStreams, fetchGoogle } from './api';
 import { loadUsdRate, summarizeFees } from './currency';
+import { summarizeEarnings } from './earnings';
 import './dashboard.css';
 
 function Icon({ name, size = 20, ...props }) {
@@ -46,6 +47,33 @@ function ReportNote({ children, label = 'How this is calculated' }) {
   return <details className="studio-report-note"><summary>{label}</summary><p>{children}</p></details>;
 }
 
+function EarningsSummary({ sources, reports, range, days }) {
+  const summary = summarizeEarnings(sources, reports, range);
+  if (!summary.expected) return null;
+  const labels = {
+    youtube: ['YouTube', 'Estimated revenue'],
+    etsy: ['Etsy', 'Before refunds and fees'],
+    stripe: ['Stripe', 'After transaction fees'],
+    app: ['PinDo sales', 'Not connected'],
+  };
+  const amounts = totals => totals.length ? totals.map(total => <span key={total.currency}>{formatCurrency(total.amount, total.currency)}</span>) : <span>—</span>;
+  return <section className="studio-panel studio-income-summary" aria-label="Total reported earnings">
+    <div className="studio-income-main">
+      <h2>Total reported earnings</h2>
+      <p>Last {days === 1 ? 'completed day' : `${days} completed days`} · {formatReportPeriod(range.start, range.end)}</p>
+      <div className="studio-income-value">{amounts(summary.totals)}</div>
+      <small>{summary.known ? `${summary.partial ? 'Partial total' : 'Reported total'} · ${summary.known} reporting ${summary.known === 1 ? 'source' : 'sources'}` : 'Awaiting period reports · missing amounts stay unknown'}</small>
+    </div>
+    <div className="studio-income-providers" aria-label="What makes up the total">{summary.providers.map(provider => <div key={provider.kind}>
+      <span>{labels[provider.kind][0]}</span>
+      <strong>{amounts(provider.totals)}</strong>
+      <small>{provider.known ? labels[provider.kind][1] : 'Period report unavailable'}{provider.known > 0 && provider.known < provider.expected && ` · ${provider.known}/${provider.expected} sources`}</small>
+      {provider.delayed && <small>{provider.through ? `Through ${formatReportPeriod(provider.through, provider.through)}` : 'Reporting dates vary by channel'}</small>}
+    </div>)}</div>
+    <p className="studio-income-note">Combined reported amounts, not profit. {summary.lifetimeExcluded && 'Patreon lifetime support is excluded. '}Missing reports are excluded{summary.totals.length > 1 ? '; currencies are kept separate' : ''}.</p>
+  </section>;
+}
+
 function EarningsPanel({ sources, reports }) {
   const rows = sources.filter(s => ['youtube', 'patreon', 'etsy'].includes(s.kind)).map(source => {
     const report = reports[source.id];
@@ -63,7 +91,7 @@ function EarningsPanel({ sources, reports }) {
   if (sources.some(s => s.project === 'pindo' && ['web', 'ios'].includes(s.kind))) rows.push({ id: 'pindo-sales', project: 'PinDo.', label: 'Website and app sales', value: '—', period: 'Selected period', status: 'Unavailable', note: 'No sales reporting connection is configured.' });
   if (!rows.length) return null;
   return <section className="studio-panel studio-earnings" aria-label="Project earnings">
-    <div className="studio-panel-head"><div><h2>Earnings</h2><p>Amounts keep their own currency and reporting basis.</p></div></div>
+    <div className="studio-panel-head"><div><h2>Earnings by source</h2><p>Amounts keep their own currency and reporting basis.</p></div></div>
     <div className="studio-earnings-scroll"><table aria-label="Earnings by project"><thead><tr><th>PROJECT / SOURCE</th><th>AMOUNT</th><th>PERIOD</th><th>REPORT</th></tr></thead><tbody>{rows.map(row => {
       const dates = row.period.split(' — ');
       return <tr key={row.id}>
@@ -229,6 +257,7 @@ export function DashboardWorkspace({ user, reports, products, busy, error, days,
             const c = key === 'followers' ? audienceTotal(sources, reports) : coverage(sources, reports, key);
             return <article className="studio-stat" key={key}><div className="studio-stat-label">{m.label}<Icon name={membershipOnly ? 'patreon' : ['people', 'youtube', 'web', 'ios'][i]} size={17}/></div><div className="studio-stat-value">{key === 'followers' ? formatAudience(c) : format(c.value)}</div><div className="studio-stat-description">{m.detail}</div>{key === 'followers' ? <AudienceChange sources={sources} reports={reports}/> : key !== 'lifetimeViews' && !membershipOnly ? <PeriodChange sources={sources} reports={reports} metric={key} days={days}/> : null}<div className="studio-coverage"><span style={{ width: `${c.total ? c.known / c.total * 100 : 0}%` }}/></div><div className="studio-stat-foot">{c.total ? `${c.known} of ${c.total} sources reporting${c.known && c.known < c.total ? ' · partial total' : ''}` : 'No sources in this filter'}</div></article>;
           })}</div>}
+          {!shopOnly && !xOnly && <EarningsSummary sources={sources} reports={reports} range={range} days={days}/>}
           {!membershipOnly && !shopOnly && !xOnly && <section className="studio-panel studio-activity"><div className="studio-panel-head"><div><h2>Across the studio</h2><p>{days === 1 ? range.end : `${range.start} — ${range.end}`} <span>· {days === 1 ? 'completed day' : 'completed days'}</span></p></div><select aria-label="Chart metric" value={activeMetric} onChange={e => setMetric(e.target.value)}><option value="views">Content views</option><option value="sessions">Website sessions</option><option value="activeUsers">App active users</option><option value="impressions">Pinterest impressions</option></select></div><ActivityChart sources={sources} reports={reports} metric={activeMetric} range={range}/><div className="studio-chart-legend">{projects.filter(p => sources.some(s => s.project === p.id && METRICS[activeMetric].kinds.includes(s.kind))).map(p => <span key={p.id}><i style={{ background: p.chartColor }}/>{p.name}</span>)}<small>{activeMetric === 'activeUsers' ? 'Daily users · not additive across days' : activeMetric === 'impressions' ? 'Pinterest impressions · UTC' : 'Source reporting timezones may differ'}</small></div></section>}
           <XPanel source={xSource} report={reports[xSource?.id]} onConnect={onConnect}/>
           {!shopOnly && <EarningsPanel sources={sources} reports={reports}/>}
