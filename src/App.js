@@ -1,12 +1,13 @@
 import React, { lazy, Suspense, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { HashRouter as Router, Routes, Route, useLocation, Link as RouterLink } from "react-router-dom";
+import { BrowserRouter, HashRouter, Routes, Route, useLocation, Link as RouterLink } from "react-router-dom";
 import { Box, Button, CircularProgress, Typography } from "@mui/material";
 import "./App.css";
 import HeaderComponent from "./components/Header/HeaderComponent";
 import SpeedDialComponent from "./components/SpeedDial/SpeedDialComponent";
 import PointerFollower from "./components/PointerFollower";
 import Footer from "./components/Footer/Footer";
+import { dashboardRedirect, isBrandedDashboard } from './config/dashboard-location';
 
 const HomeComponent = lazy(() => import("./components/Home/Home"));
 const ShogiBoardComponent = lazy(() => import("./components/Shogi/ShogiBoardComponent"));
@@ -43,6 +44,8 @@ class PageBoundary extends React.Component {
 
 const AppContent = () => {
   const location = useLocation();
+  const redirect = dashboardRedirect(window.location);
+  useEffect(() => { if (redirect) window.location.replace(redirect); }, [redirect]);
   useEffect(() => {
     window.scrollTo(0, 0);
     const titles = { "/": "Home", "/portfolio": "Joey Rattana · Portfolio", "/music": "Music Collection", "/shogi": "Shogi", "/about": "About", "/contact": "Contact", "/privacy": "Privacy Policy", "/terms": "Terms of Service", "/MovieClub": "Movie Club", "/Admin": "Admin" };
@@ -50,6 +53,7 @@ const AppContent = () => {
   }, [location.pathname]);
   const showFooter = ["/about", "/privacy", "/terms", "/contact"].includes(location.pathname);
   const dashboard = location.pathname === "/dashboard";
+  if (redirect) return <OpeningStudio href={redirect} />;
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       <a className="skip-link" href="#main-content" onClick={(event) => {
@@ -85,5 +89,12 @@ const AppContent = () => {
 };
 
 const queryClient = new QueryClient();
-const App = () => <QueryClientProvider client={queryClient}><Router><AppContent /></Router></QueryClientProvider>;
+const Router = isBrandedDashboard(window.location) ? BrowserRouter : HashRouter;
+const OpeningStudio = ({ href }) => <Box sx={{ color: 'white', textAlign: 'center', p: 6 }}><Typography>Opening your private studio…</Typography><a href={href}>Continue to Studio Analytics</a></Box>;
+const App = () => {
+  const redirect = dashboardRedirect(window.location);
+  useEffect(() => { if (redirect) window.location.replace(redirect); }, [redirect]);
+  if (redirect) return <OpeningStudio href={redirect} />;
+  return <QueryClientProvider client={queryClient}><Router><AppContent /></Router></QueryClientProvider>;
+};
 export default App;

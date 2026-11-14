@@ -5,6 +5,7 @@ import { PROJECTS, SOURCES, METRICS, coverage, audienceTotal, formatAudience, da
 import { loadWorkspace, loadLifetimeEarnings, googleConsent, completeGoogleConsent, listProperties, listStreams, fetchGoogle } from './api';
 import { loadUsdRate, summarizeFees } from './currency';
 import { summarizeLifetimeEarnings } from './earnings';
+import { DASHBOARD_ORIGIN as SIGN_IN_ORIGIN, DASHBOARD_PATH, DASHBOARD_URL, requestsGoogleSignIn } from '../../config/dashboard-location';
 import './dashboard.css';
 
 function Icon({ name, size = 20, ...props }) {
@@ -36,7 +37,6 @@ function Icon({ name, size = 20, ...props }) {
 const sourceState = report => report?.stale ? 'stale' : report?.status === 'error' ? 'error' : ['collecting', 'pending-review', 'processing', 'snapshot'].includes(report?.connectionState) ? report.connectionState : report?.status;
 const isReporting = report => ['connected', 'partial'].includes(report?.status) && report?.connectionMode !== 'manual';
 const statusLabel = report => ({ connected: 'Connected', partial: 'Limited access', unavailable: 'Needs connection', error: 'Needs attention', stale: 'Refresh failed', collecting: 'Collecting new data', processing: 'Waiting for daily report', 'pending-review': 'Awaiting Pinterest approval', snapshot: 'Dated snapshot' }[sourceState(report)] || 'Not connected');
-const SIGN_IN_ORIGIN = 'https://ac-movie-club.firebaseapp.com';
 const signInError = err => ({
   'auth/unauthorized-domain': 'This website is not authorized for sign-in. Open the secure workspace and try again.',
   'auth/network-request-failed': 'Google sign-in could not reach the server. Check your connection and try again.',
@@ -343,9 +343,9 @@ export default function Dashboard() {
           }
         } catch (err) { if (mounted) { setSourceError(err.message); setError(`Reporting connection: ${err.message}`); } }
         finally { if (mounted) setSourceBusy(false); }
-        const startGoogle = new URLSearchParams(window.location.hash.split('?')[1] || '').get('signin') === 'google';
+        const startGoogle = requestsGoogleSignIn(window.location);
         if (startGoogle && window.location.origin === SIGN_IN_ORIGIN) {
-          window.history.replaceState(null, '', `${window.location.pathname}#/dashboard`);
+          window.history.replaceState(null, '', DASHBOARD_PATH);
           if (!auth.currentUser) {
             setLoginOpen(true); setLoginBusy(true);
             const provider = new GoogleAuthProvider(); provider.setCustomParameters({ prompt: 'select_account' });
@@ -405,7 +405,7 @@ export default function Dashboard() {
       const [{ auth }, sdk] = await Promise.all([import('../../config/firebase'), import('firebase/auth')]);
       if (google) {
         if (window.location.origin !== SIGN_IN_ORIGIN) {
-          window.location.assign(`${SIGN_IN_ORIGIN}/#/dashboard?signin=google`);
+          window.location.assign(`${DASHBOARD_URL}?signin=google`);
           return;
         }
         const provider = new sdk.GoogleAuthProvider(); provider.setCustomParameters({ prompt: 'select_account' });
