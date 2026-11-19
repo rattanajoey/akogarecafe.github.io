@@ -8,10 +8,27 @@ beforeEach(() => loadUsdRate.mockResolvedValue({ rate: 1.3368, date: '2026-10-23
 
 jest.mock('react-router-dom', () => ({ Link: ({ to, ...props }) => <a href={to} {...props} /> }));
 
-function Workspace({ reports, lifetime = null }) {
+function Workspace({ reports, lifetime = null, ...state }) {
   const [days, setDays] = useState(28);
-  return <DashboardWorkspace user={{ displayName: 'Studio' }} reports={reports} lifetime={lifetime} products={null} busy={false} error="" days={days} setDays={setDays} onRefresh={() => {}} onLogin={() => {}} onLogout={() => {}} onConnect={() => {}} />;
+  return <DashboardWorkspace user={{ displayName: 'Studio' }} reports={reports} lifetime={lifetime} products={null} busy={false} error="" days={days} setDays={setDays} onRefresh={() => {}} onLogin={() => {}} onLogout={() => {}} onConnect={() => {}} {...state} />;
 }
+
+test('refresh status keeps the last successful report date visible during a retry and failure', () => {
+  const lastUpdated = '2026-11-18T18:05:00.000Z';
+  const { rerender } = render(<Workspace reports={{}} lastUpdated={lastUpdated} />);
+  const status = screen.getByRole('status', { name: 'Report freshness' });
+  expect(status.querySelector('time').dateTime).toBe(lastUpdated);
+  expect(status.textContent).toContain('19 Nov 2026');
+  expect(status.textContent).toContain('02:05');
+  expect(status.textContent).toContain('GMT+8');
+  expect(status.textContent).toContain('Source reporting dates may lag');
+  rerender(<Workspace reports={{}} lastUpdated={lastUpdated} busy />);
+  expect(status.textContent).toContain('Refreshing…');
+  expect(status.querySelector('time').dateTime).toBe(lastUpdated);
+  rerender(<Workspace reports={{}} lastUpdated={lastUpdated} refreshFailed />);
+  expect(status.textContent).toContain('Refresh failed · showing the last successful report');
+  expect(status.querySelector('time').dateTime).toBe(lastUpdated);
+});
 
 test('Last 1 day selects yesterday, explains processing and centers a single reported point', () => {
   const yesterday = dateRange(1).end;

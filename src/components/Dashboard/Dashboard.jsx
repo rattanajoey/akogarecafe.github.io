@@ -188,7 +188,7 @@ function ActivityChart({ sources, reports, metric, range }) {
   </div>;
 }
 
-export function DashboardWorkspace({ user, reports, products, busy, error, days, setDays, onRefresh, onLogin, onLogout, onConnect, lastUpdated, lifetime = null, lifetimeBusy = false, lifetimeError = '' }) {
+export function DashboardWorkspace({ user, reports, products, busy, error, days, setDays, onRefresh, onLogin, onLogout, onConnect, lastUpdated, refreshFailed = false, lifetime = null, lifetimeBusy = false, lifetimeError = '' }) {
   const [page, setPage] = useState('overview');
   const [project, setProject] = useState('all');
   const [metric, setMetric] = useState(null);
@@ -205,6 +205,7 @@ export function DashboardWorkspace({ user, reports, products, busy, error, days,
   const shopOnly = sources.length > 0 && sources.every(s => s.kind === 'etsy');
   const channelSources = sources.filter(s => s.kind !== 'etsy');
   const anyData = sources.some(s => Object.values(reports[s.id]?.metrics || {}).some(finite));
+  const refreshedAt = lastUpdated && Number.isFinite(Date.parse(lastUpdated)) ? new Date(lastUpdated) : null;
   const range = dateRange(days);
   const activeMetric = metric || ['views', 'sessions', 'activeUsers', 'impressions'].find(key => sources.some(source => (reports[source.id]?.daily || []).some(point => finite(point[key])))) || ['views', 'sessions', 'activeUsers', 'impressions'].find(key => sources.some(s => METRICS[key].kinds.includes(s.kind))) || 'views';
   const exportData = () => {
@@ -229,6 +230,13 @@ export function DashboardWorkspace({ user, reports, products, busy, error, days,
       <nav className="studio-mobile-nav" aria-label="Mobile dashboard navigation"><button className={page === 'overview' ? 'active' : ''} onClick={() => pickProject('all')}>Overview</button><button className={page === 'connections' ? 'active' : ''} onClick={() => setPage('connections')}>Connections</button><select aria-label="Choose project" value={project} onChange={e => pickProject(e.target.value)}><option value="all">All projects</option>{PROJECTS.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></nav>
       <div className="studio-content">
         <section className="studio-heading"><div><div className="studio-eyebrow"><span/> THE BIG PICTURE</div><h1>{page === 'connections' ? 'Everything, connected.' : project === 'all' ? 'A view of everything.' : PROJECTS.find(p => p.id === project).name}</h1><p>{page === 'connections' ? 'Your accounts, your data. One place to bring it together.' : 'All your projects. Every channel. A little more perspective.'}</p></div><div className="studio-heading-actions"><label className="studio-period"><Icon name="grid" size={15}/><select aria-label="Reporting period" value={days} onChange={e => setDays(Number(e.target.value))}><option value={1}>Last 1 day</option><option value={7}>Last 7 days</option><option value={28}>Last 28 days</option><option value={90}>Last 90 days</option></select></label><button className="studio-icon-button" onClick={onRefresh} disabled={!user || busy} aria-label="Refresh analytics"><Icon name="refresh" className={busy ? 'studio-spin' : ''}/></button><button className="studio-small-button studio-export" onClick={exportData} disabled={!anyData}><Icon name="download" size={16}/>Export</button></div></section>
+        {user && <div className="studio-freshness" role="status" aria-label="Report freshness">
+          <div className="studio-refresh-stamp"><Icon name="clock" size={16}/><span>{refreshedAt ? <>Last refreshed <time dateTime={refreshedAt.toISOString()} title="Latest successful report fetch, shown in Shanghai time. Cached reports can be up to five minutes old.">{refreshedAt.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Shanghai', timeZoneName: 'short' })}</time></> : busy ? 'Refreshing reports…' : 'Awaiting first refresh'}</span>
+            {busy && refreshedAt && <span className="studio-refresh-pending">Refreshing…</span>}
+            {refreshFailed && <span className="studio-refresh-failed">{refreshedAt ? 'Refresh failed · showing the last successful report' : 'Refresh failed'}</span>}
+          </div>
+          <span className="studio-refresh-note">Auto-refreshes every 5 min while viewing. Source reporting dates may lag.</span>
+        </div>}
         {days === 1 && !membershipOnly && <p className="studio-period-note" role="note"><strong>Last completed day · {range.end} (UTC).</strong> Daily reports are provisional; YouTube can take 48–72 hours. Use 7 or 28 days to judge trends.</p>}
         {error && <div className="studio-error" role="alert">{error}<button onClick={onRefresh} disabled={busy || !user}>Try again</button></div>}
         {!user && <div className="studio-welcome"><span className="studio-welcome-icon"><Icon name="lock" size={20}/></span><div><strong>A private home for your numbers.</strong><p>Sign in with your admin account to load your projects’ analytics.</p></div><button className="studio-primary" onClick={onLogin}>Open my workspace <Icon name="arrow" size={16}/></button></div>}
@@ -267,7 +275,7 @@ export function DashboardWorkspace({ user, reports, products, busy, error, days,
         </> : <div className="studio-connection-intro"><Icon name="link" size={22}/><div><strong>{SOURCES.filter(s => isReporting(reports[s.id])).length} / {SOURCES.length} sources connected</strong><p>Counts are current snapshots. Views and traffic use the selected reporting period. Limited access means only some metrics are available.</p></div></div>}
         {page === 'connections' && <XPanel source={xSource} report={reports[xSource?.id]} onConnect={onConnect}/>}
         {page === 'connections' && <ShopPanel source={shopSource} report={reports[shopSource?.id]} onConnect={onConnect} days={days} lifetime={lifetime} lifetimeBusy={lifetimeBusy}/>}
-        {channelSources.length > 0 && <section className="studio-panel studio-sources"><div className="studio-panel-head"><div><h2>{page === 'connections' ? 'Your connected world' : 'Channel breakdown'}</h2><p>{connected} of {channelSources.length} sources connected{lastUpdated && ` · Refreshed ${new Date(lastUpdated).toLocaleTimeString('en', { hour: 'numeric', minute: '2-digit' })}`}</p></div><label className="studio-source-filter"><span className="studio-sr-only">Filter by platform</span><select value={platform} onChange={e => setPlatform(e.target.value)}><option value="all">All platforms</option><option value="youtube">YouTube</option><option value="instagram">Instagram</option><option value="x">X</option><option value="web">Website</option><option value="ios">iOS</option><option value="pinterest">Pinterest</option><option value="patreon">Patreon</option></select></label></div>
+        {channelSources.length > 0 && <section className="studio-panel studio-sources"><div className="studio-panel-head"><div><h2>{page === 'connections' ? 'Your connected world' : 'Channel breakdown'}</h2><p>{connected} of {channelSources.length} sources connected</p></div><label className="studio-source-filter"><span className="studio-sr-only">Filter by platform</span><select value={platform} onChange={e => setPlatform(e.target.value)}><option value="all">All platforms</option><option value="youtube">YouTube</option><option value="instagram">Instagram</option><option value="x">X</option><option value="web">Website</option><option value="ios">iOS</option><option value="pinterest">Pinterest</option><option value="patreon">Patreon</option></select></label></div>
           <div className="studio-table-wrap"><table><thead><tr><th>PROJECT / CHANNEL</th><th>AUDIENCE <small>latest snapshot</small></th><th>CONTENT VIEWS <small>period / lifetime</small></th><th>ACTIVITY <small>period / current</small></th><th>CONNECTION</th><th><span className="studio-sr-only">Actions</span></th></tr></thead><tbody>{channelSources.map(s => {
             const r = reports[s.id]; const p = PROJECTS.find(p => p.id === s.project);
             const activityKey = s.kind === 'x' ? 'publishedItems' : s.kind === 'web' ? 'sessions' : s.kind === 'ios' ? 'activeUsers' : s.kind === 'pinterest' ? 'outboundClicks' : s.kind === 'patreon' ? 'paidMembers' : 'likes';
@@ -289,6 +297,7 @@ export default function Dashboard() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [refreshFailed, setRefreshFailed] = useState(false);
   const [lifetime, setLifetime] = useState(null);
   const [lifetimeBusy, setLifetimeBusy] = useState(false);
   const [lifetimeError, setLifetimeError] = useState('');
@@ -320,7 +329,7 @@ export default function Dashboard() {
       unsubscribe = onAuthStateChanged(auth, next => {
         lifetimeVersion.current++; lifetimeRequest.current?.abort(); setLifetime(null); setLifetimeError(''); setLifetimeBusy(false);
         generation.current++; request.current?.abort(); sessions.current = {}; analyticsToken.current = null; identity.current = next?.uid || null;
-        setReports({}); setProducts(null); setLastUpdated(null); setSource(null); setSourceToken(null); setProperties([]); setStreams([]); setError(''); setUser(next);
+        setReports({}); setProducts(null); setLastUpdated(null); setRefreshFailed(false); setSource(null); setSourceToken(null); setProperties([]); setStreams([]); setError(''); setUser(next);
       });
       try {
         await getRedirectResult(auth);
@@ -360,7 +369,7 @@ export default function Dashboard() {
     if (!user) return;
     const version = ++generation.current;
     request.current?.abort(); const controller = new AbortController(); request.current = controller;
-    setBusy(true); setError('');
+    setBusy(true); setError(''); setRefreshFailed(false);
     try {
       const data = await loadWorkspace(user, days, controller.signal);
       if (version !== generation.current) return;
@@ -374,7 +383,7 @@ export default function Dashboard() {
       setProducts(data.products || null); setLastUpdated(data.fetchedAt);
     } catch (err) {
       if (version !== generation.current || err.name === 'AbortError') return;
-      setError(err.message); setReports(old => Object.fromEntries(Object.entries(old).map(([id, r]) => [id, { ...r, stale: true }])));
+      setError(err.message); setRefreshFailed(true); setReports(old => Object.fromEntries(Object.entries(old).map(([id, r]) => [id, { ...r, stale: true }])));
     } finally { if (version === generation.current) setBusy(false); }
   }, [user, days]);
   const refreshLifetime = useCallback(async () => {
@@ -449,7 +458,7 @@ export default function Dashboard() {
     catch (err) { setSourceError(err.message); } finally { setSourceBusy(false); }
   };
   const sourceReport = source && reports[source.id];
-  return <><DashboardWorkspace user={user} reports={reports} products={products} busy={busy} error={error} days={days} setDays={setDays} onRefresh={() => { refresh(); refreshLifetime(); }} onLogin={() => { setError(''); setLoginOpen(true); }} onLogout={logout} onConnect={connect} lastUpdated={lastUpdated} lifetime={lifetime} lifetimeBusy={lifetimeBusy} lifetimeError={lifetimeError}/>
+  return <><DashboardWorkspace user={user} reports={reports} products={products} busy={busy} error={error} days={days} setDays={setDays} onRefresh={() => { refresh(); refreshLifetime(); }} onLogin={() => { setError(''); setLoginOpen(true); }} onLogout={logout} onConnect={connect} lastUpdated={lastUpdated} refreshFailed={refreshFailed} lifetime={lifetime} lifetimeBusy={lifetimeBusy} lifetimeError={lifetimeError}/>
     <Dialog open={loginOpen} onClose={() => !loginBusy && setLoginOpen(false)} maxWidth="xs" fullWidth classes={{ paper: 'studio-dialog' }}><DialogTitle><span className="studio-dialog-title">Welcome to your studio<button className="studio-icon-button" onClick={() => setLoginOpen(false)} aria-label="Close sign-in"><Icon name="close"/></button></span></DialogTitle><DialogContent><p className="studio-dialog-description">Use your Akogare admin account. Reports are available only to approved workspace members.</p><button className="studio-primary studio-full" disabled={loginBusy} onClick={e => login(e, true)}>Continue with Google</button><div className="studio-or">or use your existing email login</div><form onSubmit={login} className="studio-form"><label>Email<input type="email" autoComplete="username" required value={email} onChange={e => setEmail(e.target.value)}/></label><label>Password<input type="password" autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)}/></label>{error && <p role="alert" className="studio-form-error">{error}</p>}<button className="studio-primary studio-full" disabled={loginBusy}>{loginBusy ? 'Signing in…' : 'Sign in to workspace'}</button></form></DialogContent></Dialog>
     <Dialog open={Boolean(source)} onClose={() => !sourceBusy && setSource(null)} maxWidth="sm" fullWidth classes={{ paper: 'studio-dialog' }}><DialogTitle><span className="studio-dialog-title">{source?.label} · {source?.account}<button className="studio-icon-button" onClick={() => setSource(null)} aria-label="Close source details"><Icon name="close"/></button></span></DialogTitle><DialogContent>
       {['collecting', 'pending-review', 'processing'].includes(sourceState(sourceReport)) && <div className="studio-dialog-state"><span className={`studio-status ${sourceState(sourceReport)}`}><i/>{statusLabel(sourceReport)}</span></div>}
